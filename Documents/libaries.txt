@@ -1,0 +1,8 @@
+Flask
+os
+csv
+sqlite3
+
+
+.venv\Scripts\activate.ps1
+deactivate
