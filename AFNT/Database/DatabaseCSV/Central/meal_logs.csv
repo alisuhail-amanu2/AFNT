@@ -1,0 +1,3 @@
+﻿meal_log_id,meal_id,ate,date_ate,time_ate,is_active
+1,1,1,05/09/2023,20:00:00,1
+3,2,1,07/09/2023,14:00:00,1

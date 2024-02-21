@@ -1,0 +1,3 @@
+﻿workout_id,workout_name,description,type,date_created,level,rating,rating_description,time_created,is_active
+1,Shoulders,Trains your shoulders!,Upper Body,24/10/2023,Advanced,4,Bad,07:00:00,0
+2,Core,To create 6 pack abs!,Abdominals,25/10/2023,Intermediate,10,Excellent,08:00:00,1

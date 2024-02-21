@@ -1,0 +1,3 @@
+﻿meal_id,type,description,water_tot_g,energy_tot_kcal,protein_tot_g,lipid_tot_g,carbs_tot_g,fiber_tot_g,sugar_tot_g,calcium_tot_mg,iron_tot_mg,cholestrl_tot_mg,serving,date_created,time_created,is_active
+1,Dinner,Preset Meal,700,1,2,3,4,5,6,7,8,,1,20/07/2023,08:00:00,1
+2,Lunch,Preset Meal,600,1,2,3,4,5,6,7,8,,1,20/07/2023,14:30:00,1

@@ -1,0 +1,2 @@
+﻿user_id,user_name,password,type,email,county code,phone,address,postcode/zipcode,gender,dob,date_enrolled,time_enrolled,is_active
+0,Ali Suhail,123,Admin,alisuhail.amanullah@gmail.com,0,07784663752,"1 Alistana Street, Alistana City",AC1 AA1,Male,20/07/2003,11/10/2023,19:54:00,1

@@ -1,0 +1,1165 @@
+#:kivy 2.3.0
+#:import utils kivy.utils
+# <PP>:
+#     id: popup_value
+#     Label:
+#         size_hint: 0.6, 0.2
+#         pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+#     Button:
+#         text: "BACK"
+#         size_hint: 0.8, 0.2
+#         pos_hint: {"x": 0.1, "y": 0.1}
+#         # on_release: app.dismiss_popup()
+<RoundedButtonWorkout@Button>:
+    background_color: (0, 0, 0, 0)
+    background_normal: ''
+    canvas.before:
+        Color:
+            rgba: 1, 0.5, 0, 1
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [50]
+
+
+<RoundedButtonMeal@Button>:
+    background_color: 0, 0, 0, 0
+    background_normal: ''
+    canvas.before:
+        Color:
+            rgba: 0, 1, 0, 1
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [50]
+
+<RoundedButtonMap@Button>:
+    background_color: (0, 0, 0, 0)
+    canvas.before:
+        Color:
+            rgba: 0, 1, 1, 0.5
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [50]
+
+
+<RoundedButtonBodyStats@Button>:
+    background_color: (0, 0, 0, 0)
+    background_normal: ''
+    canvas.before:
+        Color:
+            rgba: 1, 0, 0, 1
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [50] 
+
+<RoundedButtonWater@Button>:
+    background_color: (0, 0, 0, 0)
+    canvas.before:
+        Color:
+            rgba: 0, 0, 1, 1
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [50] 
+
+<RoundedButtonWatch@Button>:
+    background_color: (0, 0, 0, 0)
+    background_normal: ''
+    canvas.before:
+        Color:
+            rgba: 0, 0, 1, 0.5
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [50] 
+
+
+<ClickableTextFieldRound>:
+    id: clickable_text_field_round
+    size_hint_y: None
+    height: input_password.height
+    pos_hint: {'center_x': 0.5}
+
+    MDTextField:
+        id: input_password
+        mode: "round"
+        hint_text: "password"
+        helper_text_mode: "on_error"
+        helper_text: "enter password"
+        password: True
+        on_text: app.root.ids.input_password.error = False if self.text else True
+
+    MDIconButton:
+        icon: "eye-off"
+        pos: input_password.width - self.width + dp(8), 0
+        on_release:
+            self.icon = "eye" if self.icon == "eye-off" else "eye-off"
+            input_password.password = not input_password.password
+
+
+WindowManager:
+    LoginScreen:
+    RegistrationScreen:
+    DashboardScreen:
+    BodyStatsScreen:
+    BodyStatsPlotsScreen:
+    WaterIntakeScreen:
+    WaterIntakePlotsScreen:
+    WorkoutHistoryScreen:
+    ExerciseLogScreen:
+    # WorkoutManager:
+    # ExerciseManager:
+
+<LoginScreen>:
+    name: 'login_screen'
+    FloatLayout:
+        AsyncImage:
+            source: 'img/afnt_login_background.jpg'
+            allow_stretch: True
+            keep_ratio: False
+
+        MDCard:
+            orientation: 'vertical'
+            allow_stretch: False
+            size_hint: None, None
+            size: dp(300), dp(400)
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}
+            
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_x: None
+                width: dp(250)
+                spacing: dp(25)
+                pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+                MDLabel:
+                    id: welcome_label
+                    text: 'Welcome Back!'
+                    font_size: 40
+                    bold: True
+                    halign: 'center'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                    padding_y: 15
+
+                MDTextField:
+                    mode: "round"
+                    id: input_username
+                    hint_text: "username"
+                    helper_text_mode: "on_error"
+                    helper_text: "enter valid username"
+                    max_text_length: 10
+                    icon_right: "account"
+                    pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+                    size_hint_x: None
+                    width: dp(250)
+                    on_text: app.handle_username_input(self.text)
+
+                ClickableTextFieldRound:
+                    id: clickable_text_field_round
+                    size_hint_y: None
+                    height: input_password.height
+                    pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+                    MDTextField:
+                        id: input_password
+                        mode: "round"
+                        hint_text: "password"
+                        helper_text_mode: "on_error"
+                        helper_text: "enter valid password"
+                        password: True
+                        on_text: app.handle_password_input(self.text)
+
+                    MDIconButton:
+                        icon: "eye-off"
+                        pos: clickable_text_field_round.width - self.width + dp(8), 0
+                        theme_text_color: "Hint"
+                        on_release:
+                            self.icon = "eye" if self.icon == "eye-off" else "eye-off"
+                            input_password.password = not input_password.password
+
+                MDRoundFlatButton:
+                    text: "Login"
+                    font_size: 20
+                    size_hint: 0.9, 0
+                    pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+                    background_normal: ''
+                    text_color: 0, 0, 0, 1
+                    md_bg_color: 0, 1, 0, 1
+                    on_release: 
+                        app.verify_login()
+                        root.manager.transition.direction = "up"
+
+                MDLabel:
+                    id: or_label
+                    text: '- OR -'
+                    font_size: 20
+                    bold: True
+                    halign: 'center'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                    padding_y: 5
+
+                MDRoundFlatButton:
+                    text: "Register"
+                    font_size: 20
+                    size_hint: 0.9, 0
+                    pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+                    background_normal: ''
+                    text_color: 1, 1, 1, 1
+                    md_bg_color: 1, 0, 0, 1
+                    on_release:
+                        root.switch_to_registration()
+                        root.manager.transition.direction = "left"
+
+                Widget:
+                    size_hint_y: None
+                    height: 2
+
+<RegistrationScreen>:
+    name: 'registration_screen'
+
+    FloatLayout:
+        AsyncImage:
+            source: 'img/afnt_registration_background.jpg'
+            allow_stretch: True
+            keep_ratio: False
+
+        MDCard:
+            orientation: 'vertical'
+            allow_stretch: False
+            size_hint: None, None
+            size: dp(350), dp(675)
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}
+
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_x: None
+                width: dp(250)
+                spacing: dp(25)
+                pos_hint: {'center_x': 0.5, 'center_y': 0.5 }
+
+                MDLabel:
+                    id: register_label
+                    text: 'Welcome to AFNT!'
+                    font_size: 40
+                    bold: True
+                    halign: 'center'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                    padding_y: 15
+
+                MDTextField:
+                    mode: "round"
+                    id: input_new_username
+                    hint_text: "username"
+                    max_text_length: 10
+                    helper_text_mode: "on_error"
+                    helper_text: "enter valid username"
+                    icon_right: "account"
+                    size_hint_y: None
+                    height: dp(48)
+                    on_text: app.handle_new_username_input(self.text)
+
+                MDTextField:
+                    mode: "round"
+                    id: input_new_email
+                    hint_text: "email"
+                    helper_text_mode: "on_error"
+                    helper_text: "user@email.com"
+                    validator: "email"
+                    icon_right: "email"
+                    size_hint_y: None
+                    height: dp(48)
+                    on_text: app.handle_new_email_input(self.text)
+
+                ClickableTextFieldRound:
+                    id: clickable_text_field_round
+                    size_hint_y: None
+                    height: input_new_password.height
+                    pos_hint: {'center_x': 0.5}
+
+                    MDTextField:
+                        id: input_new_password
+                        mode: "round"
+                        hint_text: "password"
+                        helper_text_mode: "on_error"
+                        helper_text: "enter valid password"
+                        min_text_length: 3
+                        password: True
+                        # on_text: app.root.ids.input_new_password.error = False if self.text else True
+                        on_text: app.handle_new_password_input(self.text)
+
+                    MDIconButton:
+                        icon: "eye-off"
+                        pos_hint: {"center_y": 0.5}
+                        pos: clickable_text_field_round.width - self.width + dp(8), 0
+                        theme_text_color: "Hint"
+                        on_release:
+                            self.icon = "eye" if self.icon == "eye-off" else "eye-off"
+                            input_new_password.password = not input_new_password.password
+
+                MDTextField:
+                    mode: "round"
+                    id: input_new_phone
+                    hint_text: "phone"
+                    helper_text_mode: "on_error"
+                    helper_text: "enter valid phone number"
+                    icon_right: "phone"
+                    size_hint_y: None
+                    height: dp(48)
+                    on_text: app.handle_new_phone_input(self.text)
+
+                MDTextField:
+                    mode: "round"
+                    id: date_input
+                    hint_text: "enter date of birth"
+                    icon_right: "calendar-account"
+                    size_hint_y: None
+                    height: dp(48)
+                    on_focus: app.handle_new_dob_input()
+
+                MDTextField:
+                    mode: "round"
+                    id: gender_input
+                    hint_text: "select gender"
+                    icon_right: "chevron-down"
+                    line_color_normal: 1, 1, 1, 1
+                    size_hint_y: None
+                    height: dp(48)
+                    on_focus: app.show_gender_menu(gender_input)
+                    text: app.selected_gender
+
+                MDRoundFlatButton:
+                    text: "Register!"
+                    font_size: 20
+                    size_hint: 0.9, 0
+                    pos_hint: {'center_x': 0.5}
+                    background_normal: ''
+                    text_color: 0, 0, 0, 1   
+                    md_bg_color: 0, 1, 0, 1 
+                    on_release: app.verify_registration()
+
+                MDLabel:
+                    id: or_label
+                    text: '- OR -'
+                    font_size: 20
+                    halign: 'center'
+                    size_hint_y: None
+                    bold: True
+                    height: self.texture_size[1]
+                    padding_y: 5
+
+                MDRoundFlatButton:
+                    text: "Login"
+                    font_size: 20
+                    size_hint: 0.9, 0
+                    pos_hint: {'center_x': 0.5}
+                    background_normal: ''
+                    text_color: 1, 1, 1, 1   
+                    md_bg_color: 1, 0, 0, 1 
+                    on_release: 
+                        root.switch_to_login()
+                        root.manager.transition.direction = "right"
+
+                Widget:
+                    size_hint_y: None
+                    height: 2
+
+<DashboardScreen>:
+    name: 'dashboard_screen'
+    FloatLayout:
+        MDTopAppBar:
+            valign: 'center'
+            pos_hint: {"top": 1}
+            elevation: 2
+            md_bg_color: 0, 0, 0.5, 1
+
+            GridLayout:
+                cols: 2
+                size_hint: (1, None)
+                height: self.parent.height
+                padding: 10
+                spacing: 10
+                pos_hint: {"center_x": 0.5}
+
+                AnchorLayout:
+                    anchor_x: 'left'
+                    anchor_y: 'center'
+
+                    Image:
+                        source: 'img/AFNT_Logo_dash.png'
+                        size_hint_y: None
+                        height: self.parent.height
+                        allow_stretch: True
+                        keep_ratio: True
+
+                AnchorLayout:
+                    anchor_x: 'right' 
+                    anchor_y: 'center'
+
+                    Button:
+                        background_normal: ''
+                        background_color: 0, 0, 0.5, 1
+                        size_hint: None, None
+                        size: (dp(48), dp(45))
+                        on_release: app.handle_dropdown('profile', self)
+                    Image:
+                        source: 'img/profile.png'
+                        size_hint: None, None
+                        size: (dp(48), dp(45))
+                        allow_stretch: True
+                        keep_ratio: True 
+        ScrollView:
+            do_scroll_y: True
+            do_scroll_x: False
+            bar_width: 0
+            size_hint: (0.80, 0.85)
+            pos_hint: {'center_x': 0.5, 'top': 0.85}
+
+            BoxLayout:
+                orientation: 'vertical'
+                cols: 1
+                rows: 5
+                size_hint: (None, None)
+                height: self.minimum_height
+                width: self.minimum_width
+                spacing: 30
+                padding: 10
+
+                RoundedButtonWorkout:
+                    size_hint_y: None
+                    height: "180dp"
+                    size_hint_x: None
+                    width: 0.80 * root.width
+                    user_font_size: "72sp"
+                    pos_hint: {'center_x': 0.5}
+                    on_release: root.switch_to_workout_history()
+
+                    Image:
+                        source: 'img/workout.png'
+                        size: (self.parent.height, self.parent.height)
+                        allow_stretch: False
+                        keep_ratio: False
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+
+                RoundedButtonMeal:
+                    size_hint_y: None
+                    height: "180dp"
+                    size_hint_x: None
+                    width: 0.80 * root.width
+                    user_font_size: "72sp"
+                    pos_hint: {'center_x': 0.5}
+
+                    Image:
+                        source: 'img/meal.png'
+                        size_hint: (None, None)
+                        size: (self.parent.height, self.parent.height)
+                        allow_stretch: False
+                        keep_ratio: False
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+
+                RoundedButtonMap:
+                    size_hint_y: None
+                    height: "180dp"
+                    size_hint_x: None
+                    width: 0.80 * root.width
+                    user_font_size: "72sp"
+                    pos_hint: {'center_x': 0.5}
+                    Image:
+                        source: 'img/map.png'
+                        size: (self.parent.height, self.parent.height)
+                        allow_stretch: False
+                        keep_ratio: False
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+
+                RoundedButtonBodyStats:
+                    size_hint_y: None
+                    height: "180dp"
+                    size_hint_x: None
+                    width: 0.80 * root.width
+                    user_font_size: "72sp"
+                    pos_hint: {'center_x': 0.5}
+                    on_release: 
+                        root.switch_to_body_stats()
+                        root.manager.transition.direction = "left"
+                    Image:
+                        source: 'img/heart-monitoring.png'
+                        size: (self.parent.height, self.parent.height)
+                        allow_stretch: False
+                        keep_ratio: False
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+
+                RoundedButtonWater:
+                    # background_color: (0, 0, 1, 1)
+                    size_hint_y: None
+                    height: "180dp"
+                    size_hint_x: None
+                    width: 0.80 * root.width
+                    user_font_size: "72sp"
+                    pos_hint: {'center_x': 0.5}
+                    on_release: 
+                        root.switch_to_water_intake()
+                        root.manager.transition.direction = "left"
+                    Image:
+                        source: 'img/water-drop.png'
+                        size: (self.parent.height, self.parent.height)
+                        allow_stretch: False
+                        keep_ratio: False
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+
+                RoundedButtonWatch:
+                    # background_normal: ''
+                    # background_color: (0, 0, 1, 1)
+                    size_hint_y: None
+                    height: "180dp"
+                    size_hint_x: None
+                    width: 0.80 * root.width
+                    user_font_size: "72sp"
+                    pos_hint: {'center_x': 0.5}
+                    Image:
+                        source: 'img/smartwatch.png'
+                        size: (self.parent.height, self.parent.height)
+                        allow_stretch: False
+                        keep_ratio: False
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+
+<BodyStatsScreen>:
+    name: 'body_stats_screen'
+    FloatLayout:
+        MDTopAppBar:
+            title: "Body Statistics"
+            bold: True
+            halign: 'center'
+            font_size: '24sp'
+            pos_hint: {"top": 1}
+            elevation: 4
+            left_action_items: 
+                [["arrow-left", lambda x: root.switch_to_dashboard()]]
+            md_bg_color: 0, 0, 0.5, 1
+
+        ScrollView:
+            do_scroll_y: True
+            do_scroll_x: False
+            bar_width: 0
+            size_hint: (0.7, 0.85)
+            pos_hint: {'center_x': 0.5, 'top': 0.85}
+
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint: (0.9, None)
+                pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+                height: dp(950)
+                width: self.parent.width
+                spacing: 20
+                padding: 10
+                canvas.before:
+                    Color:
+                        rgba: 0.95, 0.95, 0.95, 1
+                    RoundedRectangle:
+                        size: self.size
+                        pos: self.pos
+                        radius: [10,]
+
+                MDLabel:
+                    id: body_stats_label
+                    text: 'Edit Body Statistics'
+                    font_size: 32
+                    underline: True
+                    bold: True
+                    halign: 'center'
+                    height: self.texture_size[1]
+                    padding_y: 15
+
+                MDTextField:
+                    id: body_stats_date
+                    hint_text: "Enter date *"
+                    icon_right: "calendar-account"
+                    on_focus: app.handle_body_stats_date_input()
+
+                MDTextField:
+                    id: weight_input
+                    hint_text: 'Enter weight (kg) *'
+                    icon_right: "weight"
+                    helper_text_mode: "on_error"
+                    helper_text: "enter weight *"
+                    multiline: False
+                    max_text_length: 5
+                    on_text: app.handle_weight_input(self.text)
+
+                MDTextField:
+                    id: height_input
+                    hint_text: 'Enter height (cm)'
+                    icon_right: "human-male-height-variant"
+                    helper_text_mode: "on_error"
+                    helper_text: "enter valid height"
+                    multiline: False
+                    max_text_length: 3
+
+                MDTextField:
+                    id: body_fat_input
+                    hint_text: 'Enter body fat (kg)'
+                    icon_right: "human"
+                    helper_text_mode: "on_error"
+                    helper_text: "enter valid body fat"
+                    multiline: False
+                    max_text_length: 6
+
+                MDTextField:
+                    id: skeletal_muscle_input
+                    hint_text: 'Enter skeletal muscle (kg)'
+                    icon_right: "arm-flex"
+                    helper_text_mode: "on_error"
+                    helper_text: "enter valid skeletal muscle"
+                    multiline: False
+                    max_text_length: 6
+
+                MDTextField:
+                    id: step_count_input
+                    hint_text: 'Enter steps taken'
+                    icon_right: "walk"
+                    helper_text_mode: "on_error"
+                    helper_text: "enter valid number of steps"
+                    multiline: False
+                    max_text_length: 6
+
+                BoxLayout:
+                    orientation: 'horizontal'
+                    pos_hint: {"center_x": 0.5}
+
+                    Button:
+                        text: "Submit"
+                        size_hint_x: None
+                        background_normal: ''
+                        width: self.parent.width
+                        background_color: 0.0, 0.8, 1, 1
+                        on_release: app.verify_body_stats_input()
+
+                MDLabel:
+                    id: body_stats_label
+                    text: 'View Body Statistics Graphs'
+                    font_size: 32
+                    underline: True
+                    bold: True
+                    halign: 'center'
+                    height: self.texture_size[1]
+                    padding_y: 15
+
+                MDTextField:
+                    id: month
+                    background_color: app.theme_cls.bg_normal
+                    hint_text: "Enter month (1-12)"
+            
+                MDTextField:
+                    id: year
+                    background_color: app.theme_cls.bg_normal
+                    pos_hint: {"center_x":.5}
+                    hint_text: "Enter year (yyyy)"
+
+                GridLayout:
+                    cols: 2
+                    size_hint: (0.95, None)
+                    width: self.parent.width
+                    pos_hint: {"center_x": 0.5}
+                    spacing: 10
+
+                    AnchorLayout:
+                        anchor_x: "center"
+                        anchor_y: "center"
+
+                        Button:
+                            text: "Weight"
+                            value: "weight"
+                            size_hint_x: None
+                            background_normal: ''
+                            width: self.parent.width
+                            background_color: 0.0, 0.8, 1, 1
+                            on_release: root.switch_to_body_stats_plots(self, self.value)
+
+                    AnchorLayout:
+                        anchor_x: "center"
+                        anchor_y: "center"
+
+                        Button:
+                            text: "BMI"
+                            value: "bmi"
+                            size_hint_x: None
+                            width: self.parent.width
+                            background_normal: ''
+                            background_color: 0.0, 0.8, 1, 1
+                            on_release: root.switch_to_body_stats_plots(self, self.value)
+
+                    AnchorLayout:
+                        anchor_x: "center"
+                        anchor_y: "center"
+
+                        Button:
+                            text: "Body Fat"
+                            value: "body_fat"
+                            size_hint_x: None
+                            width: self.parent.width
+                            background_normal: ''
+                            background_color: 0.0, 0.8, 1, 1
+                            on_release: root.switch_to_body_stats_plots(self, self.value)
+
+                    AnchorLayout:
+                        anchor_x: "center"
+                        anchor_y: "center"
+
+                        Button:
+                            text: "Skeletal Muscle"
+                            value: "skeletal_muscle"
+                            size_hint_x: None
+                            width: self.parent.width
+                            background_normal: ''
+                            background_color: 0.0, 0.8, 1, 1
+                            on_release: root.switch_to_body_stats_plots(self, self.value)
+                    
+                    AnchorLayout:
+                        anchor_x: "center"
+                        anchor_y: "center"
+
+                        Button:
+                            text: "Step Count"
+                            value: "step_count"
+                            size_hint_x: None
+                            width: self.parent.width
+                            background_normal: ''
+                            background_color: 0.0, 0.8, 1, 1
+                            on_release: root.switch_to_body_stats_plots(self, self.value)
+
+<BodyStatsPlotsScreen>:
+    name: "body_stats_plots_screen"
+    BoxLayout:
+        id: box2
+        orientation: 'vertical'
+        size_hint_y:.9
+        size_hint: (.7, 0.9)
+        pos_hint: {'center_x': 0.5, "top":1}
+        spacing: 10
+
+    Button:
+        text: "Back"
+        pos_hint: {"center_x":.5, "y":.02}
+        size_hint_y: 0.05
+        size_hint_x: None
+        background_normal: ''
+        # width: self.parent.width
+        background_color: 0.0, 0.8, 1, 1
+        on_release: 
+            root.switch_to_body_stats()
+            box2.clear_widgets()
+
+<WaterIntakeScreen>:
+    name: 'water_intake_screen'
+
+    MDTopAppBar:
+        title: "Water Intake"
+        bold: True
+        halign: 'center'
+        font_size: '24sp'
+        pos_hint: {"top": 1}
+        elevation: 4
+        left_action_items: 
+            [["arrow-left", lambda x: root.switch_to_dashboard()]]
+        md_bg_color: 0, 0, 0.5, 1
+    
+    ScrollView:
+        do_scroll_y: True
+        do_scroll_x: False
+        bar_width: 0
+        size_hint: (0.7, 0.85)
+        pos_hint: {'center_x': 0.5, 'top': 0.85}
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (None, None)
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            height: dp(600)
+            width: self.parent.width
+            spacing: 20
+            padding: 10
+            canvas.before:
+                Color:
+                    rgba: 0.95, 0.95, 0.95, 1
+                RoundedRectangle:
+                    size: self.size
+                    pos: self.pos
+                    radius: [10,]
+
+            MDLabel:
+                id: water_intake_label
+                text: 'Edit Water Intake'
+                font_size: 25
+                underline: True
+                bold: True
+                halign: 'center'
+                size_hint_y: None
+                height: self.texture_size[1]
+                padding_y: 15
+
+            MDTextField:
+                id: water_date_input
+                hint_text: "Enter date *"
+                icon_right: "calendar-account"
+                size_hint_y: None
+                height: dp(48)
+                on_focus: app.handle_water_intake_date_input()
+
+            MDTextField:
+                id: water_input
+                hint_text: 'Enter water intake (ml) *'
+                icon_right: "water"
+                helper_text_mode: "on_error"
+                helper_text: "enter water intake amount *"
+                multiline: False
+                max_text_length: 5
+                on_text: app.handle_water_input(self.text)
+
+            GridLayout:
+                cols: 2
+                size_hint: (None, None)
+                width: self.parent.width
+                pos_hint: {"center_x": 0.5}
+                spacing: 10
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        text: "Submit"
+                        size_hint_x: None
+                        background_normal: ''
+                        width: self.parent.width
+                        background_color: 0.0, 0.8, 1, 1
+                        on_release: app.verify_water_input()
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        text: "Delete All Data"
+                        size_hint_x: None
+                        background_normal: ''
+                        width: self.parent.width
+                        background_color: 0.0, 0.8, 1, 1
+                        on_release: app.verify_delete_water_intake_data()
+
+            MDLabel:
+                id: water_intake_label
+                text: 'Generate Water Intake Graphs'
+                font_size: 25
+                underline: True
+                bold: True
+                halign: 'center'
+                size_hint_y: None
+                height: self.texture_size[1]
+                padding_y: 15
+            
+            MDTextField:
+                id: month
+                background_color: app.theme_cls.bg_normal
+                hint_text: "Enter month (1-12)"
+        
+            MDTextField:
+                id: year
+                background_color: app.theme_cls.bg_normal
+                hint_text: "Enter year (yyyy)"
+
+            AnchorLayout:
+                anchor_x: "center"
+                anchor_y: "center"
+
+                Button:
+                    text: "Water Intake Graphs"
+                    value: "water_intake"
+                    size_hint_x: None
+                    background_normal: ''
+                    width: self.parent.width
+                    background_color: 0.0, 0.8, 1, 1
+                    on_release: root.switch_to_water_intake_plots()
+
+<WaterIntakePlotsScreen>:
+    name: "water_intake_plots_screen"
+    
+    BoxLayout:
+        id: box1
+        orientation: 'vertical'
+        size_hint_y:.9
+        size_hint: (.7, 0.9)
+        pos_hint: {'center_x': 0.5, "top":1}
+        spacing: 10
+
+    Button:
+        text: "Back"
+        pos_hint: {"center_x":.5, "y":.02}
+        size_hint_y: 0.05
+        size_hint_x: None
+        background_normal: ''
+        background_color: 0.0, 0.8, 1, 1
+        on_release: 
+            root.switch_to_water_intake()
+            box1.clear_widgets()
+
+<WorkoutHistoryScreen>:
+    name: "workout_history_screen"
+    MDTopAppBar:
+        title: "Workout Planner"
+        bold: True
+        halign: 'center'
+        font_size: '24sp'
+        pos_hint: {"top": 1}
+        elevation: 4
+        left_action_items:
+            [["arrow-left", lambda x: root.switch_to_dashboard()]]
+        md_bg_color: 0, 0, 0.5, 
+    
+    ScrollView:
+        do_scroll_y: True
+        do_scroll_x: False
+        bar_width: 0
+        size_hint: (0.9, 0.85)
+        pos_hint: {'center_x': 0.5, 'top': 0.85}
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (None, None)
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            height: dp(700)
+            width: self.parent.width
+            spacing: 20
+            padding: 10
+            canvas.before:
+                Color:
+                    rgba: 0.95, 0.95, 0.95, 1
+                RoundedRectangle:
+                    size: self.size
+                    pos: self.pos
+                    radius: [10,]
+
+            GridLayout:
+                cols: 2
+                size_hint: (0.9, None)
+                width: self.parent.width
+                pos_hint: {"center_x": 0.5}
+                spacing: 10
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    MDTextField:
+                        id: workout_log_date_from
+                        hint_text: "From *"
+                        on_focus: root.handle_workout_log_date_from_input()
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    MDTextField:
+                        id: workout_log_date_to
+                        hint_text: "To *"
+                        on_focus: root.handle_workout_log_date_to_input()
+
+            BoxLayout:
+                id: workout_log_datatable_box
+                orientation:'vertical'
+
+            GridLayout:
+                cols: 2
+                size_hint: (0.95, None)
+                width: self.parent.width
+                pos_hint: {"center_x": 0.5}
+                spacing: 10
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: remove_workout_log
+                        text: "Remove Workout Logs"
+                        value: "remove_workout_log"
+                        size_hint_x: None
+                        background_normal: ''
+                        width: self.parent.width
+                        background_color: 0.0, 0.8, 1, 1
+                        on_release: root.remove_row()
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: edit_workout_logs
+                        text: "Edit Workout Logs"
+                        value: "edit_workout_logs"
+                        size_hint_x: None
+                        width: self.parent.width
+                        background_normal: ''
+                        background_color: 0.0, 0.8, 1, 1
+                        on_release: root.update_row()
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: view_workout_log
+                        text: "View Workout Log"
+                        value: "view_workout_log"
+                        size_hint_x: None
+                        width: self.parent.width
+                        background_normal: ''
+                        background_color: 0.0, 0.8, 1, 1
+                        on_release: root.switch_to_exercise_log()
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: allocate_workout
+                        text: "Allocate Workouts"
+                        value: "allocate_workout"
+                        size_hint_x: None
+                        width: self.parent.width
+                        background_normal: ''
+                        background_color: 0.0, 0.8, 1, 1
+                        # on_release: root.update_row()
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: manage_workout_log
+                        text: "Manage Workouts"
+                        value: "manage_workout"
+                        size_hint_x: None
+                        width: self.parent.width
+                        background_normal: ''
+                        background_color: 0.0, 0.8, 1, 1
+                        # on_release: root.add_row()
+                
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: manage_exercise
+                        text: "Manage Exercises"
+                        value: "manage_exercise"
+                        size_hint_x: None
+                        width: self.parent.width
+                        background_normal: ''
+                        background_color: 0.0, 0.8, 1, 1
+                        # on_release: root.switch_to_body_stats_plots(self, self.value)
+
+<ExerciseLogScreen>:
+    name: "exercise_log_screen"
+    MDTopAppBar:
+        title: "Exercise Logs"
+        bold: True
+        halign: 'center'
+        font_size: '24sp'
+        pos_hint: {"top": 1}
+        elevation: 4
+        left_action_items:
+            [["arrow-left", lambda x: root.switch_to_workout_history()]]
+        md_bg_color: 0, 0, 0.5, 
+    
+    ScrollView:
+        do_scroll_y: True
+        do_scroll_x: False
+        bar_width: 0
+        size_hint: (0.9, 0.85)
+        pos_hint: {'center_x': 0.5, 'top': 0.85}
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (None, None)
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            height: dp(700)
+            width: self.parent.width
+            spacing: 20
+            padding: 10
+            canvas.before:
+                Color:
+                    rgba: 0.95, 0.95, 0.95, 1
+                RoundedRectangle:
+                    size: self.size
+                    pos: self.pos
+                    radius: [10,]
+
+            BoxLayout:
+                id: exercise_log_datatable_box
+                orientation:'vertical'
+
+            GridLayout:
+                cols: 2
+                size_hint: (0.95, None)
+                width: self.parent.width
+                pos_hint: {"center_x": 0.5}
+                spacing: 10
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: remove_exercise_log
+                        text: "Remove Exercise"
+                        value: "remove_exercise_log"
+                        size_hint_x: None
+                        background_normal: ''
+                        width: self.parent.width
+                        background_color: 0.0, 0.8, 1, 1
+                        on_release: root.remove_row()
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: edit_exercise_logs
+                        text: "Edit Exercise"
+                        value: "edit_exercise_logs"
+                        size_hint_x: None
+                        width: self.parent.width
+                        background_normal: ''
+                        background_color: 0.0, 0.8, 1, 1
+                        on_release: root.update_row()
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: allocate_exercise_logs
+                        text: "Allocate Exercise"
+                        value: "allocate_exercise_logs"
+                        size_hint_x: None
+                        width: self.parent.width
+                        background_normal: ''
+                        background_color: 0.0, 0.8, 1, 1
+                        # on_release: root.update_row()
+
+# <WorkoutManager>:
+#     name: "workout_manager_screen"
+
+# <ExerciseManager>:
+#     name: "exercise_manager_screen"

@@ -1,0 +1,367 @@
+### Inserting a new exercise
+exercise_data = {
+    'exercise_name': 'Bicep Curl',
+    'description': 'Lift dumbbells with a bicep curl motion.',
+    'type': 'Strength',
+    'body_part': 'Arms',
+    'equipment': 'Dumbbells',
+    'level': 'Beginner',
+    'rating': 4.5,
+    'rating_description': 'Great exercise for building bicep muscles.',
+    'is_active': True
+}
+
+exercise_table.insert_exercise(exercise_data)
+
+### Get exercise by ID
+exercise_id_to_get = 'C1' 
+result_get_by_id = exercise_table.get_exercise_by_id(exercise_id_to_get)
+print(result_get_by_id)
+
+### Get exercise by name
+exercise_name_to_get = 'bicep curl'
+result_get_by_name = exercise_table.get_exercise_by_name(exercise_name_to_get)
+print(result_get_by_name)
+
+### Updating an exercise
+exercise_id_to_update = '2910'
+updated_values = {
+    'description': 'Updated description for Bicep Curl',
+    'level': 'Intermediate',
+    'rating': 4.8
+}
+exercise_table.update_exercise(exercise_id_to_update, updated_values)
+
+### Removing an exercise
+exercise_id_to_remove = '6'
+exercise_table.remove_exercise(exercise_id_to_remove)
+
+### Dropping the 'exercises' table
+exercise_table.drop_exercise()
+
+-----------------------------------------------------------------------------------------------------------
+db = LocalDB('local_db.db')
+exercise_logs = ExerciseLogsTable(db.connection)
+
+
+##### Exercise Log
+### Insert Exercise Log
+exercise_log_data = {
+    'exercise_id': 10,
+    'workout_log_id': 1,
+    'sets': 3,
+    'reps': 12,
+    'weight_kg': 20.0,
+    'rest_per_set_s': 60,
+    'duration': '00:30:00',
+    'distance_m': 1000,
+    'rpe': 7.5,
+    'is_complete': True,
+    'date_complete': '2023-01-01',
+    'time_complete': '12:30:00',
+    'details': 'Completed the exercise successfully',
+    'is_active': True
+}
+exercise_logs.insert_exercise_log(exercise_log_data)
+
+### Get Exercise Log by exercise_log_id
+exercise_log_id_to_search = 2
+result = exercise_logs.get_exercise_log_by_id(exercise_log_id_to_search)
+print("Get Exercise Log by id Result:", result)
+
+### Update Exercise Log
+exercise_log_id_to_update = 1
+updated_values_without_rest_per_set_s = {
+    'sets': 4,
+    'reps': 15,
+    'weight_kg': 25.0,
+    'duration': '00:45:00',
+    'distance_m': 1000,
+    'rpe': 8.0,
+    'is_complete': False,
+    'date_complete': '2023-01-02',
+    'time_complete': '13:00:00',
+    'details': 'Updated details for the exercise log',
+    'is_active': False
+}
+
+exercise_logs_table = ExerciseLogsTable(db.connection)
+exercise_logs_table.update_exercise_log(exercise_log_id_to_update, updated_values_without_rest_per_set_s)
+
+
+### Remove Exercise Log
+exercise_log_id_to_remove = 16
+exercise_logs.remove_exercise_log(exercise_log_id_to_remove)
+
+### Drop Exercise Log
+exercise_logs.drop_exercise_log()
+
+----------------------------------------------------------------------------------------------------------
+### Inserting a Workout
+workout_data = {
+    'workout_name': 'boob Training',
+    'description': 'A workout focusing on building strength.',
+    'type': 'Strength',
+    'date_created': '2023-01-01',
+    'level': 'Intermediate',
+    'rating': 4.5,
+    'rating_description': 'Great workout!',
+    # 'time_created': '12:00:00',
+    'is_active': True
+}
+workout_table.insert_workout(workout_data)
+
+### Retrieving a Workout by ID
+workout_id_to_retrieve = '90'
+retrieved_workout = workout_table.get_workout_by_id(workout_id_to_retrieve)
+print(f"Test Example 2: Retrieved Workout by ID: {retrieved_workout}")
+
+### Updating a Workout
+workout_id_to_update = 'C2'
+updated_values = {
+    'description': 'alistana motors is the  greatest comapny in the world as we all know',
+    'level': 'Basic',
+    'rating': 4.8,
+    'is_active': False
+}
+workout_table.update_workout(workout_id_to_update, updated_values)
+
+### Removing a Workout
+workout_id_to_remove = '1'
+workout_table.remove_workout(workout_id_to_remove)
+
+### Drop Workout
+workout_table.drop_workout()
+-----------------------------------------------------------------------------------------------------------
+workout_logs_table = WorkoutLogsTable(db.connection)
+
+formatted_date_assigned = date.today().strftime('%d/%m/%Y')
+formatted_time_assigned = time(10, 30).strftime('%H:%M')
+
+### Test Example 1: Insert Workout log
+workout_log_to_insert = {
+    'workout_id': 'C1',
+    'date_assigned': formatted_date_assigned,
+    'time_assigned': formatted_time_assigned,
+    'is_complete': False,
+    'date_completed': '20/07/2023',
+    'time_completed': '23:34',
+    'is_active': True
+}
+
+workout_logs_table.insert_workout_log(workout_log_to_insert)
+
+### Test Example 2: Retrieving a Workout Log by ID
+workout_log_id_to_retrieve = 10
+retrieved_workout_log = workout_logs_table.get_workout_log_by_id(workout_log_id_to_retrieve)
+print("Retrieved Workout Log:", retrieved_workout_log)
+
+formatted_date_assigned = date.today().strftime('%d/%m/%Y')
+current_time = datetime.now().time()
+formatted_time_assigned = current_time.strftime('%H:%M')
+
+### Test Example 3: Updating a Workout Log
+workout_log_id_to_update = 1 
+updated_values = {
+    'is_complete': True,
+    'date_completed': formatted_date_assigned,
+    'time_completed': formatted_time_assigned
+}
+workout_logs_table.update_workout_log(workout_log_id_to_update, updated_values)
+
+### Test Example 4: Removing a Workout Log
+workout_log_id_to_remove = 1 
+workout_logs_table.remove_workout_log(workout_log_id_to_remove)
+
+### Test Example 5: Drop Workout Log
+workout_logs_table.drop_workout_log()
+-----------------------------------------------------------------------------------------------------------
+
+### Test Example 1: Inserting a Meal
+meal_to_insert = {
+    'type': 'Breakfast',
+    'description': 'Healthy Breakfast',
+    'water_tot_g': 200,
+    'energy_tot_kcal': 300,
+    'protein_tot_g': 15.5,
+    'lipid_tot_g': 10.0,
+    'carbs_tot_g': 30.0,
+    'fiber_tot_g': 5.0,
+    'sugar_tot_g': 8.0,
+    'calcium_tot_mg': 150.0,
+    'iron_tot_mg': 2.0,
+    'cholestrl_tot_mg': 0.0,
+    'serving': 1.0,
+    'date_created': '2023-01-01',
+    'time_created': '08:00:00',
+    'is_active': True
+}
+meal_table.insert_meal(meal_to_insert)
+
+### Test Example 2: Retrieving a Meal by ID
+meal_id_to_retrieve = '2'
+retrieved_meal = meal_table.get_meal_by_id(meal_id_to_retrieve)
+print("Retrieved Meal:", retrieved_meal)
+
+### Test Example 2.1: Retrieving a Meal by type
+meal_type_to_retrieve = 'Dinner'
+retrieved_meal = meal_table.get_meal_by_type(meal_type_to_retrieve)
+print("Retrieved Meal:", retrieved_meal)
+
+### Test Example 3: Updating a Meal
+meal_id_to_update = 'C2'
+updated_values = {
+    'description': 'Updated Healthy Breakfast',
+    'carbs_tot_g': 35.0,
+    'sugar_tot_g': 10.0,
+    'time_created': '09:30:00'
+}
+
+meal_table.update_meal(meal_id_to_update, updated_values)
+
+### Test Example 4: Removing a Meal
+meal_id_to_remove = 'C5'
+meal_table.remove_meal(meal_id_to_remove)
+
+-----------------------------------------------------------------------------------------------------------
+
+# Creating an instance of the MealLogsTable
+meal_logs_table = MealLogsTable(db.connection)
+
+### Test Example 1: Inserting a Meal Log
+meal_log_to_insert = {
+    'meal_id': 'C1', 
+    'ate': True,
+    'date_ate': '2023-01-02',
+    'time_ate': '12:00:00',
+    'is_active': True
+}
+
+meal_logs_table.insert_meal_log(meal_log_to_insert)
+
+### Test Example 2: Retrieving a Meal Log by ID
+meal_log_id_to_retrieve = '342'
+retrieved_meal_log = meal_logs_table.get_meal_log_by_id(meal_log_id_to_retrieve)
+print("Retrieved Meal Log:", retrieved_meal_log)
+
+### Test Example 3: Updating a Meal Log
+meal_log_id_to_update = '2'
+updated_values = {
+    'ate': False,
+    'date_ate':  '20/07/2003',
+    'time_ate': '13:30:00',
+    'is_active': False
+}
+meal_logs_table.update_meal_log(meal_log_id_to_update, updated_values)
+
+### Test Example 4: Removing a Meal Log
+meal_log_id_to_remove = '4'
+meal_logs_table.remove_meal_log(meal_log_id_to_remove)
+
+### Drop Meal Log
+meal_logs_table.drop_workout()
+
+-----------------------------------------------------------------------------------------------------------
+
+food_items_table = FoodItemsTable(db.connection)
+
+### Example 1: Inserting a food item
+food_item_to_insert = {
+    'food_item_name': 'Bitchkun',
+    'water_g': 74,
+    'energy_kcal': 89,
+    'protein_g': 1.1,
+    'lipid_g': 0.3,
+    'carbs_g': 22.8,
+    'fiber_td_g': 2.6,
+    'sugar_g': 12.2,
+    'calcium_mg': 5,
+    'iron_mg': 0.3,
+    'cholestrl_mg': 0,
+    'is_active': True
+}
+food_items_table.insert_food_item(food_item_to_insert)
+
+### Example 2: Retrieving a food item by ID
+food_item_id_to_retrieve = '2069'
+retrieved_food_item = food_items_table.get_food_item_by_id(food_item_id_to_retrieve)
+print(f"Retrieved Food Item by ID: {retrieved_food_item}")
+
+### Example 3: Retrieving food items by name
+food_item_name_to_retrieve = 'PORRIDGE, WITH GRANOLA'
+food_items_by_name = food_items_table.get_food_item_by_name(food_item_name_to_retrieve)
+print(f"Food Items by name: {food_items_by_name}")
+
+### Example 4: Updating a food item
+food_item_id_to_update = '8789'
+updated_values = {'protein_g': 1.5, 'lipid_g': 0.5}
+food_items_table.update_food_item(food_item_id_to_update, updated_values)
+
+### Example 5: Removing a food item
+food_item_id_to_remove = '8789'
+food_items_table.remove_food_item(food_item_id_to_remove)
+
+### Example 6: Dropping the food_items table
+food_items_table.drop_food_item()
+-----------------------------------------------------------------------------------------------------------
+food_item_logs_table = FoodItemLogsTable(db.connection)
+
+### Example 1: Inserting a food item log
+food_item_log_to_insert = {
+    'meal_log_id': 1,
+    'food_item_id': 'C1',
+    'serving': 1.5,
+    'weight_g': 150,
+    'ate': True,
+    'date_ate': '2023-01-01',
+    'time_ate': '12:30:00',
+    'description': 'Ate a banana',
+    'is_active': True
+}
+food_item_logs_table.insert_food_item_log(food_item_log_to_insert)
+
+### Example 2: Retrieving a food item log by ID
+food_item_log_id_to_retrieve = 1
+retrieved_food_item_log = food_item_logs_table.get_food_item_log_by_id(food_item_log_id_to_retrieve)
+print(f"Retrieved Food Item Log by ID: {retrieved_food_item_log}")
+
+### Example 3: Updating a food item log
+food_item_log_id_to_update = 14
+updated_values = {'serving': 2.0, 'description': 'Ate two bananas'}
+food_item_logs_table.update_food_item_log(food_item_log_id_to_update, updated_values)
+
+### Example 4: Removing a food item log
+food_item_log_id_to_remove = 1
+food_item_logs_table.remove_food_item_log(food_item_log_id_to_remove)
+
+### Example 5: Dropping the food_item_logs table
+food_item_logs_table.drop_food_item_log()
+
+-----------------------------------------------------------------------------------------------------------
+
+bmi_table = BMITable(db.connection)
+
+### Example 1: Inserting a BMI record
+bmi_to_insert = {
+    'bmi': 25.5,
+    'date_recorded': '2023-01-01',
+    'time_recorded': '12:30:00'
+}
+bmi_table.insert_bmi(bmi_to_insert)
+
+### Example 2: Retrieving a BMI record by ID
+bmi_id_to_retrieve = 1
+retrieved_bmi = bmi_table.get_bmi_by_id(bmi_id_to_retrieve)
+print(f"Retrieved BMI by ID: {retrieved_bmi}")
+
+### Example 3: Updating a BMI record
+bmi_id_to_update = 1
+updated_values = {'bmi': 26.0, 'time_recorded': '13:00:00'}
+bmi_table.update_bmi(bmi_id_to_update, updated_values)
+
+### Example 4: Removing a BMI record
+bmi_id_to_remove = 1
+bmi_table.remove_bmi(bmi_id_to_remove)
+
+### Example 5: Dropping the bmi table
+bmi_table.drop_bmi()
