@@ -363,6 +363,7 @@ class ExerciseLogScreen(Screen):
         self.exercise_log = ExerciseLog(self.local_db.connection)
         # self.workout_history_screen = WorkoutHistoryScreen()
         self.selected_rows = []
+        self.workout_log_rows = []
     
     def switch_to_workout_history(self):
         # self.clear_workout_log_datatable_box()
@@ -376,9 +377,9 @@ class ExerciseLogScreen(Screen):
 
     def create_exercise_log_datatable(self):
         exercise_log_datatable_box = self.ids.exercise_log_datatable_box
-        self.selected_rows = self.manager.get_screen('workout_history_screen').get_selected_rows()
-        print("self.selected_rows", self.selected_rows)
-        exercise_log_data = self.exercise_log.get_exercise_logs_details(self.selected_rows[-1][0])
+        self.workout_log_rows = self.manager.get_screen('workout_history_screen').get_selected_rows()
+        print("self.workout_log_rows", self.workout_log_rows)
+        exercise_log_data = self.exercise_log.get_exercise_logs_details(self.workout_log_rows[-1][0])
         print("exercise_log_data", exercise_log_data)
 
         if exercise_log_data:
@@ -407,7 +408,7 @@ class ExerciseLogScreen(Screen):
             )
             self.exercise_log_datatable.bind(on_check_press=self.rows_selected)
         else:
-            self.exercise_log_datatable = Label(text='No Workouts Recorded', color = 'red', font_size = "20sp", bold = True)
+            self.exercise_log_datatable = Label(text='No Exercises Allocated', color = 'red', font_size = "20sp", bold = True)
             
         exercise_log_datatable_box.add_widget(self.exercise_log_datatable)
 
@@ -419,16 +420,16 @@ class ExerciseLogScreen(Screen):
         else:
             self.selected_rows.append(modified_row_data)
 
-    # def remove_row(self):
-    #     if self.selected_rows:
-    #         # print("selected_rows:", self.selected_rows)
-    #         for row in self.selected_rows:
-    #             exercise_log_id = row[0]
-    #             print("worky", exercise_log_id)
-    #             self.exercise_logs.remove_exercise_log(row[0])
-    #     self.clear_exercise_log_datatable_box()
-    #     self.create_exercise_log_datatable()
-    #     self.selected_rows.clear()
+    def remove_row(self):
+        if self.selected_rows:
+            # print("selected_rows:", self.selected_rows)
+            for row in self.selected_rows:
+                exercise_log_id = row[0]
+                print("worky", exercise_log_id)
+                self.exercise_log.remove_exercise_log(row[0])
+        self.clear_exercise_log_datatable_box()
+        self.create_exercise_log_datatable()
+        self.selected_rows.clear()
 
     # def update_row(self):
     #     if self.selected_rows:

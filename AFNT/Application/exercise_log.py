@@ -62,7 +62,8 @@ class ExerciseLog():
                     JOIN 
                         exercises AS e ON el.exercise_id = e.exercise_id
                     WHERE 
-                        el.workout_log_id = ?;
+                        el.workout_log_id = ? AND
+                        el.is_active = 1;  -- Add condition for is_active field
                 """, (workout_log_id,))
                 return self.cursor.fetchall()
 
@@ -80,21 +81,33 @@ class ExerciseLog():
             self.cursor.execute(sql, updated_values)
 
     def remove_exercise_log(self, exercise_log_id):
-        with self.connection:
-            self.cursor.execute("DELETE FROM exercise_logs WHERE exercise_log_id=?", (exercise_log_id,))
+        try:
+            with self.connection:
+                self.cursor.execute("UPDATE exercise_logs SET is_active = 0 WHERE exercise_log_id=?", (exercise_log_id,))
+        except Exception as e:
+            print(f"Error removing exercise log: {e}")
+
+    def re_add_exercise_log(self, exercise_log_id):
+        try:
+            with self.connection:
+                self.cursor.execute("UPDATE exercise_logs SET is_active = 1 WHERE exercise_log_id=?", (exercise_log_id,))
+        except Exception as e:
+            print(f"Error removing exercise log: {e}")
 
     def drop_exercise_log(self):
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS exercise_logs")
 
-# db = LocalDB('local_db.db')
-# exercise_log = ExerciseLog(db.connection)
+db = LocalDB('local_db.db')
+exercise_log = ExerciseLog(db.connection)
 
 # exercise_log_data = ['-=', '07/02/2024']
 # print(exercise_log.monthly_exercise_log_data('10', '2023'))
 # exercise_log.remove_exercise_log(13)
 
 # print(exercise_log.get_exercise_logs_details(2))
+# exercise_log.remove_exercise_log(1)
+# exercise_log.re_add_exercise_log(1)
 
 # db.print_exercise_logs()
-# db.close_connection()
+db.close_connection()
