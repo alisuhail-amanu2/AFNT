@@ -159,7 +159,97 @@ class UpdateWorkoutLogPopup(Popup):
         is_complete = self.is_complete_input.text
         self.update_workout_log_callback(workout_log_id, date_assigned, time_assigned, is_complete)
         self.dismiss()
-        
+
+class UpdateExerciseLogPopup(Popup):
+    def __init__(self, selected_row, update_exercise_log_callback, **kwargs):
+        super(UpdateExerciseLogPopup, self).__init__(**kwargs)
+        self.update_exercise_log_callback = update_exercise_log_callback
+        self.selected_row = selected_row
+
+        self.title = "Update Exercise Log"
+        self.title_color = get_color_from_hex("#000000")
+        self.size_hint = (0.8, 0.9)
+        self.background = 'white'
+
+        layout = BoxLayout(orientation='vertical')
+
+        print("self.selected_row", self.selected_row)
+        self.sets_input = MDTextField(hint_text="Sets", input_filter="int")
+        layout.add_widget(self.sets_input)
+        self.sets_input.text = self.selected_row[2]
+
+        self.reps_input = MDTextField(hint_text="Reps", input_filter="int")
+        layout.add_widget(self.reps_input)
+        self.reps_input.text = self.selected_row[3]
+
+        self.weight_input = MDTextField(hint_text="Weight (kg)", input_filter="float")
+        layout.add_widget(self.weight_input)
+        self.weight_input.text = self.selected_row[4]
+
+        self.rest_input = MDTextField(hint_text="Rest (secs)", input_filter="int")
+        layout.add_widget(self.rest_input)
+        self.rest_input.text = self.selected_row[5]
+
+        self.distance_input = MDTextField(hint_text="Distance (m)", input_filter="float")
+        layout.add_widget(self.distance_input)
+        self.distance_input.text = self.selected_row[6]
+
+        self.rpe_input = MDTextField(hint_text="RPE", input_filter="int")
+        layout.add_widget(self.rpe_input)
+        self.rpe_input.text = self.selected_row[7]
+
+        self.is_complete_input = MDTextField(hint_text="Is Complete")
+        self.is_complete_input.bind(focus=self.show_completion_status_menu)
+        layout.add_widget(self.is_complete_input)
+        self.is_complete_input.text = self.selected_row[8]
+
+        button_layout = BoxLayout(orientation='horizontal')
+
+        save_button = Button(text="Save", background_normal='', background_color=(0.0, 0.8, 1, 1))
+        save_button.bind(on_release=self.save_button_pressed)
+        button_layout.add_widget(save_button)
+
+        cancel_button = Button(text="Cancel", background_normal='', background_color=(0.8, 0, 0, 1))
+        cancel_button.bind(on_release=self.dismiss)
+        button_layout.add_widget(cancel_button)
+
+        layout.add_widget(button_layout)
+
+        self.content = layout
+
+    def validate_rpe(self, rpe):
+        try:
+            rpe_value = int(rpe)
+            return 1 <= rpe_value <= 10
+        except ValueError:
+            return False
+
+    def show_completion_status_menu(self, instance, value):
+        if value:
+            menu_items = [
+                {"viewclass": "OneLineListItem", "text": "Yes", "on_release": lambda x="Yes": self.select_completion_status(x)},
+                {"viewclass": "OneLineListItem", "text": "No", "on_release": lambda x="No": self.select_completion_status(x)},
+            ]
+            menu = MDDropdownMenu(items=menu_items, width_mult=4)
+            menu.caller = instance
+            menu.open()
+
+    def select_completion_status(self, selected_completion_status_text):
+        self.is_complete_input.text = selected_completion_status_text
+        self.is_complete_input.foreground_color = get_color_from_hex("#000000")
+
+    def save_button_pressed(self, instance):
+        exercise_log_id = self.selected_row[0]
+        sets = self.sets_input.text
+        reps = self.reps_input.text
+        weight = self.weight_input.text
+        rest = self.rest_input.text
+        distance = self.distance_input.text
+        rpe = self.rpe_input.text
+        is_complete = self.is_complete_input.text
+        self.update_exercise_log_callback(exercise_log_id, sets, reps, weight, rest, distance, rpe, is_complete)
+        self.dismiss()
+
 class WindowManager(ScreenManager):
     pass
 
@@ -224,10 +314,11 @@ class WorkoutHistoryScreen(Screen):
         self.manager.current = 'workout_manager_screen'
 
     def switch_to_exercise_log(self):
-        self.manager.transition.direction = 'left'
-        self.manager.current = 'exercise_log_screen'
-        plots_screen = self.manager.get_screen('exercise_log_screen')
-        plots_screen.create_exercise_log_datatable()
+        if self.selected_rows:
+            self.manager.transition.direction = 'left'
+            self.manager.current = 'exercise_log_screen'
+            plots_screen = self.manager.get_screen('exercise_log_screen')
+            plots_screen.create_exercise_log_datatable()
 
     def clear_workout_log_datatable_box(self):
         workout_log_datatable_box = self.ids.workout_log_datatable_box
@@ -361,12 +452,10 @@ class ExerciseLogScreen(Screen):
         super(ExerciseLogScreen, self).__init__(**kwargs)
         self.local_db = LocalDB('local_db.db')
         self.exercise_log = ExerciseLog(self.local_db.connection)
-        # self.workout_history_screen = WorkoutHistoryScreen()
         self.selected_rows = []
         self.workout_log_rows = []
     
     def switch_to_workout_history(self):
-        # self.clear_workout_log_datatable_box()
         self.manager.transition.direction = 'right'
         self.manager.current = 'workout_history_screen'
         self.clear_exercise_log_datatable_box()
@@ -386,7 +475,6 @@ class ExerciseLogScreen(Screen):
             self.exercise_log_datatable = MDDataTable(
                 pos_hint={'center_x': 0.5, 'center_y': 0.5},
                 size_hint=(0.95, 0.4),
-                # minimum_width=dp(650),
                 check=True,
                 use_pagination=True,
                 rows_num=6,
@@ -422,7 +510,6 @@ class ExerciseLogScreen(Screen):
 
     def remove_row(self):
         if self.selected_rows:
-            # print("selected_rows:", self.selected_rows)
             for row in self.selected_rows:
                 exercise_log_id = row[0]
                 print("worky", exercise_log_id)
@@ -431,23 +518,29 @@ class ExerciseLogScreen(Screen):
         self.create_exercise_log_datatable()
         self.selected_rows.clear()
 
-    # def update_row(self):
-    #     if self.selected_rows:
-    #         for selected_row in self.selected_rows:
-    #             update_popup = UpdateWorkoutLogPopup(selected_row, update_exercise_log_callback=self.update_row_callback)
-    #             update_popup.open()
+    def update_row(self):
+        if self.selected_rows:
+            for selected_row in self.selected_rows:
+                update_popup = UpdateExerciseLogPopup(selected_row, update_exercise_log_callback=self.update_row_callback)
+                update_popup.open()
 
-    # def update_row_callback(self, exercise_log_id, date_assigned, time_assigned, is_complete):
-    #     # print("updated data", exercise_log_id, date_assigned, time_assigned, is_complete)
-    #     if is_complete == 'Yes':
-    #         updated_is_complete = 1
-    #     else:
-    #         updated_is_complete = 0
-            
-    #     self.exercise_logs.update_exercise_log( exercise_log_id, date_assigned, time_assigned, updated_is_complete)
-    #     self.clear_exercise_log_datatable_box()
-    #     self.create_exercise_log_datatable()
-    #     self.selected_rows.clear()
+    def update_row_callback(self, exercise_log_id, sets, reps, weight, rest, distance, rpe, is_complete):
+        print("updated data", exercise_log_id, sets, reps, weight, rest, distance, rpe, is_complete)
+        updated_is_complete = 1 if is_complete == 'Yes' else 0
+        updated_values = {
+            'sets': sets,
+            'reps': reps,
+            'weight_kg': weight,
+            'rest_per_set_s': rest,
+            'distance_m': distance,
+            'rpe': rpe,
+            'is_complete': updated_is_complete
+        }
+        
+        self.exercise_log.update_exercise_log(exercise_log_id, updated_values)
+        self.clear_exercise_log_datatable_box()
+        self.create_exercise_log_datatable()
+        self.selected_rows.clear()
 
 #-----------------------------------------------------------
 
