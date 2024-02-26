@@ -143,6 +143,7 @@ class WorkoutLog():
 # workout_log.update_workout_log(6, '10/02/2024', '16:20:00', 0)
 # workout_log.remove_workout_log(1)
 # workout_log.re_add_workout_log(5)
+# print(workout_log.get_workout_details())
 
-# db.print_workout_logs()
+# # db.print_workout_logs()
 # db.close_connection()

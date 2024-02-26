@@ -257,7 +257,7 @@ class LocalDB():
                     rest_per_set_s = row['rest_per_set_s']
                     duration = row['duration']
                     distance_m = row['distance_m']
-                    rpe = float(row['rpe'])
+                    rpe = (row['rpe'])
                     is_complete = row['is_complete']
                     date_complete = row['date_complete']
                     time_complete =  row['time_complete']

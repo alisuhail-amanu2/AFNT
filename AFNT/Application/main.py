@@ -32,7 +32,9 @@ from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.textfield import MDTextField, MDTextFieldRect
 from kivy.uix.gridlayout import GridLayout
 from kivymd.uix.dropdownitem import MDDropDownItem
+from kivymd.uix.tab import MDTabs, MDTabsBase
 from kivy.utils import get_color_from_hex
+from kivy.clock import Clock
 
 from datetime import datetime, timedelta
 from local_db import LocalDB
@@ -50,6 +52,19 @@ from exercise import Exercise
 from exercise_log import ExerciseLog
 
 logged_user = ''
+
+# class TabCustom(FloatLayout, MDTabsBase):
+#     '''Class implementing content for the Custom tab.'''
+
+
+# class TabPreset(FloatLayout, MDTabsBase):
+#     '''Class implementing content for the Preset tab.'''
+
+class Tab(BoxLayout):
+    label = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super(Tab, self).__init__(**kwargs)
 
 class ResizableDataTable(MDDataTable):
     total_width = NumericProperty(0)
@@ -158,6 +173,71 @@ class UpdateWorkoutLogPopup(Popup):
         time_assigned = self.time_assigned_input.text
         is_complete = self.is_complete_input.text
         self.update_workout_log_callback(workout_log_id, date_assigned, time_assigned, is_complete)
+        self.dismiss()
+
+class UpdateWorkoutAllocatePopup(Popup):
+    def __init__(self, selected_row, update_workout_allocate_callback, **kwargs):
+        super(UpdateWorkoutAllocatePopup, self).__init__(**kwargs)
+        self.update_workout_allocate_callback = update_workout_allocate_callback
+        self.selected_row = selected_row
+
+        self.title = "Update Workout"
+        self.title_color = get_color_from_hex("#000000")
+        self.size_hint = (0.8, 0.7)
+        self.background = 'white'
+
+        layout = BoxLayout(orientation='vertical')
+
+        print("self.selected_row", self.selected_row)
+        self.workout_name_input = MDTextField(hint_text="Enter Workout Name", input_filter="text")
+        layout.add_widget(self.workout_name_input)
+        self.workout_name_input.text = self.selected_row[1]
+
+        self.description_input = MDTextField(hint_text="Enter Description", input_filter="int")
+        layout.add_widget(self.description_input)
+        self.description_input.text = self.selected_row[2]
+
+        self.workout_type_input = MDTextField(hint_text="Select Workout Type")
+        self.workout_type_input.bind(focus=self.show_workout_type_menu)
+        layout.add_widget(self.workout_type_input)
+        self.workout_type_input.text = self.selected_row[3]
+
+        button_layout = BoxLayout(orientation='horizontal')
+
+        save_button = Button(text="Save", background_normal='', background_color=(0.0, 0.8, 1, 1))
+        save_button.bind(on_release=self.save_button_pressed)
+        button_layout.add_widget(save_button)
+
+        cancel_button = Button(text="Cancel", background_normal='', background_color=(0.8, 0, 0, 1))
+        cancel_button.bind(on_release=self.dismiss)
+        button_layout.add_widget(cancel_button)
+
+        layout.add_widget(button_layout)
+
+        self.content = layout
+
+    def show_workout_type_menu(self, instance, value):
+        if value:
+            menu_items = [
+                {"viewclass": "OneLineListItem", "text": "Upper Body", "on_release": lambda x="Upper Body": self.select_workout_type(x)},
+                {"viewclass": "OneLineListItem", "text": "Back", "on_release": lambda x="Back": self.select_workout_type(x)},
+                {"viewclass": "OneLineListItem", "text": "Abdominals", "on_release": lambda x="Abdominals": self.select_workout_type(x)},
+                {"viewclass": "OneLineListItem", "text": "Lower Body", "on_release": lambda x="Lower Body": self.select_workout_type(x)},
+            ]
+            menu = MDDropdownMenu(items=menu_items, width_mult=4)
+            menu.caller = instance
+            menu.open()
+
+    def select_workout_type(self, selected_workout_type_text):
+        self.workout_type_input.text = selected_workout_type_text
+        self.workout_type_input.foreground_color = get_color_from_hex("#000000")
+
+    def save_button_pressed(self, instance):
+        workout_id = self.selected_row[0]
+        workout_name = self.workout_name_input.text
+        description = self.description_input.text
+        workout_type = self.workout_type_input.text
+        self.update_workout_allocate_callback(workout_id, workout_name, description, workout_type)
         self.dismiss()
 
 class UpdateExerciseLogPopup(Popup):
@@ -308,7 +388,13 @@ class WorkoutHistoryScreen(Screen):
         self.manager.transition.direction = 'right'
         self.manager.current = 'dashboard_screen'
         self.clear_workout_log_datatable_box()
-    
+
+    def switch_to_workout_allocate(self):
+        self.manager.transition.direction = 'left'
+        self.manager.current = 'workout_allocate_screen'
+        plots_screen = self.manager.get_screen('workout_allocate_screen')
+        plots_screen.create_workout_allocate_datatable()
+
     def switch_to_workout_manager(self):
         self.manager.transition.direction = 'left'
         self.manager.current = 'workout_manager_screen'
@@ -372,7 +458,7 @@ class WorkoutHistoryScreen(Screen):
         if workout_log_data:
             self.workout_log_datatable = MDDataTable(
                 pos_hint={'center_x': 0.5, 'center_y': 0.5},
-                size_hint=(0.95, 0.4),
+                size_hint=(0.95, 0.3),
                 # minimum_width=dp(650),
                 check=True,
                 use_pagination=True,
@@ -447,6 +533,125 @@ class WorkoutHistoryScreen(Screen):
     def get_selected_rows(self):
         return self.selected_rows
 
+class WorkoutAllocateScreen(Screen):
+    def __init__(self, **kwargs):
+        super(WorkoutAllocateScreen, self).__init__(**kwargs)
+        self.local_db = LocalDB('local_db.db')
+        self.workout = Workout(self.local_db.connection)
+        self.workout_logs = WorkoutLog(self.local_db.connection)
+        self.selected_rows = []
+        self.selected_date = datetime.today().strftime('%d/%m/%Y')
+
+    def switch_to_workout_history(self):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'workout_history_screen'
+        self.clear_workout_allocate_datatable_box()
+
+    def clear_workout_allocate_datatable_box(self):
+        workout_allocate_datatable_box = self.ids.workout_allocate_datatable_box
+        workout_allocate_datatable_box.clear_widgets()
+
+    # From date input
+    def handle_workout_allocate_date_input(self):
+        if not hasattr(self, 'workout_allocate_date'):
+            self.workout_allocate_date = MDDatePicker()
+            self.workout_allocate_date.bind(on_save=self.workout_allocate_date_on_save, on_cancel=self.on_cancel)
+        self.workout_allocate_date.open()
+
+    def workout_allocate_date_on_save(self, instance, value, date_range):
+        screen = self.manager.get_screen('workout_allocate_screen')
+        self.selected_date = value.strftime("%d/%m/%Y")
+        screen.ids.workout_allocate_date.text = self.selected_date
+        print(instance, value, date_range)
+        self.clear_workout_allocate_datatable_box()
+        self.create_workout_allocate_datatable()
+
+    def on_cancel(self, instance, value):
+        instance.dismiss()
+
+    def create_workout_allocate_datatable(self):
+        screen = self.manager.get_screen('workout_allocate_screen')
+        screen.ids.workout_allocate_date.text = self.selected_date
+
+        print('selected date', self.selected_date)
+
+        workout_allocate_datatable_box = self.ids.workout_allocate_datatable_box
+        workout_allocate_data = self.workout.get_workout_details()
+        # print(workout_allocate_data)
+
+        if workout_allocate_data:
+            self.workout_allocate_datatable = MDDataTable(
+                pos_hint={'center_x': 0.5, 'center_y': 0.5},
+                size_hint=(0.95, 0.3),
+                check=True,
+                use_pagination=True,
+                rows_num=6,
+                pagination_menu_height='240dp',
+                pagination_menu_pos="auto",
+                background_color=[1, 0, 0, .5],
+                column_data=[
+                    ["ID", dp(25)],
+                    ["Name", dp(25)],
+                    ["Description", dp(35)],
+                    ["Type", dp(25)],
+                    ["Level", dp(25)],
+                    ["Rating", dp(25)],
+                ],
+                row_data=workout_allocate_data
+            )
+            self.workout_allocate_datatable.bind(on_check_press=self.rows_selected)
+        else:
+            self.workout_allocate_datatable = Label(text='No Workouts Recorded', color = 'red', font_size = "20sp", bold = True)
+            
+        workout_allocate_datatable_box.add_widget(self.workout_allocate_datatable)
+    
+    # def on_start_date_selected(self, instance, start_date):
+    #     self.update_row_data(start_date, self.end_date_input.text)
+
+    # def on_end_date_selected(self, instance, end_date):
+    #     self.update_row_data(self.start_date_input.text, end_date)
+
+    # def update_row_data(self, start_date, end_date):
+    #     row_data = self.workout_allocates.get_workout_allocates_details_by_date_range(start_date, end_date)
+    #     self.workout_allocate_datatable.row_data = row_data
+
+    def rows_selected(self, instance_table, current_row):
+        row_data = tuple(current_row)
+        modified_row_data = ((row_data[0]),) + row_data[1:]
+        if modified_row_data in self.selected_rows:
+            self.selected_rows.remove(modified_row_data)
+        else:
+            self.selected_rows.append(modified_row_data)
+        print("self.selected_rows.", self.selected_rows)
+
+    def remove_row(self):
+        if self.selected_rows:
+            # print("selected_rows:", self.selected_rows)
+            for row in self.selected_rows:
+                workout_id = row[0]
+                print("worky", workout_id)
+                self.workout.remove_workout(row[0])
+        self.clear_workout_allocate_datatable_box()
+        self.create_workout_allocate_datatable()
+        self.selected_rows.clear()
+
+    def update_row(self):
+        if self.selected_rows:
+            for selected_row in self.selected_rows:
+                update_popup = UpdateWorkoutAllocatePopup(selected_row, update_workout_allocate_callback=self.update_row_callback)
+                update_popup.open()
+
+    def update_row_callback(self, workout_id, workout_name, description, workout_type):
+        print("updated data", workout_id, workout_name, description, workout_type)
+            
+        # self.workout_allocates.update_workout_allocate( workout_allocate_id, date_assigned, time_assigned, updated_is_complete)
+        self.clear_workout_allocate_datatable_box()
+        self.create_workout_allocate_datatable()
+        self.selected_rows.clear()
+
+    def get_selected_rows(self):
+        return self.selected_rows
+
 class ExerciseLogScreen(Screen):
     def __init__(self, **kwargs):
         super(ExerciseLogScreen, self).__init__(**kwargs)
@@ -474,10 +679,10 @@ class ExerciseLogScreen(Screen):
         if exercise_log_data:
             self.exercise_log_datatable = MDDataTable(
                 pos_hint={'center_x': 0.5, 'center_y': 0.5},
-                size_hint=(0.95, 0.4),
+                size_hint=(0.95, 0.3),
                 check=True,
                 use_pagination=True,
-                rows_num=6,
+                rows_num=8,
                 pagination_menu_height='240dp',
                 pagination_menu_pos="auto",
                 background_color=[1, 0, 0, .5],
@@ -544,21 +749,6 @@ class ExerciseLogScreen(Screen):
 
 #-----------------------------------------------------------
 
-# class WorkoutLogScreen(Screen):
-#     def switch_to_workout_log(self):
-#         self.manager.transition.direction = 'right'
-#         self.manager.current = 'workout_log_screen'
-
-#     def switch_to_create_workout(self):
-#         self.manager.transition.direction = 'left'
-#         self.manager.current = 'workout_create_screen'
-
-# class CreateWorkoutScreen(Screen):
-#     def switch_to_workout_log(self):
-#         self.manager.transition.direction = 'right'
-#         self.manager.current = 'workout_log_screen'
-    
-#     def switch_to_exercise_log(self):
 
 class BodyStatsScreen(Screen):
     def switch_to_dashboard(self):

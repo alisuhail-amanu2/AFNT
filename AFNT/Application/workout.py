@@ -44,10 +44,7 @@ class Workout():
 
     def update_workout(self, workout_id, updated_values):
         table_name = 'workouts'
-
-        # Check if the workout_id is a custom ID (starts with 'C')
         if workout_id.startswith('C'):
-            # If it's a custom ID, update the existing record
             set_clause = ', '.join(f"{key} = :{key}" for key in updated_values.keys())
             sql = f"UPDATE {table_name} SET {set_clause} WHERE workout_id = :workout_id"
             updated_values['workout_id'] = workout_id
@@ -55,8 +52,6 @@ class Workout():
             with self.connection:
                 self.cursor.execute(sql, updated_values)
         else:
-            # If it's a preset ID, create a copy with a custom ID and update the copy
-            # Assume workout_id is numeric for preset IDs
             with self.connection:
                 self.cursor.execute(f"PRAGMA table_info({table_name})")
                 columns_info = self.cursor.fetchall()
@@ -66,16 +61,13 @@ class Workout():
                 existing_record = self.cursor.fetchone()
 
                 if existing_record:
-                    # Create a copy with a custom ID (C ID)
                     new_id_numeric = self._get_next_custom_id_numeric()
                     new_id = f'C{new_id_numeric}'
 
-                    # Copy values and update with user-provided values
                     updated_record = dict(zip(columns, existing_record))
                     updated_record.update(updated_values)
                     updated_record['workout_id'] = new_id
 
-                    # Insert the updated record with the custom ID
                     columns = ', '.join(key for key in updated_record.keys())
                     placeholders = ', '.join(':' + key for key in updated_record.keys())
                     insert_sql = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
@@ -88,21 +80,50 @@ class Workout():
 
         return latest_id_numeric + 1 if latest_id_numeric else 1
 
+    def get_workout_details(self):
+        try:
+            with self.connection:
+                self.cursor.execute("""
+                    SELECT 
+                        workout_id,
+                        workout_name,
+                        description,
+                        type,
+                        level,
+                        rating
+                    FROM 
+                        workouts
+                    WHERE
+                        is_active = 1;
+                """)
+                return self.cursor.fetchall()
+        except Exception as e:
+            print(f"Error retrieving workout details: {e}")
+
     def remove_workout(self, workout_id):
-        with self.connection:
-            if workout_id.startswith('C'):
-                self.cursor.execute("DELETE FROM workouts WHERE workout_id=?", (workout_id,))
-            else:
-                print("Cannot delete preset workouts.")
+        try:
+            with self.connection:
+                self.cursor.execute("UPDATE workouts SET is_active = 0 WHERE workout_id=?", (workout_id,))
+        except Exception as e:
+            print(f"Error removing workout log: {e}")
+
+    def re_add_workout(self, workout_id):
+        try:
+            with self.connection:
+                self.cursor.execute("UPDATE workouts SET is_active = 1 WHERE workout_id=?", (workout_id,))
+        except Exception as e:
+            print(f"Error removing workout log: {e}")
 
     def drop_workout(self):
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS workouts")
 
 # db = LocalDB('local_db.db')
-# weight = Weight(db.connection)
-# weight_data = ['-=', '07/02/2024']
-# print(weight.monthly_weight_data('10', '2023'))
-# weight.remove_weight(13)
-# db.print_weight()
+# workout = Workout(db.connection)
+
+# print(workout.get_workout_details())
+# workout.remove_workout('C1')
+# workout.re_add_workout('3')
+
+# db.print_workouts()
 # db.close_connection()
