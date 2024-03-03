@@ -10,6 +10,13 @@ class WorkoutLog():
     def insert_workout_log(self, workout_log):
         try:
             with self.connection:
+                # Check if there are already 3 workout logs for the same date_assigned and is_active is 1
+                self.cursor.execute("SELECT COUNT(*) FROM workout_logs WHERE date_assigned = ? AND is_active = 1", (workout_log['date_assigned'],))
+                count = self.cursor.fetchone()[0]
+                if count >= 3:
+                    print("Error: Cannot add more than 3 active workout logs on the same day.")
+                    return None
+
                 columns = ', '.join(workout_log.keys())
                 values = [workout_log.get(key, '') for key in workout_log.keys()]
                 placeholders = ', '.join('?' for _ in workout_log.values())
@@ -20,6 +27,9 @@ class WorkoutLog():
                     VALUES ({placeholders})
                 """
                 self.cursor.execute(sql, values)
+                # Retrieve the last inserted row id, which is the workout_log_id
+                workout_log_id = self.cursor.lastrowid
+                return workout_log_id
 
         except sqlite3.IntegrityError as e:
             if "FOREIGN KEY constraint failed" in str(e):
@@ -29,6 +39,22 @@ class WorkoutLog():
 
         except Exception as e:
             print(f"Error inserting workout log: {e}")
+
+    def get_latest_workout_log_id(self, workout_id):
+        try:
+            with self.connection:
+                self.cursor.execute("SELECT workout_log_id FROM workout_logs WHERE workout_id = ? ORDER BY date_assigned DESC LIMIT 1", (workout_id,))
+                latest_workout_log_id = self.cursor.fetchone()
+                if latest_workout_log_id:
+                    return latest_workout_log_id[0]
+                else:
+                    print("No workout logs found for the specified workout_id.")
+                    return None
+
+        except sqlite3.Error as e:
+            print("Error retrieving latest workout log id:", e)
+            return None
+
 
     def get_workout_log_by_id(self, workout_log_id):
         with self.connection:
@@ -144,6 +170,8 @@ class WorkoutLog():
 # workout_log.remove_workout_log(1)
 # workout_log.re_add_workout_log(5)
 # print(workout_log.get_workout_details())
+# workout_log.insert_workout_log()
 
-# # db.print_workout_logs()
+# db.print_workout_logs()
+# print(workout_log.get_latest_workout_log_id('C1'))
 # db.close_connection()

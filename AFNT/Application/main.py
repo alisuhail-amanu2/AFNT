@@ -53,18 +53,25 @@ from exercise_log import ExerciseLog
 
 logged_user = ''
 
-# class TabCustom(FloatLayout, MDTabsBase):
-#     '''Class implementing content for the Custom tab.'''
+class SuccessPopup(Popup):
+    def show_popup(self, title, para):
+        content = Label(text=para)
+        popup = Popup(title=title, content=content, size_hint=(None, None), size=(400, 200))
+        popup.bind(on_dismiss=self.on_popup_dismiss)
+        popup.open()
 
+    def on_popup_dismiss(self, instance):
+        pass
 
-# class TabPreset(FloatLayout, MDTabsBase):
-#     '''Class implementing content for the Preset tab.'''
+class FailPopup(Popup):
+    def show_popup(self, title, para):
+        content = Label(text=para)
+        popup = Popup(title=title, content=content, size_hint=(None, None), size=(400, 200))
+        popup.bind(on_dismiss=self.on_popup_dismiss)
+        popup.open()
 
-class Tab(BoxLayout):
-    label = ObjectProperty(None)
-
-    def __init__(self, **kwargs):
-        super(Tab, self).__init__(**kwargs)
+    def on_popup_dismiss(self, instance):
+        pass
 
 class ResizableDataTable(MDDataTable):
     total_width = NumericProperty(0)
@@ -183,17 +190,17 @@ class UpdateWorkoutAllocatePopup(Popup):
 
         self.title = "Update Workout"
         self.title_color = get_color_from_hex("#000000")
-        self.size_hint = (0.8, 0.7)
+        self.size_hint = (0.8, 0.6)
         self.background = 'white'
 
         layout = BoxLayout(orientation='vertical')
 
         print("self.selected_row", self.selected_row)
-        self.workout_name_input = MDTextField(hint_text="Enter Workout Name", input_filter="text")
+        self.workout_name_input = MDTextField(hint_text="Enter Workout Name")
         layout.add_widget(self.workout_name_input)
         self.workout_name_input.text = self.selected_row[1]
 
-        self.description_input = MDTextField(hint_text="Enter Description", input_filter="int")
+        self.description_input = MDTextField(hint_text="Enter Description")
         layout.add_widget(self.description_input)
         self.description_input.text = self.selected_row[2]
 
@@ -359,6 +366,7 @@ class DashboardScreen(Screen):
         self.manager.transition.direction = 'left'
         self.manager.current = 'workout_history_screen'
         plots_screen = self.manager.get_screen('workout_history_screen')
+        plots_screen.clear_workout_log_datatable_box()
         plots_screen.create_workout_log_datatable()
 
     def switch_to_water_intake(self):
@@ -384,18 +392,23 @@ class WorkoutHistoryScreen(Screen):
         self.to_selected_date = self.to_selected_date_obj.strftime('%d/%m/%Y')
 
     def switch_to_dashboard(self):
-        self.clear_workout_log_datatable_box()
         self.manager.transition.direction = 'right'
         self.manager.current = 'dashboard_screen'
+        self.selected_rows.clear()
         self.clear_workout_log_datatable_box()
 
     def switch_to_workout_allocate(self):
+        self.selected_rows.clear()
         self.manager.transition.direction = 'left'
         self.manager.current = 'workout_allocate_screen'
+        self.clear_workout_log_datatable_box
+        
         plots_screen = self.manager.get_screen('workout_allocate_screen')
+        plots_screen.clear_workout_allocate_datatable_box()
         plots_screen.create_workout_allocate_datatable()
 
     def switch_to_workout_manager(self):
+        self.selected_rows.clear()
         self.manager.transition.direction = 'left'
         self.manager.current = 'workout_manager_screen'
 
@@ -405,10 +418,12 @@ class WorkoutHistoryScreen(Screen):
             self.manager.current = 'exercise_log_screen'
             plots_screen = self.manager.get_screen('exercise_log_screen')
             plots_screen.create_exercise_log_datatable()
+            self.selected_rows.clear()
 
     def clear_workout_log_datatable_box(self):
         workout_log_datatable_box = self.ids.workout_log_datatable_box
         workout_log_datatable_box.clear_widgets()
+        self.selected_rows.clear()
 
     # From date input
     def handle_workout_log_date_from_input(self):
@@ -444,6 +459,7 @@ class WorkoutHistoryScreen(Screen):
         instance.dismiss()
 
     def create_workout_log_datatable(self):
+        # self.manager = ScreenManager()
         screen = self.manager.get_screen('workout_history_screen')
         screen.ids.workout_log_date_from.text = self.from_selected_date
         screen.ids.workout_log_date_to.text = self.to_selected_date
@@ -539,17 +555,34 @@ class WorkoutAllocateScreen(Screen):
         self.local_db = LocalDB('local_db.db')
         self.workout = Workout(self.local_db.connection)
         self.workout_logs = WorkoutLog(self.local_db.connection)
+        self.exercise_log = ExerciseLog(self.local_db.connection)
+
         self.selected_rows = []
         self.selected_date = datetime.today().strftime('%d/%m/%Y')
+        self.selected_time = datetime.today().strftime('%H:%M:%S')
 
     def switch_to_workout_history(self):
-        self.manager.transition.direction = 'right'
+        self.manager.transition.direction = 'left'
         self.manager.current = 'workout_history_screen'
         self.clear_workout_allocate_datatable_box()
+        plots_screen = self.manager.get_screen('workout_history_screen')
+        plots_screen.clear_workout_log_datatable_box()
+        plots_screen.create_workout_log_datatable()
+        self.selected_rows.clear()
+
+    def switch_to_workout_create(self):
+        self.manager.transition.direction = 'left'
+        self.manager.current = 'workout_create_screen'
+        self.clear_workout_allocate_datatable_box()
+        plots_screen = self.manager.get_screen('workout_history_screen')
+        plots_screen.clear_workout_log_datatable_box()
+        plots_screen.create_workout_log_datatable()
+        self.selected_rows.clear()
 
     def clear_workout_allocate_datatable_box(self):
         workout_allocate_datatable_box = self.ids.workout_allocate_datatable_box
         workout_allocate_datatable_box.clear_widgets()
+        self.selected_rows.clear()
 
     # From date input
     def handle_workout_allocate_date_input(self):
@@ -566,14 +599,30 @@ class WorkoutAllocateScreen(Screen):
         self.clear_workout_allocate_datatable_box()
         self.create_workout_allocate_datatable()
 
+    def handle_workout_allocate_time_input(self):
+        if not hasattr(self, 'workout_allocate_time'):
+            self.workout_allocate_time = MDTimePicker()
+            self.workout_allocate_time.bind(on_save=self.workout_allocate_time_on_save, on_cancel=self.on_cancel)
+        self.workout_allocate_time.open()
+
+    def workout_allocate_time_on_save(self, instance, value):
+        screen = self.manager.get_screen('workout_allocate_screen')
+        self.selected_time = value.strftime("%H:%M:%S")
+        screen.ids.workout_allocate_time.text = self.selected_time
+        print(instance, value)
+        self.clear_workout_allocate_datatable_box()
+        self.create_workout_allocate_datatable()
+
+
     def on_cancel(self, instance, value):
         instance.dismiss()
 
     def create_workout_allocate_datatable(self):
         screen = self.manager.get_screen('workout_allocate_screen')
         screen.ids.workout_allocate_date.text = self.selected_date
+        screen.ids.workout_allocate_time.text = self.selected_time
 
-        print('selected date', self.selected_date)
+        print('selected datetime', self.selected_date, self.selected_time)
 
         workout_allocate_datatable_box = self.ids.workout_allocate_datatable_box
         workout_allocate_data = self.workout.get_workout_details()
@@ -604,6 +653,7 @@ class WorkoutAllocateScreen(Screen):
             self.workout_allocate_datatable = Label(text='No Workouts Recorded', color = 'red', font_size = "20sp", bold = True)
             
         workout_allocate_datatable_box.add_widget(self.workout_allocate_datatable)
+        self.selected_rows.clear()
     
     # def on_start_date_selected(self, instance, start_date):
     #     self.update_row_data(start_date, self.end_date_input.text)
@@ -629,7 +679,6 @@ class WorkoutAllocateScreen(Screen):
             # print("selected_rows:", self.selected_rows)
             for row in self.selected_rows:
                 workout_id = row[0]
-                print("worky", workout_id)
                 self.workout.remove_workout(row[0])
         self.clear_workout_allocate_datatable_box()
         self.create_workout_allocate_datatable()
@@ -639,18 +688,74 @@ class WorkoutAllocateScreen(Screen):
         if self.selected_rows:
             for selected_row in self.selected_rows:
                 update_popup = UpdateWorkoutAllocatePopup(selected_row, update_workout_allocate_callback=self.update_row_callback)
+                self.selected_rows.clear()
                 update_popup.open()
 
     def update_row_callback(self, workout_id, workout_name, description, workout_type):
         print("updated data", workout_id, workout_name, description, workout_type)
+
+        workout_update = {
+            'workout_name': workout_name,
+            'description': description,
+            'type': workout_type,
+        }
             
-        # self.workout_allocates.update_workout_allocate( workout_allocate_id, date_assigned, time_assigned, updated_is_complete)
+        self.workout.update_workout(workout_id, workout_update)
         self.clear_workout_allocate_datatable_box()
         self.create_workout_allocate_datatable()
         self.selected_rows.clear()
 
     def get_selected_rows(self):
         return self.selected_rows
+
+    def allocate_save_button(self):
+        if self.selected_rows:
+            print("selected data", self.selected_rows, self.selected_date, self.selected_time)
+            print("datadata", self.selected_rows[0][0])
+            insert_workout_log = {
+                'workout_id': self.selected_rows[0][0],
+                'date_assigned': self.selected_date,
+                'time_assigned': self.selected_time,
+                # 'date_completed': self.selected_date,
+                # 'time_completed': self.selected_time,
+                'is_complete': 0,
+                'is_active': 1,
+            }
+
+            new_workout_log_id = self.workout_logs.insert_workout_log(insert_workout_log)
+            if new_workout_log_id:
+                latest_workout_log = self.workout_logs.get_latest_workout_log_id(self.selected_rows[0][0])
+                print("old workout log, new workout log", latest_workout_log, new_workout_log_id)
+                self.exercise_log.allocate_exercise_logs(latest_workout_log, new_workout_log_id)
+                
+                self.selected_rows.clear()
+                allocate_workout_success = SuccessPopup()
+                allocate_workout_success.show_popup('Success', 'Workout Allocated!')
+            else:
+                self.selected_rows.clear()
+                allocate_workout_success = FailPopup()
+                allocate_workout_success.show_popup('Failed', '3 Workouts Allowed Per Day!')
+
+class WorkoutCreateScreen(Screen):
+    def __init__(self, **kwargs):
+        super(WorkoutCreateScreen, self).__init__(**kwargs)
+        self.local_db = LocalDB('local_db.db')
+        self.workout = Workout(self.local_db.connection)
+        # self.workout_logs = WorkoutLog(self.local_db.connection)
+        # self.exercise_log = ExerciseLog(self.local_db.connection)
+
+        # self.selected_rows = []
+        # self.selected_date = datetime.today().strftime('%d/%m/%Y')
+        # self.selected_time = datetime.today().strftime('%H:%M:%S')
+
+    def switch_to_workout_history(self):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'workout_history_screen'
+        # self.clear_workout_allocate_datatable_box()
+        # plots_screen = self.manager.get_screen('workout_history_screen')
+        # plots_screen.clear_workout_log_datatable_box()
+        # plots_screen.create_workout_log_datatable()
+        # self.selected_rows.clear()
 
 class ExerciseLogScreen(Screen):
     def __init__(self, **kwargs):
@@ -664,6 +769,10 @@ class ExerciseLogScreen(Screen):
         self.manager.transition.direction = 'right'
         self.manager.current = 'workout_history_screen'
         self.clear_exercise_log_datatable_box()
+        plots_screen = self.manager.get_screen('workout_history_screen')
+        plots_screen.clear_workout_log_datatable_box()
+        plots_screen.create_workout_log_datatable()
+        self.selected_rows.clear()
 
     def clear_exercise_log_datatable_box(self):
         exercise_log_datatable_box = self.ids.exercise_log_datatable_box
@@ -1193,6 +1302,11 @@ class AFNTApp(MDApp):
         self.exercise_table = Exercise(self.local_db.connection)
         self.exercise_log_table =ExerciseLog(self.local_db.connection)
         self.User = User()
+
+        self.sm = ScreenManager()
+        self.sm.add_widget(WorkoutHistoryScreen(name='workout_history_screen'))
+        self.sm.add_widget(WorkoutAllocateScreen(name='workout_allocate_screen'))
+
         return Builder.load_file('screens.kv')
 
     # Display Error Popups

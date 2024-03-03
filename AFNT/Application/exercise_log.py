@@ -30,10 +30,36 @@ class ExerciseLog():
         except Exception as e:
             print(f"Error inserting exercise log: {e}")
 
-    def get_exercise_log_by_id(self, exercise_log_id):
-        with self.connection:
-            self.cursor.execute("SELECT * FROM exercise_logs WHERE exercise_log_id=?", (exercise_log_id,))
-            return self.cursor.fetchall()
+    def allocate_exercise_logs(self, workout_log_id_to_copy, new_workout_log_id):
+        try:
+            print("fetched data", workout_log_id_to_copy, new_workout_log_id)
+            # Fetch exercise logs with the specified workout log ID to copy
+            self.cursor.execute("SELECT workout_log_id, exercise_id, sets, reps, weight_kg, rest_per_set_s, duration, distance_m, rpe, is_complete, date_complete, time_complete, details, is_active FROM exercise_logs WHERE workout_log_id = ?", (workout_log_id_to_copy,))
+            exercise_logs_to_copy = self.cursor.fetchall()
+            if exercise_logs_to_copy:
+                for exercise_log in exercise_logs_to_copy:
+                    exercise_log_data = list(exercise_log)
+                    exercise_log_data[0] = new_workout_log_id  # Update workout_log_id
+                    exercise_log_data[8] = ''  # rpe
+                    exercise_log_data[9] = 0  # is_complete
+                    exercise_log_data[10] = ''   # date_complete
+                    exercise_log_data[11] = ''  # time_complete
+                    exercise_log_data[12] = ''  # details
+                    exercise_log_data[13] = 1   # is_active
+                    
+                    # Insert the modified exercise log into the table
+                    self.insert_exercise_log(dict(zip(['workout_log_id', 'exercise_id', 'sets', 'reps', 'weight_kg', 'rest_per_set_s', 'duration', 'distance_m', 'rpe', 'is_complete', 'date_complete', 'time_complete', 'details', 'is_active'], exercise_log_data)))
+                    
+                self.connection.commit()
+                print("Exercise logs copied and updated successfully.")
+                return True
+            else:
+                return 0
+
+        except sqlite3.Error as e:
+            print("Error copying and updating exercise logs:", e)
+            return False
+
 
     def get_exercise_log_by_workout_log_id(self, workout_log_id):
         with self.connection:
@@ -98,8 +124,8 @@ class ExerciseLog():
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS exercise_logs")
 
-# db = LocalDB('local_db.db')
-# exercise_log = ExerciseLog(db.connection)
+db = LocalDB('local_db.db')
+exercise_log = ExerciseLog(db.connection)
 
 # exercise_log_data = ['-=', '07/02/2024']
 # print(exercise_log.monthly_exercise_log_data('10', '2023'))
@@ -120,6 +146,7 @@ class ExerciseLog():
 # }
 
 # exercise_log.update_exercise_log(1, updated_values)
-
+# exercise_log.allocate_exercise_logs(7, 11)
+# print("\n")
 # db.print_exercise_logs()
 # db.close_connection()

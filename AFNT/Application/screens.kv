@@ -110,6 +110,7 @@ WindowManager:
     WaterIntakePlotsScreen:
     WorkoutHistoryScreen:
     WorkoutAllocateScreen:
+    WorkoutCreateScreen:
     ExerciseLogScreen:
     # WorkoutManager:
     # ExerciseManager:
@@ -1041,38 +1042,10 @@ WindowManager:
                         background_color: 0.0, 0.8, 1, 1
                         on_release: root.switch_to_workout_allocate()
 
-                AnchorLayout:
-                    anchor_x: "center"
-                    anchor_y: "center"
-
-                    Button:
-                        id: manage_workout_log
-                        text: "Manage Workouts"
-                        value: "manage_workout"
-                        size_hint_x: None
-                        width: self.parent.width
-                        background_normal: ''
-                        background_color: 0.0, 0.8, 1, 1
-                        # on_release: root.add_row()
-                
-                AnchorLayout:
-                    anchor_x: "center"
-                    anchor_y: "center"
-
-                    Button:
-                        id: manage_exercise
-                        text: "Manage Exercises"
-                        value: "manage_exercise"
-                        size_hint_x: None
-                        width: self.parent.width
-                        background_normal: ''
-                        background_color: 0.0, 0.8, 1, 1
-                        # on_release: root.switch_to_body_stats_plots(self, self.value)
-
 <WorkoutAllocateScreen>:
     name: "workout_allocate_screen"
     MDTopAppBar:
-        title: "Allocate Workouts"
+        title: "Allocate Workout"
         bold: True
         halign: 'center'
         font_size: '24sp'
@@ -1081,7 +1054,7 @@ WindowManager:
         left_action_items:
             [["arrow-left", lambda x: root.switch_to_workout_history()]]
         md_bg_color: 0, 0, 0.5, 
-    
+
     ScrollView:
         do_scroll_y: True
         do_scroll_x: False
@@ -1104,7 +1077,6 @@ WindowManager:
                     size: self.size
                     pos: self.pos
                     radius: [10,]
-
             GridLayout:
                 cols: 2
                 size_hint: (0.9, None)
@@ -1120,15 +1092,15 @@ WindowManager:
                         id: workout_allocate_date
                         hint_text: "Select date to add workout*"
                         on_focus: root.handle_workout_allocate_date_input()
+                
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
 
-                # AnchorLayout:
-                #     anchor_x: "center"
-                #     anchor_y: "center"
-
-                #     MDTextField:
-                #         id: workout_allocate_date_to
-                #         hint_text: "To *"
-                #         on_focus: root.handle_workout_allocate_date_to_input()
+                    MDTextField:
+                        id: workout_allocate_time
+                        hint_text: "Select time to add workout*"
+                        on_focus: root.handle_workout_allocate_time_input()
 
             BoxLayout:
                 id: workout_allocate_datatable_box
@@ -1181,7 +1153,7 @@ WindowManager:
                         width: self.parent.width
                         background_normal: ''
                         background_color: 0.0, 0.8, 1, 1
-                        on_release: root.switch_to_workout_allocate()
+                        on_release: root.allocate_save_button()
 
                 AnchorLayout:
                     anchor_x: "center"
@@ -1195,8 +1167,47 @@ WindowManager:
                         width: self.parent.width
                         background_normal: ''
                         background_color: 0.0, 0.8, 1, 1
-                        # on_release: root.switch_to_body_stats_plots(self, self.value)
+                        on_release: root.switch_to_workout_create()
 
+<WorkoutCreateScreen>:
+    name: "workout_create_screen"
+    MDTopAppBar:
+        title: "Create Workout"
+        bold: True
+        halign: 'center'
+        font_size: '24sp'
+        pos_hint: {"top": 1}
+        elevation: 4
+        left_action_items:
+            [["arrow-left", lambda x: root.switch_to_workout_history()]]
+        md_bg_color: 0, 0, 0.5, 
+    
+    ScrollView:
+        do_scroll_y: True
+        do_scroll_x: False
+        bar_width: 0
+        size_hint: (0.9, 0.85)
+        pos_hint: {'center_x': 0.5, 'top': 0.85}
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (None, None)
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            height: dp(700)
+            width: self.parent.width
+            spacing: 20
+            padding: 10
+            canvas.before:
+                Color:
+                    rgba: 0.95, 0.95, 0.95, 1
+                RoundedRectangle:
+                    size: self.size
+                    pos: self.pos
+                    radius: [10,]
+
+            BoxLayout:
+                # id: exercise_log_datatable_box
+                orientation:'vertical'
 
 
 <ExerciseLogScreen>:
