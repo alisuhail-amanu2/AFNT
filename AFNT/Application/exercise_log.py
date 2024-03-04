@@ -124,8 +124,8 @@ class ExerciseLog():
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS exercise_logs")
 
-db = LocalDB('local_db.db')
-exercise_log = ExerciseLog(db.connection)
+# db = LocalDB('local_db.db')
+# exercise_log = ExerciseLog(db.connection)
 
 # exercise_log_data = ['-=', '07/02/2024']
 # print(exercise_log.monthly_exercise_log_data('10', '2023'))

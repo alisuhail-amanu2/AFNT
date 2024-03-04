@@ -111,9 +111,8 @@ WindowManager:
     WorkoutHistoryScreen:
     WorkoutAllocateScreen:
     WorkoutCreateScreen:
+    ExerciseCreateScreen:
     ExerciseLogScreen:
-    # WorkoutManager:
-    # ExerciseManager:
 
 <LoginScreen>:
     name: 'login_screen'
@@ -1034,7 +1033,7 @@ WindowManager:
 
                     Button:
                         id: allocate_workout
-                        text: "Allocate Workouts"
+                        text: "Workout Manager"
                         value: "allocate_workout"
                         size_hint_x: None
                         width: self.parent.width
@@ -1168,6 +1167,20 @@ WindowManager:
                         background_normal: ''
                         background_color: 0.0, 0.8, 1, 1
                         on_release: root.switch_to_workout_create()
+                
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: create_exercise
+                        text: "Create Exercise"
+                        value: "create_exercise"
+                        size_hint_x: None
+                        width: self.parent.width
+                        background_normal: ''
+                        background_color: 0.0, 0.8, 1, 1
+                        on_release: root.switch_to_exercise_create()
 
 <WorkoutCreateScreen>:
     name: "workout_create_screen"
@@ -1179,7 +1192,94 @@ WindowManager:
         pos_hint: {"top": 1}
         elevation: 4
         left_action_items:
-            [["arrow-left", lambda x: root.switch_to_workout_history()]]
+            [["arrow-left", lambda x: root.switch_to_workout_allocate()]]
+        md_bg_color: 0, 0, 0.5, 
+    
+    ScrollView:
+        do_scroll_y: True
+        do_scroll_x: False
+        bar_width: 0
+        size_hint: (0.9, 0.85)
+        pos_hint: {'center_x': 0.5, 'top': 0.80}
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (None, None)
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            height: dp(350)
+            width: self.parent.width
+            spacing: 20
+            padding: 10
+            canvas.before:
+                Color:
+                    rgba: 0.95, 0.95, 0.95, 1
+                RoundedRectangle:
+                    size: self.size
+                    pos: self.pos
+                    radius: [10,]
+            BoxLayout:
+                id: workout_create_box
+                orientation:'vertical'
+                
+                MDTextField:
+                    id: workout_name_input
+                    hint_text: 'Enter workout name *'
+                    icon_right: "dumbbell"
+                    helper_text_mode: "on_error"
+                    helper_text: "enter workout name *"
+                    multiline: False
+                    on_text: root.handle_workout_name_input(self.text)
+
+                MDTextField:
+                    id: workout_description_input
+                    hint_text: 'Enter description'
+                    icon_right: "text-account"
+                    multiline: True
+                    height: "200dp"
+
+                MDTextField:
+                    id: workout_type_input
+                    hint_text: 'Select type *'
+                    icon_right: "podium-gold"
+                    helper_text_mode: "on_error"
+                    helper_text: "select workout type"
+                    multiline: False
+                    on_focus: root.show_workout_type_menu(workout_type_input)
+                    text: ""
+
+                MDTextField:
+                    id: level_input
+                    hint_text: 'Select level'
+                    icon_right: "human"
+                    helper_text_mode: "on_error"
+                    helper_text: "select level *"
+                    multiline: False
+                    on_focus: root.show_level_menu(level_input)
+                    text: ""
+
+                BoxLayout:
+                    orientation: 'horizontal'
+                    pos_hint: {"center_x": 0.5}
+
+                    Button:
+                        text: "Create"
+                        size_hint_x: None
+                        background_normal: ''
+                        width: self.parent.width
+                        background_color: 0.0, 0.8, 1, 1
+                        on_release: root.verify_workout_create_input()
+
+<ExerciseCreateScreen>:
+    name: "exercise_create_screen"
+    MDTopAppBar:
+        title: "Create Exercise"
+        bold: True
+        halign: 'center'
+        font_size: '24sp'
+        pos_hint: {"top": 1}
+        elevation: 4
+        left_action_items:
+            [["arrow-left", lambda x: root.switch_to_workout_allocate()]]
         md_bg_color: 0, 0, 0.5, 
     
     ScrollView:
@@ -1193,7 +1293,7 @@ WindowManager:
             orientation: 'vertical'
             size_hint: (None, None)
             pos_hint: {'center_x': 0.5, 'center_y': 0.5}
-            height: dp(700)
+            height: dp(850)
             width: self.parent.width
             spacing: 20
             padding: 10
@@ -1204,11 +1304,129 @@ WindowManager:
                     size: self.size
                     pos: self.pos
                     radius: [10,]
-
             BoxLayout:
-                # id: exercise_log_datatable_box
+                id: exercise_create_box
                 orientation:'vertical'
 
+                MDLabel:
+                    id: exercise_description_label
+                    text: 'Exercise Description:'
+                    font_size: 32
+                    underline: True
+                    bold: True
+                    halign: 'center'
+                    height: self.texture_size[1]
+                    padding_y: 15
+
+                MDTextField:
+                    id: exercise_name_input
+                    hint_text: 'Enter exercise name *'
+                    icon_right: "rename"
+                    helper_text_mode: "on_error"
+                    helper_text: "enter exercise name *"
+                    multiline: False
+                    on_text: root.handle_exercise_name_input(self.text)
+
+                MDTextField:
+                    id: exercise_description_input
+                    hint_text: 'Enter description'
+                    icon_right: "text-account"
+                    multiline: True
+                    height: "200dp"
+
+                MDTextField:
+                    id: exercise_type_input
+                    hint_text: 'Select type *'
+                    icon_right: "weight-lifter"
+                    helper_text_mode: "on_error"
+                    helper_text: "select exercise type"
+                    multiline: False
+                    on_focus: root.show_exercise_type_menu(exercise_type_input)
+                    text: ""
+
+                MDTextField:
+                    id: body_part_input
+                    hint_text: 'Select body part *'
+                    icon_right: "arm-flex"
+                    helper_text_mode: "on_error"
+                    helper_text: "select body part"
+                    multiline: False
+                    on_focus: root.show_body_part_menu(body_part_input)
+                    text: ""
+
+                MDTextField:
+                    id: equipment_input
+                    hint_text: 'Select equipment *'
+                    icon_right: "dumbbell"
+                    helper_text_mode: "on_error"
+                    helper_text: "select exercise type"
+                    multiline: False
+                    on_focus: root.show_equipment_menu(equipment_input)
+                    text: ""
+
+                MDTextField:
+                    id: level_input
+                    hint_text: 'Select level'
+                    icon_right: "gymnastics"
+                    helper_text_mode: "on_error"
+                    helper_text: "select level *"
+                    multiline: False
+                    on_focus: root.show_level_menu(level_input)
+                    text: ""
+
+                MDLabel:
+                    id: exercise_details_label
+                    text: 'Exercise Details:'
+                    font_size: 32
+                    underline: True
+                    bold: True
+                    halign: 'center'
+                    height: self.texture_size[1]
+                    padding_y: 15
+
+                MDTextField:
+                    id: sets_input
+                    hint_text: 'Enter sets'
+                    multiline: False
+
+                MDTextField:
+                    id: reps_input
+                    hint_text: 'Enter reps'
+                    multiline: False
+
+                MDTextField:
+                    id: weight_kg_input
+                    hint_text: 'Enter weight (kg)'
+                    multiline: False
+
+                MDTextField:
+                    id: rest_s_input
+                    hint_text: 'Enter rest (per second)'
+                    multiline: False
+
+                MDTextField:
+                    id: duration_input
+                    hint_text: 'Enter duration'
+                    multiline: False
+                    on_focus: root.handle_exercise_create_duration_input()
+
+                MDTextField:
+                    id: distance_input
+                    hint_text: 'Enter distance (metres)'
+                    multiline: False
+
+
+                BoxLayout:
+                    orientation: 'horizontal'
+                    pos_hint: {"center_x": 0.5}
+
+                    Button:
+                        text: "Create"
+                        size_hint_x: None
+                        background_normal: ''
+                        width: self.parent.width
+                        background_color: 0.0, 0.8, 1, 1
+                        on_release: root.verify_workout_create_input()
 
 <ExerciseLogScreen>:
     name: "exercise_log_screen"

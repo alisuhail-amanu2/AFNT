@@ -562,7 +562,7 @@ class WorkoutAllocateScreen(Screen):
         self.selected_time = datetime.today().strftime('%H:%M:%S')
 
     def switch_to_workout_history(self):
-        self.manager.transition.direction = 'left'
+        self.manager.transition.direction = 'right'
         self.manager.current = 'workout_history_screen'
         self.clear_workout_allocate_datatable_box()
         plots_screen = self.manager.get_screen('workout_history_screen')
@@ -573,18 +573,21 @@ class WorkoutAllocateScreen(Screen):
     def switch_to_workout_create(self):
         self.manager.transition.direction = 'left'
         self.manager.current = 'workout_create_screen'
-        self.clear_workout_allocate_datatable_box()
-        plots_screen = self.manager.get_screen('workout_history_screen')
-        plots_screen.clear_workout_log_datatable_box()
-        plots_screen.create_workout_log_datatable()
         self.selected_rows.clear()
+        self.clear_workout_allocate_datatable_box()
+
+    def switch_to_exercise_create(self):
+        self.manager.transition.direction = 'left'
+        self.manager.current = 'exercise_create_screen'
+        self.selected_rows.clear()
+        self.clear_workout_allocate_datatable_box()
 
     def clear_workout_allocate_datatable_box(self):
         workout_allocate_datatable_box = self.ids.workout_allocate_datatable_box
         workout_allocate_datatable_box.clear_widgets()
         self.selected_rows.clear()
 
-    # From date input
+    # Allocate date input
     def handle_workout_allocate_date_input(self):
         if not hasattr(self, 'workout_allocate_date'):
             self.workout_allocate_date = MDDatePicker()
@@ -612,7 +615,6 @@ class WorkoutAllocateScreen(Screen):
         print(instance, value)
         self.clear_workout_allocate_datatable_box()
         self.create_workout_allocate_datatable()
-
 
     def on_cancel(self, instance, value):
         instance.dismiss()
@@ -654,16 +656,6 @@ class WorkoutAllocateScreen(Screen):
             
         workout_allocate_datatable_box.add_widget(self.workout_allocate_datatable)
         self.selected_rows.clear()
-    
-    # def on_start_date_selected(self, instance, start_date):
-    #     self.update_row_data(start_date, self.end_date_input.text)
-
-    # def on_end_date_selected(self, instance, end_date):
-    #     self.update_row_data(self.start_date_input.text, end_date)
-
-    # def update_row_data(self, start_date, end_date):
-    #     row_data = self.workout_allocates.get_workout_allocates_details_by_date_range(start_date, end_date)
-    #     self.workout_allocate_datatable.row_data = row_data
 
     def rows_selected(self, instance_table, current_row):
         row_data = tuple(current_row)
@@ -710,14 +702,12 @@ class WorkoutAllocateScreen(Screen):
 
     def allocate_save_button(self):
         if self.selected_rows:
-            print("selected data", self.selected_rows, self.selected_date, self.selected_time)
-            print("datadata", self.selected_rows[0][0])
+            # print("selected data", self.selected_rows, self.selected_date, self.selected_time)
+            # print("datadata", self.selected_rows[0][0])
             insert_workout_log = {
                 'workout_id': self.selected_rows[0][0],
                 'date_assigned': self.selected_date,
                 'time_assigned': self.selected_time,
-                # 'date_completed': self.selected_date,
-                # 'time_completed': self.selected_time,
                 'is_complete': 0,
                 'is_active': 1,
             }
@@ -741,21 +731,301 @@ class WorkoutCreateScreen(Screen):
         super(WorkoutCreateScreen, self).__init__(**kwargs)
         self.local_db = LocalDB('local_db.db')
         self.workout = Workout(self.local_db.connection)
-        # self.workout_logs = WorkoutLog(self.local_db.connection)
-        # self.exercise_log = ExerciseLog(self.local_db.connection)
+        self.select_workout_type = ""
+        self.fail_popup = FailPopup()
+        self.success_popup = SuccessPopup()
 
-        # self.selected_rows = []
-        # self.selected_date = datetime.today().strftime('%d/%m/%Y')
-        # self.selected_time = datetime.today().strftime('%H:%M:%S')
-
-    def switch_to_workout_history(self):
+    def switch_to_workout_allocate(self):
         self.manager.transition.direction = 'right'
-        self.manager.current = 'workout_history_screen'
-        # self.clear_workout_allocate_datatable_box()
-        # plots_screen = self.manager.get_screen('workout_history_screen')
-        # plots_screen.clear_workout_log_datatable_box()
-        # plots_screen.create_workout_log_datatable()
-        # self.selected_rows.clear()
+        self.manager.current = 'workout_allocate_screen'
+
+        plots_screen = self.manager.get_screen('workout_allocate_screen')
+        plots_screen.clear_workout_allocate_datatable_box()
+        plots_screen.create_workout_allocate_datatable()
+
+    def handle_workout_name_input(self, text):
+        self.ids.workout_name_input.error = not text
+
+    def show_workout_type_menu(self, instance):
+        menu_items = [
+            {"viewclass": "OneLineListItem", "text": "Upper Body", "on_release": lambda x="Upper Body": self.set_selected_workout_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Shoulders", "on_release": lambda x="Shoulders": self.set_selected_workout_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Chest", "on_release": lambda x="Chest": self.set_selected_workout_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Back", "on_release": lambda x="Back": self.set_selected_workout_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Abdomen", "on_release": lambda x="Abdomen": self.set_selected_workout_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Legs", "on_release": lambda x="Legs": self.set_selected_workout_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Push", "on_release": lambda x="Push": self.set_selected_workout_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Pull", "on_release": lambda x="Pull": self.set_selected_workout_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Core", "on_release": lambda x="Core": self.set_selected_workout_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Cardio", "on_release": lambda x="Cardio": self.set_selected_workout_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Custom", "on_release": lambda x="Custom": self.set_selected_workout_type(x, instance)},
+        ]
+        menu = MDDropdownMenu(items=menu_items, width_mult=4)
+        menu.caller = instance
+        menu.open()
+
+    def set_selected_workout_type(self, selected_workout_type_text, textfield_instance):
+        self.ids.workout_type_input.text = selected_workout_type_text
+        print("Selected workout type:", selected_workout_type_text)
+
+    def show_level_menu(self, instance):
+        menu_items = [
+            {"viewclass": "OneLineListItem", "text": "Beginner", "on_release": lambda x="Beginner": self.set_selected_level(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Intermediate", "on_release": lambda x="Intermediate": self.set_selected_level(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Advanced", "on_release": lambda x="Advanced": self.set_selected_level(x, instance)},
+        ]
+        menu = MDDropdownMenu(items=menu_items, width_mult=4)
+        menu.caller = instance
+        menu.open()
+
+    def set_selected_level(self, selected_level_text, textfield_instance):
+        self.ids.level_input.text = selected_level_text
+        print("Selected level", selected_level_text)
+
+    def verify_workout_create_input(self):
+        workout_name = self.ids.workout_name_input.text
+        workout_description = self.ids.workout_description_input.text
+        workout_type = self.ids.workout_type_input.text
+        workout_level = self.ids.level_input.text
+
+        if not workout_name:
+            return self.fail_popup.show_popup('Failed', 'Enter workout name')
+        if not workout_type:
+            return self.fail_popup.show_popup('Failed', 'Select workout type')
+
+        workout_data = {
+            "workout_name": workout_name,
+            "description": workout_description,
+            "type": workout_type,
+            "date_created": datetime.now().strftime("%d/%m/%Y"),
+            "level": workout_level,
+            "rating": '',
+            "rating_description": '',
+            "time_created":datetime.now().strftime('%H:%M:%S'), 
+            "is_active": 1,
+        }
+        print("workout", workout_data)
+        self.workout.insert_workout(workout_data)
+        return self.success_popup.show_popup('Success', 'Workout Created Successfully')
+
+class ExerciseCreateScreen(Screen):
+    def __init__(self, **kwargs):
+        super(ExerciseCreateScreen, self).__init__(**kwargs)
+        self.local_db = LocalDB('local_db.db')
+        self.exercise = Exercise(self.local_db.connection)
+        self.exercise_log = ExerciseLog(self.local_db.connection)
+        self.select_workout_type = ""
+        self.fail_popup = FailPopup()
+        self.success_popup = SuccessPopup()
+
+    def switch_to_workout_allocate(self):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'workout_allocate_screen'
+
+        plots_screen = self.manager.get_screen('workout_allocate_screen')
+        plots_screen.clear_workout_allocate_datatable_box()
+        plots_screen.create_workout_allocate_datatable()
+
+    def handle_exercise_name_input(self, text):
+        self.ids.exercise_name_input.error = not text
+    
+    # Exercise type
+    def show_exercise_type_menu(self, instance):
+        menu_items = [
+            {"viewclass": "OneLineListItem", "text": "Cardio", "on_release": lambda x="Cardio": self.set_selected_exercise_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Olympic Weightlifting", "on_release": lambda x="Olympic Weightlifting": self.set_selected_exercise_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Plyometrics", "on_release": lambda x="Plyometrics": self.set_selected_exercise_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Powerlifting", "on_release": lambda x="Powerlifting": self.set_selected_exercise_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Strength", "on_release": lambda x="Strength": self.set_selected_exercise_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Stretching", "on_release": lambda x="Stretching": self.set_selected_exercise_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Strongman", "on_release": lambda x="Strongman": self.set_selected_exercise_type(x, instance)},
+        ]
+        menu = MDDropdownMenu(items=menu_items, width_mult=4)
+        menu.caller = instance
+        menu.open()
+    
+    def set_selected_exercise_type(self, selected_exercise_type_text, textfield_instance):
+        self.ids.exercise_type_input.text = selected_exercise_type_text
+        print("Selected workout type:", selected_exercise_type_text)
+
+    # Body part
+    def show_body_part_menu(self, instance):
+        menu_items = [
+            {"viewclass": "OneLineListItem", "text": "Upper Body", "on_release": lambda x="Upper Body": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Shoulders", "on_release": lambda x="Shoulders": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Chest", "on_release": lambda x="Chest": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Back", "on_release": lambda x="Back": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Abdomen", "on_release": lambda x="Abdomen": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Legs", "on_release": lambda x="Legs": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Push", "on_release": lambda x="Push": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Pull", "on_release": lambda x="Pull": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Core", "on_release": lambda x="Core": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Cardio", "on_release": lambda x="Cardio": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Custom", "on_release": lambda x="Custom": self.set_selected_body_part(x, instance)},
+        ]
+        menu = MDDropdownMenu(items=menu_items, width_mult=4)
+        menu.caller = instance
+        menu.open()
+
+    def set_selected_body_part(self, selected_body_part_text, textfield_instance):
+        self.ids.body_part_input.text = selected_body_part_text
+        print("Selected body_part", selected_body_part_text)
+
+    # Equipment
+    def show_equipment_menu(self, instance):
+        menu_items = [
+            {"viewclass": "OneLineListItem", "text": "Body Only", "on_release": lambda x="Body Only": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Cable", "on_release": lambda x="Cable": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Dumbbell", "on_release": lambda x="Dumbbell": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Exercise Ball", "on_release": lambda x="Exercise Ball": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "E-Z Curl Bar", "on_release": lambda x="E-Z Curl Bar": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Foam Roll", "on_release": lambda x="Foam Roll": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Kettlebells", "on_release": lambda x="Kettlebells": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Machine", "on_release": lambda x="Machine": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Medicine Ball", "on_release": lambda x="Medicine Ball": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Other", "on_release": lambda x="Other": self.set_selected_equipment(x, instance)},
+        ]
+        menu = MDDropdownMenu(items=menu_items, width_mult=4)
+        menu.caller = instance
+        menu.open()
+
+    def set_selected_equipment(self, selected_equipment_text, textfield_instance):
+        self.ids.equipment_input.text = selected_equipment_text
+        print("Selected equipment", selected_equipment_text)
+
+    # Level
+    def show_level_menu(self, instance):
+        menu_items = [
+            {"viewclass": "OneLineListItem", "text": "Beginner", "on_release": lambda x="Beginner": self.set_selected_level(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Intermediate", "on_release": lambda x="Intermediate": self.set_selected_level(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Advanced", "on_release": lambda x="Advanced": self.set_selected_level(x, instance)},
+        ]
+        menu = MDDropdownMenu(items=menu_items, width_mult=4)
+        menu.caller = instance
+        menu.open()
+
+    def set_selected_level(self, selected_level_text, textfield_instance):
+        self.ids.level_input.text = selected_level_text
+        print("Selected level", selected_level_text)
+
+    # Duration
+    def handle_exercise_create_duration_input(self):
+        if not hasattr(self, 'duration_input'):
+            self.duration_input = MDTimePicker()
+            self.duration_input.bind(on_save=self.duration_input_on_save, on_cancel=self.on_cancel)
+        self.duration_input.open()
+
+    def duration_input_on_save(self, instance, value):
+        screen = self.manager.get_screen('exercise_create_screen')
+        self.selected_time = value.strftime("%H:%M:%S")
+        screen.ids.duration_input.text = self.selected_time
+        print(instance, value)
+
+    def on_cancel(self, instance, value):
+        instance.dismiss()
+
+    # Verify create exercise input data
+    def verify_workout_create_input(self):
+        exercise_name = self.ids.exercise_name_input.text
+        workout_description = self.ids.exercise_description_input.text
+        exercise_type = self.ids.exercise_type_input.text
+        body_part = self.ids.body_part_input.text
+        equipment = self.ids.equipment_input.text
+        exercise_level = self.ids.level_input.text
+
+        sets = self.ids.sets_input.text
+        reps = self.ids.reps_input.text
+        weight_kg = self.ids.weight_kg_input.text
+        rest_s = self.ids.rest_s_input.text
+        duration = self.ids.duration_input.text
+        distance_m = self.ids.distance_input.text
+
+        if not exercise_name:
+            print("ex name failed")
+            return self.fail_popup.show_popup('Failed', 'Enter exercise name')
+        if not exercise_type:
+            return self.fail_popup.show_popup('Failed', 'Select exercise type')
+        if not body_part:
+            return self.fail_popup.show_popup('Failed', 'Select body part')
+        if not equipment:
+            return self.fail_popup.show_popup('Failed', 'Select equiptment type')
+        if not exercise_level:
+            return self.fail_popup.show_popup('Failed', 'Select level')
+        if sets:
+            try:
+                sets = int(sets)
+            except ValueError:
+                print("sets failed")
+                return self.fail_popup.show_popup('Failed', 'Sets must be an integer')
+        if reps:
+            try:
+                reps = int(reps)
+            except ValueError:
+                print("reps failed")
+                return self.fail_popup.show_popup('Failed', 'Reps must be an integer')
+        if rest_s:
+            try:
+                rest_s = int(rest_s)
+            except ValueError:
+                print("rest_s failed")
+                return self.fail_popup.show_popup('Failed', 'Rest must be an integer')
+        if weight_kg:
+            try:
+                weight_kg = float(weight_kg)
+            except ValueError:
+                print("weight failed")
+                return self.fail_popup.show_popup('Failed', 'Weight must be a number')
+        if distance_m:
+            try:
+                distance_m = float(distance_m)
+            except ValueError:
+                print("distance failed")
+                return self.fail_popup.show_popup('Failed', 'Distance must be a number')
+
+        # Check if weight_kg and distance_m have two decimal points
+        if weight_kg and not (weight_kg * 100).is_integer():
+            print("weight failed again")
+            return self.fail_popup.show_popup('Failed', 'Weight must have two decimal points')
+        if distance_m and not (distance_m * 100).is_integer():
+            print("distance failed again")
+            return self.fail_popup.show_popup('Failed', 'Distance must have two decimal points')
+
+        exercise_data = {
+            "exercise_name": exercise_name,
+            "description": workout_description,
+            "type": exercise_type,
+            "body_part": body_part,
+            "equipment": equipment,
+            "level": exercise_level,
+            "rating": '',
+            "rating_description": '',
+            "is_active": 1,
+        }
+        print("exercise_data", exercise_data)
+        self.exercise.insert_exercise(exercise_data)
+        exercise_details = self.exercise.get_exercise_by_name(exercise_name)
+        print("exercise_details", exercise_details)
+
+        exercise_log_data = {
+            "exercise_id": exercise_details[0][0],
+            "workout_log_id": 0,
+            "sets": sets,
+            "reps": reps,
+            "weight_kg": weight_kg,
+            "rest_per_set_s": rest_s,
+            "duration": duration,
+            "distance_m": distance_m,
+            "rpe": '',
+            "is_complete": 0,
+            "date_complete": '',
+            "time_complete": '',
+            "details": '',
+            "is_active": 1,
+        }
+        print("exercise_log", exercise_log_data)
+
+        self.exercise_log.insert_exercise_log(exercise_log_data)
+        return self.success_popup.show_popup('Success', 'Exercise Created Successfully')
 
 class ExerciseLogScreen(Screen):
     def __init__(self, **kwargs):

@@ -1,4 +1,5 @@
 ﻿workout_id,workout_name,description,type,date_created,level,rating,rating_description,time_created,is_active
+0,default,default,default,20/07/2023,10,10,,00:00:00,0
 C1,pushy day,For Upper Body,Upper Body,21/07/2023,Beginner,9,Average,05:00:00,1
 C2,legz,Leg Day,Legs,09/10/2023,Intermediate,7,Good,06:00:00,1
 1,Shoulders,Trains your shoulders!,Upper Body,24/10/2023,Advanced,4,Bad,07:00:00,0
