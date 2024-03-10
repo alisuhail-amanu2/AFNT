@@ -61,6 +61,17 @@ class WorkoutLog():
             self.cursor.execute("SELECT * FROM workout_logs WHERE workout_log_id=?", (workout_log_id,))
             return self.cursor.fetchall()
 
+    def get_workout_logs_by_workout_id(self, workout_id):
+        try:
+            with self.connection:
+                self.cursor.execute("SELECT * FROM workout_logs WHERE workout_id = ?", (workout_id,))
+                workout_logs = self.cursor.fetchall()
+                return workout_logs
+
+        except sqlite3.Error as e:
+            print("Error retrieving workout logs by workout id:", e)
+            return None
+
     def get_all_workout_logs(self):
         with self.connection:
             self.cursor.execute("SELECT * FROM workout_logs")
@@ -173,5 +184,5 @@ class WorkoutLog():
 # workout_log.insert_workout_log()
 
 # db.print_workout_logs()
-# print(workout_log.get_latest_workout_log_id('C1'))
+# print(workout_log.get_workout_logs_by_workout_id('C1'))
 # db.close_connection()

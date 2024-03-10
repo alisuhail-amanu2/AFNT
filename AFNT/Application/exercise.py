@@ -12,38 +12,28 @@ class Exercise():
         try:
             table_name = 'exercises'
 
-            # Fetch the latest exercise_id
             with self.connection:
                 self.cursor.execute(f"SELECT MAX(CAST(SUBSTR(exercise_id, 2) AS INTEGER)) FROM {table_name} WHERE exercise_id LIKE 'C%'")
                 latest_id = self.cursor.fetchone()[0]
 
             latest_numeric_part = int(latest_id)
-
-            # Generate the new exercise_id
             new_id_numeric = latest_numeric_part + 1
             new_id = f'C{new_id_numeric}'
 
             exercise['exercise_id'] = new_id
 
-            # Prepare the SQL query
             columns = ', '.join(exercise.keys())
             placeholders = ', '.join(':' + key for key in exercise.keys())
             sql = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
 
-            # Execute the SQL query with the new exercise data
             with self.connection:
                 self.cursor.execute(sql, exercise)
 
         except sqlite3.IntegrityError as e:
             print(f"IntegrityError: {e}")
-            # Handle integrity constraint violation appropriately
-            # For example, log the error or raise an exception
 
         except Exception as e:
             print(f"Error inserting exercise: {e}")
-
-
-
 
     def get_exercise_by_id(self, exercise_id):
         with self.connection:
@@ -53,6 +43,11 @@ class Exercise():
     def get_exercise_by_name(self, exercise_name):
         with self.connection:
             self.cursor.execute("SELECT * FROM exercises WHERE LOWER(exercise_name) = LOWER(?)", (exercise_name,))
+            return self.cursor.fetchall()
+
+    def get_all_exercises(self):
+        with self.connection:
+            self.cursor.execute("SELECT exercise_id, exercise_name, type, body_part, equipment, level, rating FROM exercises")
             return self.cursor.fetchall()
 
     def update_exercise(self, exercise_id, updated_values):
@@ -97,9 +92,18 @@ class Exercise():
     def remove_exercise(self, exercise_id):
         with self.connection:
             if exercise_id.startswith('C'):
-                self.cursor.execute("DELETE FROM exercises WHERE exercise_id=?", (exercise_id,))
+                self.cursor.execute("UPDATE exercises SET is_active = 0 WHERE exercise_id=?", (exercise_id,))
             else:
                 print("Cannot delete preset exercises.")
+                return 0
+
+    def re_add_workout(self, workout_id):
+        try:
+            with self.connection:
+                self.cursor.execute("UPDATE exercises SET is_active = 1 WHERE exercise_id=?", (workout_id,))
+        except Exception as e:
+            print(f"Error removing workout log: {e}")
+
 
     def drop_exercise(self):
         with self.connection:
@@ -130,4 +134,6 @@ class Exercise():
 
 # print(value[0][0])
 # db.print_exercises()
+
+# print(exercise.get_all_exercises())
 # db.close_connection()

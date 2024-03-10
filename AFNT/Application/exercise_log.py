@@ -60,11 +60,28 @@ class ExerciseLog():
             print("Error copying and updating exercise logs:", e)
             return False
 
-
     def get_exercise_log_by_workout_log_id(self, workout_log_id):
         with self.connection:
             self.cursor.execute("SELECT * FROM exercise_logs WHERE workout_log_id=?", (workout_log_id,))
             return self.cursor.fetchall()
+
+    def get_exercise_id(self, exercise_log_id):
+        with self.connection:
+            self.cursor.execute("SELECT * FROM exercise_logs WHERE exercise_log_id=?", (exercise_log_id,))
+            exercise_log_data = self.cursor.fetchall()
+            return exercise_log_data[0][1]
+
+    def get_latest_exercise_log_by_exercise_id(self, exercise_id):
+        try:
+            with self.connection:
+                # Select the latest exercise log for the specified exercise_id
+                self.cursor.execute("SELECT * FROM exercise_logs WHERE exercise_id=? LIMIT 1", (exercise_id,))
+                latest_exercise_log = self.cursor.fetchone()
+                return latest_exercise_log
+
+        except sqlite3.Error as e:
+            print("Error retrieving latest exercise log by exercise id:", e)
+            return None
 
     def get_exercise_logs_details(self, workout_log_id):
         try:
@@ -91,6 +108,32 @@ class ExerciseLog():
                         el.workout_log_id = ? AND
                         el.is_active = 1;  -- Add condition for is_active field
                 """, (workout_log_id,))
+                return self.cursor.fetchall()
+
+        except Exception as e:
+            print(f"Error retrieving exercise logs details: {e}")
+            return []
+
+    def get_all_exercise_logs_details(self):
+        try:
+            with self.connection:
+                self.cursor.execute("""
+                    SELECT 
+                        el.exercise_log_id,
+                        e.exercise_name,
+                        el.sets,
+                        el.reps,
+                        el.weight_kg,
+                        el.rest_per_set_s,
+                        el.duration,
+                        el.distance_m
+                    FROM 
+                        exercise_logs AS el
+                    JOIN 
+                        exercises AS e ON el.exercise_id = e.exercise_id
+                    WHERE 
+                        el.is_active = 1;
+                """)
                 return self.cursor.fetchall()
 
         except Exception as e:
@@ -148,5 +191,9 @@ class ExerciseLog():
 # exercise_log.update_exercise_log(1, updated_values)
 # exercise_log.allocate_exercise_logs(7, 11)
 # print("\n")
+# print(exercise_log.get_latest_exercise_log_by_exercise_id('928'))
+# print(exercise_log.get_all_exercise_logs_details())
+# print(exercise_log.get_exercise_id(4))
+
 # db.print_exercise_logs()
 # db.close_connection()

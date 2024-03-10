@@ -35,6 +35,7 @@ from kivymd.uix.dropdownitem import MDDropDownItem
 from kivymd.uix.tab import MDTabs, MDTabsBase
 from kivy.utils import get_color_from_hex
 from kivy.clock import Clock
+from kivy_garden.mapview import MapView
 
 from datetime import datetime, timedelta
 from local_db import LocalDB
@@ -195,7 +196,7 @@ class UpdateWorkoutAllocatePopup(Popup):
 
         layout = BoxLayout(orientation='vertical')
 
-        print("self.selected_row", self.selected_row)
+        # print("self.selected_row", self.selected_row)
         self.workout_name_input = MDTextField(hint_text="Enter Workout Name")
         layout.add_widget(self.workout_name_input)
         self.workout_name_input.text = self.selected_row[1]
@@ -260,7 +261,7 @@ class UpdateExerciseLogPopup(Popup):
 
         layout = BoxLayout(orientation='vertical')
 
-        print("self.selected_row", self.selected_row)
+        # print("self.selected_row", self.selected_row)
         self.sets_input = MDTextField(hint_text="Sets", input_filter="int")
         layout.add_widget(self.sets_input)
         self.sets_input.text = self.selected_row[2]
@@ -337,6 +338,162 @@ class UpdateExerciseLogPopup(Popup):
         self.update_exercise_log_callback(exercise_log_id, sets, reps, weight, rest, distance, rpe, is_complete)
         self.dismiss()
 
+class UpdateExerciseAllocatePopup(Popup):
+    def __init__(self, selected_row, update_exercise_allocate_callback, **kwargs):
+        super(UpdateExerciseAllocatePopup, self).__init__(**kwargs)
+        self.update_exercise_allocate_callback = update_exercise_allocate_callback
+        self.selected_row = selected_row
+
+        self.title = "Update Exercise"
+        self.title_color = get_color_from_hex("#000000")
+        self.size_hint = (0.8, 0.9)
+        self.background = 'white'
+
+        layout = BoxLayout(orientation='vertical')
+
+        # print("self.selected_row", self.selected_row)
+        self.exercise_name_input = MDTextField(hint_text="Enter Exercise Name")
+        layout.add_widget(self.exercise_name_input)
+        self.exercise_name_input.text = self.selected_row[1]
+
+        self.description_input = MDTextField(hint_text="Enter Description")
+        layout.add_widget(self.description_input)
+        self.description_input.text = self.selected_row[2]
+
+        self.exercise_type_input = MDTextField(hint_text="Select Workout Type")
+        self.exercise_type_input.bind(focus=self.show_exercise_type_menu)
+        layout.add_widget(self.exercise_type_input)
+        self.exercise_type_input.text = self.selected_row[3]
+
+        self.body_part_input = MDTextField(hint_text="Select Body Part")
+        self.body_part_input.bind(focus=self.show_body_part_menu)
+        layout.add_widget(self.body_part_input)
+        self.body_part_input.text = self.selected_row[3]
+
+        self.equipment_input = MDTextField(hint_text="Select Equipment")
+        self.equipment_input.bind(focus=self.show_equipment_menu)
+        layout.add_widget(self.equipment_input)
+        self.equipment_input.text = self.selected_row[4]
+
+        self.level_input = MDTextField(hint_text="Select Level")
+        self.level_input.bind(focus=self.show_level_menu)
+        layout.add_widget(self.level_input)
+        self.level_input.text = self.selected_row[5]
+
+        button_layout = BoxLayout(orientation='horizontal')
+
+        save_button = Button(text="Save", background_normal='', background_color=(0.0, 0.8, 1, 1))
+        save_button.bind(on_release=self.save_button_pressed)
+        button_layout.add_widget(save_button)
+
+        cancel_button = Button(text="Cancel", background_normal='', background_color=(0.8, 0, 0, 1))
+        cancel_button.bind(on_release=self.dismiss)
+        button_layout.add_widget(cancel_button)
+
+        layout.add_widget(button_layout)
+
+        self.content = layout
+
+    def handle_exercise_name_input(self, text):
+        self.ids.exercise_name_input.error = not text
+    
+    # Exercise type
+    def show_exercise_type_menu(self, instance, value):
+        menu_items = [
+            {"viewclass": "OneLineListItem", "text": "Cardio", "on_release": lambda x="Cardio": self.set_selected_exercise_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Olympic Weightlifting", "on_release": lambda x="Olympic Weightlifting": self.set_selected_exercise_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Plyometrics", "on_release": lambda x="Plyometrics": self.set_selected_exercise_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Powerlifting", "on_release": lambda x="Powerlifting": self.set_selected_exercise_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Strength", "on_release": lambda x="Strength": self.set_selected_exercise_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Stretching", "on_release": lambda x="Stretching": self.set_selected_exercise_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Strongman", "on_release": lambda x="Strongman": self.set_selected_exercise_type(x, instance)},
+        ]
+        menu = MDDropdownMenu(items=menu_items, width_mult=4)
+        menu.caller = instance
+        menu.open()
+
+    def set_selected_exercise_type(self, selected_exercise_type_text, textfield_instance):
+        self.exercise_type_input.text = selected_exercise_type_text
+        # print("Selected workout type:", selected_exercise_type_text)
+
+
+    # Body part
+    def show_body_part_menu(self, instance, value):
+        menu_items = [
+            {"viewclass": "OneLineListItem", "text": "Upper Body", "on_release": lambda x="Upper Body": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Shoulders", "on_release": lambda x="Shoulders": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Chest", "on_release": lambda x="Chest": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Back", "on_release": lambda x="Back": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Abdomen", "on_release": lambda x="Abdomen": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Legs", "on_release": lambda x="Legs": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Push", "on_release": lambda x="Push": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Pull", "on_release": lambda x="Pull": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Core", "on_release": lambda x="Core": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Cardio", "on_release": lambda x="Cardio": self.set_selected_body_part(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Custom", "on_release": lambda x="Custom": self.set_selected_body_part(x, instance)},
+        ]
+        menu = MDDropdownMenu(items=menu_items, width_mult=4)
+        menu.caller = instance
+        menu.open()
+
+    def set_selected_body_part(self, selected_body_part_text, textfield_instance):
+        self.body_part_input.text = selected_body_part_text
+        # print("Selected body_part", selected_body_part_text)
+
+    # Equipment
+    def show_equipment_menu(self, instance, value):
+        menu_items = [
+            {"viewclass": "OneLineListItem", "text": "Body Only", "on_release": lambda x="Body Only": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Cable", "on_release": lambda x="Cable": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Dumbbell", "on_release": lambda x="Dumbbell": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Exercise Ball", "on_release": lambda x="Exercise Ball": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "E-Z Curl Bar", "on_release": lambda x="E-Z Curl Bar": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Foam Roll", "on_release": lambda x="Foam Roll": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Kettlebells", "on_release": lambda x="Kettlebells": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Machine", "on_release": lambda x="Machine": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Medicine Ball", "on_release": lambda x="Medicine Ball": self.set_selected_equipment(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Other", "on_release": lambda x="Other": self.set_selected_equipment(x, instance)},
+        ]
+        menu = MDDropdownMenu(items=menu_items, width_mult=4)
+        menu.caller = instance
+        menu.open()
+
+    def set_selected_equipment(self, selected_equipment_text, textfield_instance):
+        self.equipment_input.text = selected_equipment_text
+        # print("Selected equipment", selected_equipment_text)
+
+    # Level
+    def show_level_menu(self, instance, value):
+        menu_items = [
+            {"viewclass": "OneLineListItem", "text": "Beginner", "on_release": lambda x="Beginner": self.set_selected_level(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Intermediate", "on_release": lambda x="Intermediate": self.set_selected_level(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Advanced", "on_release": lambda x="Advanced": self.set_selected_level(x, instance)},
+        ]
+        menu = MDDropdownMenu(items=menu_items, width_mult=4)
+        menu.caller = instance
+        menu.open()
+
+    def set_selected_level(self, selected_level_text, textfield_instance):
+        self.level_input.text = selected_level_text
+        # print("Selected level", selected_level_text)
+
+    def select_exercise_type(self, selected_exercise_type_text):
+        self.exercise_type_input.text = selected_exercise_type_text
+        self.exercise_type_input.foreground_color = get_color_from_hex("#000000")
+
+    def save_button_pressed(self, instance):
+        exercise_id = self.selected_row[0]
+        exercise_name = self.exercise_name_input.text
+        description = self.description_input.text
+        exercise_type = self.exercise_type_input.text
+        body_part = self.body_part_input.text
+        equipment = self.equipment_input.text
+        level = self.level_input.text
+        
+        # print("damn", exercise_id, exercise_name, description, exercise_type, body_part, equipment, level)
+        self.update_exercise_allocate_callback(exercise_id, exercise_name, description, exercise_type, body_part, equipment, level)
+        self.dismiss()
+
 class WindowManager(ScreenManager):
     pass
 
@@ -368,6 +525,15 @@ class DashboardScreen(Screen):
         plots_screen = self.manager.get_screen('workout_history_screen')
         plots_screen.clear_workout_log_datatable_box()
         plots_screen.create_workout_log_datatable()
+
+    def switch_to_gym_finder(self):
+        self.manager.transition.direction = 'left'
+        self.manager.current = 'gym_finder_screen'
+        
+        plots_screen = self.manager.get_screen('gym_finder_screen')
+        # plots_screen.clear_workout_log_datatable_box()
+        plots_screen.create_map_view()
+
 
     def switch_to_water_intake(self):
         self.manager.current = 'water_intake_screen'
@@ -418,7 +584,7 @@ class WorkoutHistoryScreen(Screen):
             self.manager.current = 'exercise_log_screen'
             plots_screen = self.manager.get_screen('exercise_log_screen')
             plots_screen.create_exercise_log_datatable()
-            self.selected_rows.clear()
+            # self.selected_rows.clear()
 
     def clear_workout_log_datatable_box(self):
         workout_log_datatable_box = self.ids.workout_log_datatable_box
@@ -436,7 +602,7 @@ class WorkoutHistoryScreen(Screen):
         screen = self.manager.get_screen('workout_history_screen')
         self.from_selected_date = value.strftime("%d/%m/%Y")
         screen.ids.workout_log_date_from.text = self.from_selected_date
-        print(instance, value, date_range)
+        # print(instance, value, date_range)
         self.clear_workout_log_datatable_box()
         self.create_workout_log_datatable()
 
@@ -451,7 +617,7 @@ class WorkoutHistoryScreen(Screen):
         screen = self.manager.get_screen('workout_history_screen')
         self.to_selected_date = value.strftime("%d/%m/%Y")
         screen.ids.workout_log_date_to.text = self.to_selected_date
-        print(instance, value, date_range)
+        # print(instance, value, date_range)
         self.clear_workout_log_datatable_box()
         self.create_workout_log_datatable()
 
@@ -464,8 +630,8 @@ class WorkoutHistoryScreen(Screen):
         screen.ids.workout_log_date_from.text = self.from_selected_date
         screen.ids.workout_log_date_to.text = self.to_selected_date
 
-        print('from', self.from_selected_date)
-        print('to',  self.to_selected_date)
+        # print('from', self.from_selected_date)
+        # print('to',  self.to_selected_date)
 
         workout_log_datatable_box = self.ids.workout_log_datatable_box
         # workout_log_data = self.workout_logs.get_workout_logs_details()
@@ -475,7 +641,6 @@ class WorkoutHistoryScreen(Screen):
             self.workout_log_datatable = MDDataTable(
                 pos_hint={'center_x': 0.5, 'center_y': 0.5},
                 size_hint=(0.95, 0.3),
-                # minimum_width=dp(650),
                 check=True,
                 use_pagination=True,
                 rows_num=6,
@@ -485,7 +650,6 @@ class WorkoutHistoryScreen(Screen):
                 column_data=[
                     ["Log ID", dp(25)],
                     ["Name", dp(25)],
-                    # ["Type", dp(25)],
                     ["Date Assigned", dp(25)],
                     ["Time Assigned", dp(25)],
                     ["Status", dp(25)]
@@ -515,14 +679,14 @@ class WorkoutHistoryScreen(Screen):
             self.selected_rows.remove(modified_row_data)
         else:
             self.selected_rows.append(modified_row_data)
-        print("self.selected_rows.", self.selected_rows)
+        # print("self.selected_rows.", self.selected_rows)
 
     def remove_row(self):
         if self.selected_rows:
             # print("selected_rows:", self.selected_rows)
             for row in self.selected_rows:
                 workout_log_id = row[0]
-                print("worky", workout_log_id)
+                # print("worky", workout_log_id)
                 self.workout_logs.remove_workout_log(row[0])
         self.clear_workout_log_datatable_box()
         self.create_workout_log_datatable()
@@ -582,6 +746,15 @@ class WorkoutAllocateScreen(Screen):
         self.selected_rows.clear()
         self.clear_workout_allocate_datatable_box()
 
+    def switch_to_exercise_allocate(self):
+        if self.selected_rows:
+            self.manager.transition.direction = 'left'
+            self.manager.current = 'exercise_allocate_screen'
+            # self.clear_workout_allocate_datatable_box()
+            plots_screen = self.manager.get_screen('exercise_allocate_screen')
+            plots_screen.clear_exercise_allocate_datatable_box()
+            plots_screen.create_exercise_allocate_datatable()
+
     def clear_workout_allocate_datatable_box(self):
         workout_allocate_datatable_box = self.ids.workout_allocate_datatable_box
         workout_allocate_datatable_box.clear_widgets()
@@ -598,7 +771,7 @@ class WorkoutAllocateScreen(Screen):
         screen = self.manager.get_screen('workout_allocate_screen')
         self.selected_date = value.strftime("%d/%m/%Y")
         screen.ids.workout_allocate_date.text = self.selected_date
-        print(instance, value, date_range)
+        # print(instance, value, date_range)
         self.clear_workout_allocate_datatable_box()
         self.create_workout_allocate_datatable()
 
@@ -612,7 +785,7 @@ class WorkoutAllocateScreen(Screen):
         screen = self.manager.get_screen('workout_allocate_screen')
         self.selected_time = value.strftime("%H:%M:%S")
         screen.ids.workout_allocate_time.text = self.selected_time
-        print(instance, value)
+        # print(instance, value)
         self.clear_workout_allocate_datatable_box()
         self.create_workout_allocate_datatable()
 
@@ -624,7 +797,7 @@ class WorkoutAllocateScreen(Screen):
         screen.ids.workout_allocate_date.text = self.selected_date
         screen.ids.workout_allocate_time.text = self.selected_time
 
-        print('selected datetime', self.selected_date, self.selected_time)
+        # print('selected datetime', self.selected_date, self.selected_time)
 
         workout_allocate_datatable_box = self.ids.workout_allocate_datatable_box
         workout_allocate_data = self.workout.get_workout_details()
@@ -664,7 +837,7 @@ class WorkoutAllocateScreen(Screen):
             self.selected_rows.remove(modified_row_data)
         else:
             self.selected_rows.append(modified_row_data)
-        print("self.selected_rows.", self.selected_rows)
+        # print("self.selected_rows.", self.selected_rows)
 
     def remove_row(self):
         if self.selected_rows:
@@ -684,7 +857,7 @@ class WorkoutAllocateScreen(Screen):
                 update_popup.open()
 
     def update_row_callback(self, workout_id, workout_name, description, workout_type):
-        print("updated data", workout_id, workout_name, description, workout_type)
+        # print("updated data", workout_id, workout_name, description, workout_type)
 
         workout_update = {
             'workout_name': workout_name,
@@ -715,7 +888,7 @@ class WorkoutAllocateScreen(Screen):
             new_workout_log_id = self.workout_logs.insert_workout_log(insert_workout_log)
             if new_workout_log_id:
                 latest_workout_log = self.workout_logs.get_latest_workout_log_id(self.selected_rows[0][0])
-                print("old workout log, new workout log", latest_workout_log, new_workout_log_id)
+                # print("old workout log, new workout log", latest_workout_log, new_workout_log_id)
                 self.exercise_log.allocate_exercise_logs(latest_workout_log, new_workout_log_id)
                 
                 self.selected_rows.clear()
@@ -725,6 +898,9 @@ class WorkoutAllocateScreen(Screen):
                 self.selected_rows.clear()
                 allocate_workout_success = FailPopup()
                 allocate_workout_success.show_popup('Failed', '3 Workouts Allowed Per Day!')
+
+    def get_selected_rows(self):
+        return self.selected_rows
 
 class WorkoutCreateScreen(Screen):
     def __init__(self, **kwargs):
@@ -846,7 +1022,7 @@ class ExerciseCreateScreen(Screen):
     
     def set_selected_exercise_type(self, selected_exercise_type_text, textfield_instance):
         self.ids.exercise_type_input.text = selected_exercise_type_text
-        print("Selected workout type:", selected_exercise_type_text)
+        # print("Selected workout type:", selected_exercise_type_text)
 
     # Body part
     def show_body_part_menu(self, instance):
@@ -869,7 +1045,7 @@ class ExerciseCreateScreen(Screen):
 
     def set_selected_body_part(self, selected_body_part_text, textfield_instance):
         self.ids.body_part_input.text = selected_body_part_text
-        print("Selected body_part", selected_body_part_text)
+        # print("Selected body_part", selected_body_part_text)
 
     # Equipment
     def show_equipment_menu(self, instance):
@@ -891,7 +1067,7 @@ class ExerciseCreateScreen(Screen):
 
     def set_selected_equipment(self, selected_equipment_text, textfield_instance):
         self.ids.equipment_input.text = selected_equipment_text
-        print("Selected equipment", selected_equipment_text)
+        # print("Selected equipment", selected_equipment_text)
 
     # Level
     def show_level_menu(self, instance):
@@ -906,7 +1082,7 @@ class ExerciseCreateScreen(Screen):
 
     def set_selected_level(self, selected_level_text, textfield_instance):
         self.ids.level_input.text = selected_level_text
-        print("Selected level", selected_level_text)
+        # print("Selected level", selected_level_text)
 
     # Duration
     def handle_exercise_create_duration_input(self):
@@ -919,7 +1095,7 @@ class ExerciseCreateScreen(Screen):
         screen = self.manager.get_screen('exercise_create_screen')
         self.selected_time = value.strftime("%H:%M:%S")
         screen.ids.duration_input.text = self.selected_time
-        print(instance, value)
+        # print(instance, value)
 
     def on_cancel(self, instance, value):
         instance.dismiss()
@@ -941,7 +1117,7 @@ class ExerciseCreateScreen(Screen):
         distance_m = self.ids.distance_input.text
 
         if not exercise_name:
-            print("ex name failed")
+            # print("ex name failed")
             return self.fail_popup.show_popup('Failed', 'Enter exercise name')
         if not exercise_type:
             return self.fail_popup.show_popup('Failed', 'Select exercise type')
@@ -955,39 +1131,39 @@ class ExerciseCreateScreen(Screen):
             try:
                 sets = int(sets)
             except ValueError:
-                print("sets failed")
+                # print("sets failed")
                 return self.fail_popup.show_popup('Failed', 'Sets must be an integer')
         if reps:
             try:
                 reps = int(reps)
             except ValueError:
-                print("reps failed")
+                # print("reps failed")
                 return self.fail_popup.show_popup('Failed', 'Reps must be an integer')
         if rest_s:
             try:
                 rest_s = int(rest_s)
             except ValueError:
-                print("rest_s failed")
+                # print("rest_s failed")
                 return self.fail_popup.show_popup('Failed', 'Rest must be an integer')
         if weight_kg:
             try:
                 weight_kg = float(weight_kg)
             except ValueError:
-                print("weight failed")
+                # print("weight failed")
                 return self.fail_popup.show_popup('Failed', 'Weight must be a number')
         if distance_m:
             try:
                 distance_m = float(distance_m)
             except ValueError:
-                print("distance failed")
+                # print("distance failed")
                 return self.fail_popup.show_popup('Failed', 'Distance must be a number')
 
         # Check if weight_kg and distance_m have two decimal points
         if weight_kg and not (weight_kg * 100).is_integer():
-            print("weight failed again")
+            # print("weight failed again")
             return self.fail_popup.show_popup('Failed', 'Weight must have two decimal points')
         if distance_m and not (distance_m * 100).is_integer():
-            print("distance failed again")
+            # print("distance failed again")
             return self.fail_popup.show_popup('Failed', 'Distance must have two decimal points')
 
         exercise_data = {
@@ -1001,10 +1177,10 @@ class ExerciseCreateScreen(Screen):
             "rating_description": '',
             "is_active": 1,
         }
-        print("exercise_data", exercise_data)
+        # print("exercise_data", exercise_data)
         self.exercise.insert_exercise(exercise_data)
         exercise_details = self.exercise.get_exercise_by_name(exercise_name)
-        print("exercise_details", exercise_details)
+        # print("exercise_details", exercise_details)
 
         exercise_log_data = {
             "exercise_id": exercise_details[0][0],
@@ -1022,7 +1198,7 @@ class ExerciseCreateScreen(Screen):
             "details": '',
             "is_active": 1,
         }
-        print("exercise_log", exercise_log_data)
+        # print("exercise_log", exercise_log_data)
 
         self.exercise_log.insert_exercise_log(exercise_log_data)
         return self.success_popup.show_popup('Success', 'Exercise Created Successfully')
@@ -1034,26 +1210,42 @@ class ExerciseLogScreen(Screen):
         self.exercise_log = ExerciseLog(self.local_db.connection)
         self.selected_rows = []
         self.workout_log_rows = []
+        # print("intial workout_log", self.workout_log_rows)
     
     def switch_to_workout_history(self):
         self.manager.transition.direction = 'right'
         self.manager.current = 'workout_history_screen'
         self.clear_exercise_log_datatable_box()
         plots_screen = self.manager.get_screen('workout_history_screen')
+
         plots_screen.clear_workout_log_datatable_box()
         plots_screen.create_workout_log_datatable()
         self.selected_rows.clear()
+
+    def switch_to_exercise_log_allocate(self):
+        self.manager.transition.direction = 'left'
+        self.manager.current = 'exercise_log_allocate_screen'
+        self.clear_exercise_log_datatable_box()
+
+        plots_screen = self.manager.get_screen('exercise_log_allocate_screen')
+        plots_screen.clear_exercise_log_allocate_datatable_box()
+        plots_screen.create_exercise_log_allocate_datatable()
+        # self.selected_rows.clear()
 
     def clear_exercise_log_datatable_box(self):
         exercise_log_datatable_box = self.ids.exercise_log_datatable_box
         exercise_log_datatable_box.clear_widgets()
 
+    def get_workout_log_data_from_selected_rows(self):
+        self.workout_log_rows = self.manager.get_screen('workout_history_screen').get_selected_rows()
+        return self.workout_log_rows[-1][0]
+
     def create_exercise_log_datatable(self):
         exercise_log_datatable_box = self.ids.exercise_log_datatable_box
-        self.workout_log_rows = self.manager.get_screen('workout_history_screen').get_selected_rows()
-        print("self.workout_log_rows", self.workout_log_rows)
-        exercise_log_data = self.exercise_log.get_exercise_logs_details(self.workout_log_rows[-1][0])
-        print("exercise_log_data", exercise_log_data)
+        # print("self.workout_log_rows", self.workout_log_rows)
+
+        exercise_log_data = self.exercise_log.get_exercise_logs_details(self.get_workout_log_data_from_selected_rows())
+        # print("exercise_log_data", exercise_log_data)
 
         if exercise_log_data:
             self.exercise_log_datatable = MDDataTable(
@@ -1096,7 +1288,7 @@ class ExerciseLogScreen(Screen):
         if self.selected_rows:
             for row in self.selected_rows:
                 exercise_log_id = row[0]
-                print("worky", exercise_log_id)
+                # print("worky", exercise_log_id)
                 self.exercise_log.remove_exercise_log(row[0])
         self.clear_exercise_log_datatable_box()
         self.create_exercise_log_datatable()
@@ -1109,7 +1301,7 @@ class ExerciseLogScreen(Screen):
                 update_popup.open()
 
     def update_row_callback(self, exercise_log_id, sets, reps, weight, rest, distance, rpe, is_complete):
-        print("updated data", exercise_log_id, sets, reps, weight, rest, distance, rpe, is_complete)
+        # print("updated data", exercise_log_id, sets, reps, weight, rest, distance, rpe, is_complete)
         updated_is_complete = 1 if is_complete == 'Yes' else 0
         updated_values = {
             'sets': sets,
@@ -1125,9 +1317,418 @@ class ExerciseLogScreen(Screen):
         self.clear_exercise_log_datatable_box()
         self.create_exercise_log_datatable()
         self.selected_rows.clear()
+    
+    def get_selected_rows(self):
+        return self.selected_rows
+
+class ExerciseLogAllocateScreen(Screen):
+    def __init__(self, **kwargs):
+        super(ExerciseLogAllocateScreen, self).__init__(**kwargs)
+        self.local_db = LocalDB('local_db.db')
+        self.exercise = Exercise(self.local_db.connection)
+        self.exercise_log = ExerciseLog(self.local_db.connection)
+        self.workout = Workout(self.local_db.connection)
+        self.workout_log = WorkoutLog(self.local_db.connection)
+
+        self.select_workout_type = ""
+        self.exercise_log_allocate_data = ""
+        self.selected_rows = []
+        self.exercise_log_rows = []
+
+        self.fail_popup = FailPopup()
+        self.success_popup = SuccessPopup()
+
+    def switch_to_exercise_log(self):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'exercise_log_screen'
+
+        plots_screen = self.manager.get_screen('exercise_log_screen')
+        plots_screen.clear_exercise_log_datatable_box()
+        plots_screen.create_exercise_log_datatable()
+
+    def clear_exercise_log_allocate_datatable_box(self):
+        exercise_log_allocate_datatable_box = self.ids.exercise_log_allocate_datatable_box
+        exercise_log_allocate_datatable_box.clear_widgets()
+        self.selected_rows.clear()
+
+    def get_workout_log_id(self):
+        workout_log_id = self.manager.get_screen('exercise_log_screen').get_workout_log_data_from_selected_rows()
+        return workout_log_id
+
+    def create_exercise_log_allocate_datatable(self):
+        exercise_log_allocate_datatable_box = self.ids.exercise_log_allocate_datatable_box
+        self.exercise_log_allocate_data = self.exercise_log.get_all_exercise_logs_details()
+
+        if self.exercise_log_allocate_data:
+            search_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=50, pos_hint={'center_x': 0.5})
+            self.search_field = MDTextField(
+                hint_text="Search",
+                size_hint_x=None,
+                width=300,
+                pos_hint={'center_x': 0.5, 'center_y': 0.9}
+            )
+
+            self.search_button = Button(
+                text="Search",
+                size_hint=(None, None),
+                size=(100, 50),
+                pos_hint={'center_x': 0.85, 'center_y': 0.9}
+            )
+            self.search_button.bind(on_release=self.on_search_button_release)
+
+            search_layout.add_widget(self.search_field)
+            search_layout.add_widget(self.search_button)
+
+            self.exercise_log_allocate_datatable = MDDataTable(
+                pos_hint={'center_x': 0.5, 'center_y': 0.5},
+                size_hint=(0.95, 0.3),
+                check=True,
+                use_pagination=True,
+                rows_num=8,
+                pagination_menu_height='240dp',
+                pagination_menu_pos="auto",
+                background_color=[1, 0, 0, .5],
+                column_data=[
+                    ["ID", dp(25)],
+                    ["Name", dp(35)],
+                    ["Sets", dp(25)],
+                    ["Reps", dp(25)],
+                    ["Weight (kg)", dp(25)],
+                    ["rest (sec)", dp(25)],
+                    ["duration", dp(25)],
+                    ["distance (m)", dp(25)],
+                ],
+                row_data=self.exercise_log_allocate_data
+            )
+            self.exercise_log_allocate_datatable.bind(on_check_press=self.rows_selected)
+
+            exercise_log_allocate_datatable_box.add_widget(search_layout)
+            exercise_log_allocate_datatable_box.add_widget(self.exercise_log_allocate_datatable)
+            self.selected_rows.clear()
+        else:
+            self.exercise_log_allocate_datatable = Label(text='No Exercises Logs Recorded', color='red', font_size="20sp", bold=True)
+            exercise_log_allocate_datatable_box.add_widget(self.exercise_log_allocate_datatable)
+
+    def on_search_button_release(self, instance):
+        search_query = self.search_field.text
+        if search_query:
+            filtered_data = [data for data in self.exercise_log_allocate_data if search_query.lower() in str(data).lower()]
+            self.exercise_log_allocate_datatable.row_data = filtered_data
+        else:
+            self.exercise_log_allocate_datatable.row_data = self.exercise_log_allocate_data
+
+    def rows_selected(self, instance_table, current_row):
+        row_data = tuple(current_row)
+        modified_row_data = ((row_data[0]),) + row_data[1:]
+        if modified_row_data in self.selected_rows:
+            self.selected_rows.remove(modified_row_data)
+        else:
+            self.selected_rows.append(modified_row_data)
+        # print("self.selected_rows.", self.selected_rows)
+
+    def allocate_log_save_button(self):
+        # print("print", self.selected_rows)
+        workout_log_id = self.get_workout_log_id()
+        # print("workout_log_id", workout_log_id)
+        
+        if self.selected_rows:
+            for exercise_logs in self.selected_rows:
+                exercise_id = self.exercise_log.get_exercise_id(exercise_logs[0])
+                # print("exercise_id", exercise_id)
+                # print(exercise_logs)
+                exercise_log_data = {
+                    'exercise_id': exercise_id,
+                    'workout_log_id': workout_log_id,
+                    'sets': exercise_logs[2],
+                    'reps': exercise_logs[3],
+                    'weight_kg': exercise_logs[4],
+                    'rest_per_set_s': exercise_logs[5],
+                    'duration': exercise_logs[6],
+                    'distance_m': exercise_logs[7],
+                    'rpe': '',
+                    'is_complete': 0,
+                    'date_complete': '',
+                    'time_complete': '',
+                    'details': '',
+                    'is_active': 1, 
+                }
+                # print("exercise log data", exercise_log_data)
+
+                self.exercise_log.insert_exercise_log(exercise_log_data)
+            
+            return self.success_popup.show_popup('Success', 'Exercise Logs Allocated Successfully')
+        else:
+            print("No exercise logs selected")
+
+class ExerciseAllocateScreen(Screen):
+    def __init__(self, **kwargs):
+        super(ExerciseAllocateScreen, self).__init__(**kwargs)
+        self.local_db = LocalDB('local_db.db')
+        self.exercise = Exercise(self.local_db.connection)
+        self.exercise_log = ExerciseLog(self.local_db.connection)
+        self.workout = Workout(self.local_db.connection)
+        self.workout_log = WorkoutLog(self.local_db.connection)
+
+        self.select_workout_type = ""
+        self.exercise_allocate_data = ""
+        self.selected_rows = []
+
+        self.fail_popup = FailPopup()
+        self.success_popup = SuccessPopup()
+
+    def switch_to_workout_allocate(self):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'workout_allocate_screen'
+
+        plots_screen = self.manager.get_screen('workout_allocate_screen')
+        plots_screen.clear_workout_allocate_datatable_box()
+        plots_screen.create_workout_allocate_datatable()
+
+    def clear_exercise_allocate_datatable_box(self):
+        exercise_allocate_datatable_box = self.ids.exercise_allocate_datatable_box
+        exercise_allocate_datatable_box.clear_widgets()
+        self.selected_rows.clear()
+
+    def create_exercise_allocate_datatable(self):
+        self.allocate_workout_rows = self.manager.get_screen('workout_allocate_screen').get_selected_rows()
+        # print("self.allocate_workout_rows", self.allocate_workout_rows)
+        
+        exercise_allocate_datatable_box = self.ids.exercise_allocate_datatable_box
+        self.exercise_allocate_data = self.exercise.get_all_exercises()
+
+        if self.exercise_allocate_data:
+            search_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=50, pos_hint={'center_x': 0.5})
+            self.search_field = MDTextField(
+                hint_text="Search",
+                size_hint_x=None,
+                width=300,
+                pos_hint={'center_x': 0.5, 'center_y': 0.9}
+            )
+
+            self.search_button = Button(
+                text="Search",
+                size_hint=(None, None),
+                size=(100, 50),
+                pos_hint={'center_x': 0.85, 'center_y': 0.9}
+            )
+            self.search_button.bind(on_release=self.on_search_button_release)
+
+            search_layout.add_widget(self.search_field)
+            search_layout.add_widget(self.search_button)
+
+            self.exercise_allocate_datatable = MDDataTable(
+                pos_hint={'center_x': 0.5, 'center_y': 0.5},
+                size_hint=(0.95, 0.3),
+                check=True,
+                use_pagination=True,
+                rows_num=8,
+                pagination_menu_height='240dp',
+                pagination_menu_pos="auto",
+                background_color=[1, 0, 0, .5],
+                column_data=[
+                    ["ID", dp(25)],
+                    ["Name", dp(35)],
+                    ["Type", dp(25)],
+                    ["Body Part", dp(25)],
+                    ["Equipment", dp(25)],
+                    ["Level", dp(25)],
+                    ["Rating", dp(25)],
+                ],
+                row_data=self.exercise_allocate_data
+            )
+            self.exercise_allocate_datatable.bind(on_check_press=self.rows_selected)
+
+            exercise_allocate_datatable_box.add_widget(search_layout)  # Add the horizontal layout
+            exercise_allocate_datatable_box.add_widget(self.exercise_allocate_datatable)
+            self.selected_rows.clear()
+        else:
+            self.exercise_allocate_datatable = Label(text='No Exercises Recorded', color='red', font_size="20sp", bold=True)
+            exercise_allocate_datatable_box.add_widget(self.exercise_allocate_datatable)
+
+    def on_search_button_release(self, instance):
+        search_query = self.search_field.text
+        if search_query:
+            filtered_data = [data for data in self.exercise_allocate_data if search_query.lower() in str(data).lower()]
+            self.exercise_allocate_datatable.row_data = filtered_data
+        else:
+            self.exercise_allocate_datatable.row_data = self.exercise_allocate_data
+
+    def rows_selected(self, instance_table, current_row):
+        row_data = tuple(current_row)
+        modified_row_data = ((row_data[0]),) + row_data[1:]
+        if modified_row_data in self.selected_rows:
+            self.selected_rows.remove(modified_row_data)
+        else:
+            self.selected_rows.append(modified_row_data)
+        # print("self.selected_rows.", self.selected_rows)
+
+    def remove_row(self):
+        if self.selected_rows:
+            for row in self.selected_rows:
+                exercise_id = row[0]
+                status = self.exercise.remove_exercise(exercise_id)
+                if status == 0:
+                    allocate_workout_success = FailPopup()
+                    allocate_workout_success.show_popup('Failed', 'Cannot delete preset exercises.')
+        
+        self.clear_exercise_allocate_datatable_box()
+        self.create_exercise_allocate_datatable()
+
+    def update_row(self):
+        if self.selected_rows:
+            for selected_row in self.selected_rows:
+                update_popup = UpdateExerciseAllocatePopup(selected_row, update_exercise_allocate_callback=self.update_row_callback)
+                self.selected_rows.clear()
+                update_popup.open()
+
+    def update_row_callback(self, exercise_id, exercise_name, description, exercise_type, body_part, equipment, level):
+        # print("updated data", exercise_id, exercise_name, description, exercise_type, body_part, equipment, level)
+
+        workout_update = {
+            'exercise_name': exercise_name,
+            'description': description,
+            'type': exercise_type,
+            'body_part': body_part,
+            'equipment': equipment,
+            'level': level,
+        }
+            
+        self.exercise.update_exercise(exercise_id, workout_update)
+        self.clear_exercise_allocate_datatable_box()
+        self.create_exercise_allocate_datatable()
+        self.selected_rows.clear()
+
+    def get_selected_rows(self):
+        return self.selected_rows
+
+    def allocate_save_button(self):
+        self.allocate_workout_rows = self.manager.get_screen('workout_allocate_screen').get_selected_rows()
+        # print("self.allocate_workout_rows", self.allocate_workout_rows[0][0])
+
+        if self.selected_rows:
+            for exercise_row in self.selected_rows:
+                if exercise_row:
+                    workout_log_data = self.workout_log.get_workout_logs_by_workout_id(self.allocate_workout_rows[0][0])
+                    if workout_log_data:
+                        for workout_logs in workout_log_data:
+                            # print(workout_logs[0])
+                            if workout_logs[4] == 0 and workout_logs[7] == 1:  # not complete and active
+                                # print('workout_logs', workout_logs)
+                                exercise_logs = self.exercise_log.get_latest_exercise_log_by_exercise_id(exercise_row[0])
+                                if exercise_logs:  # if any past exercise log record exists
+                                    insert_exercise_log = {
+                                        'exercise_id': exercise_row[0],
+                                        'workout_log_id': workout_logs[0],
+                                        'sets': exercise_logs[3],
+                                        'reps': exercise_logs[4],
+                                        'weight_kg': exercise_logs[5],
+                                        'rest_per_set_s': exercise_logs[6],
+                                        'duration': exercise_logs[7],
+                                        'distance_m': exercise_logs[8],
+                                        'rpe': '',
+                                        'is_complete': 0,
+                                        'date_complete': '',
+                                        'time_complete': '',
+                                        'details': exercise_logs[12],
+                                        'is_active': 1,
+                                    }
+                                    self.exercise_log.insert_exercise_log(insert_exercise_log)
+                                else:
+                                    # print("6 No Exercise Record Found")
+                                    insert_exercise_log = {
+                                        'exercise_id': exercise_row[0],
+                                        'workout_log_id': workout_logs[0],
+                                        'sets': '',
+                                        'reps': '',
+                                        'weight_kg': '',
+                                        'rest_per_set_s': '',
+                                        'duration': '00:00:00',
+                                        'distance_m': '',
+                                        'rpe': '',
+                                        'is_complete': 0,
+                                        'date_complete': '',
+                                        'time_complete': '',
+                                        'details': '',
+                                        'is_active': 1,
+                                    }
+                                    self.exercise_log.insert_exercise_log(insert_exercise_log)
+                    else:
+                        new_workout_log_data = {
+                            'workout_id': self.allocate_workout_rows[0][0],
+                            'date_assigned': '',
+                            'time_assigned': '',
+                            'is_complete': 0,
+                            'date_completed': '',
+                            'time_completed': '',
+                            'is_active': 0,
+                        }
+                        workout_log_id = self.workout_log.insert_workout_log(new_workout_log_data)
+                        for exercise_row in self.selected_rows:
+                            insert_exercise_log = {
+                                'exercise_id': exercise_row[0],
+                                'workout_log_id': workout_log_id,
+                                'sets': '',
+                                'reps': '',
+                                'weight_kg': '',
+                                'rest_per_s': '',
+                                'duration': '00:00:00',
+                                'distance_m': '',
+                                'rpe': '',
+                                'is_complete': 0,
+                                'date_complete': '',
+                                'time_completed': '',
+                                'details': '',
+                                'is_active': 1,
+                            }
+                            self.exercise_log.insert_exercise_log(insert_exercise_log)
+        else:
+            print("No exercises selected")
+
 
 #-----------------------------------------------------------
 
+class GymFinderScreen(Screen):
+    def switch_to_dashboard(self):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'dashboard_screen'
+
+    def create_map_view(self):
+        mapview = MapView(zoom=15, lat=51.454514, lon=-2.587910)
+        gym_finder_map = self.ids.gym_finder_map
+        gym_finder_map.clear_widgets()
+        gym_finder_map.add_widget(mapview)
+
+    # def find_nearby_gyms(self, postcode):
+    #     # Use your Google Places API key
+    #     api_key = 'YOUR_GOOGLE_PLACES_API_KEY'
+    #     gmaps = googlemaps.Client(key=api_key)
+
+    #     # Geocode the provided postcode to get its coordinates
+    #     geocode_result = gmaps.geocode(postcode)
+    #     if not geocode_result:
+    #         print(f"Could not find coordinates for the given postcode: {postcode}")
+    #         return
+
+    #     location = geocode_result[0]['geometry']['location']
+    #     lat, lon = location['lat'], location['lng']
+
+    #     # Perform a nearby search for gyms
+    #     places_result = gmaps.places_nearby(
+    #         location=(lat, lon),
+    #         radius=1000,  # You can adjust the radius as needed
+    #         type='gym'
+    #     )
+
+    #     # Extract information about nearby gyms
+    #     nearby_gyms = []
+    #     for place in places_result.get('results', []):
+    #         name = place.get('name', 'Unknown Gym')
+    #         address = place.get('vicinity', 'Unknown Address')
+    #         lat = place['geometry']['location']['lat']
+    #         lon = place['geometry']['location']['lng']
+    #         nearby_gyms.append({'name': name, 'address': address, 'lat': lat, 'lon': lon})
+
+    #     return nearby_gyms
 
 class BodyStatsScreen(Screen):
     def switch_to_dashboard(self):
@@ -1643,7 +2244,7 @@ class AFNTApp(MDApp):
         screen = self.root.get_screen('registration_screen')
         formatted_date = value.strftime("%Y-%m-%d")
         screen.ids.date_input.text = formatted_date
-        print(instance, value, date_range)
+        # print(instance, value, date_range)
 
     def on_cancel(self, instance, value):
         # self.root.ids.date_label.text = "Cancelled"
@@ -1667,7 +2268,7 @@ class AFNTApp(MDApp):
     def select_gender(self, selected_gender_text, textfield_instance):
         self.selected_gender = selected_gender_text
         textfield_instance.text = self.selected_gender
-        print(self.selected_gender)
+        # print(self.selected_gender)
 
     def verify_registration(self):
         registration_screen = self.root.get_screen('registration_screen')
@@ -1730,7 +2331,7 @@ class AFNTApp(MDApp):
         self.menu.open()
 
     def selected_navbar_dropdown(self, selected_item_text):
-        print(f"Selected: {selected_item_text}")
+        # print(f"Selected: {selected_item_text}")
         if hasattr(self, 'menu'):
             self.menu.dismiss()  # Dismiss the menu if it exists
 
@@ -1749,7 +2350,7 @@ class AFNTApp(MDApp):
         screen = self.root.get_screen('water_intake_screen')
         formatted_date = value.strftime("%d/%m/%Y")
         screen.ids.water_date_input.text = formatted_date
-        print(instance, value, date_range)
+        # print(instance, value, date_range)
     
     def handle_water_input(self, text):
         screen = self.root.get_screen('water_intake_screen')
@@ -1758,7 +2359,7 @@ class AFNTApp(MDApp):
     def verify_water_input(self):
         water_intake_screen = self.root.get_screen('water_intake_screen')
         water_details = [water_intake_screen.ids.water_input.text, water_intake_screen.ids.water_date_input.text]
-        print(water_details)
+        # print(water_details)
 
         result_code = self.water_intake_table.verify_water_intake(water_details[0], water_details[1])
 
@@ -1788,7 +2389,7 @@ class AFNTApp(MDApp):
         screen = self.root.get_screen('body_stats_screen')
         formatted_date = value.strftime("%d/%m/%Y")
         screen.ids.body_stats_date.text = formatted_date
-        print(instance, value, date_range)
+        # print(instance, value, date_range)
 
     def handle_weight_input(self, text):
         screen = self.root.get_screen('body_stats_screen')
@@ -1804,7 +2405,7 @@ class AFNTApp(MDApp):
         body_stats_details = [body_stats_screen.ids.body_stats_date.text, body_stats_screen.ids.weight_input.text, body_stats_screen.ids.height_input.text, 
                               body_stats_screen.ids.body_fat_input.text, body_stats_screen.ids.skeletal_muscle_input.text, body_stats_screen.ids.step_count_input.text]
         
-        print("bsd", body_stats_details)
+        # print("bsd", body_stats_details)
         verify_date = self.verify_date_input(body_stats_details[0])
 
         weight_code = self.weight_table.verify_weight(body_stats_details[1])
@@ -1833,8 +2434,8 @@ class AFNTApp(MDApp):
         if height_code == 23:
             return self.show_error_popup("invalid height")
         elif height_code == 24:
-            print("Err24: no height input")
-            print("bmi verf", body_stats_details[1], float(self.height_table.get_latest_height_value()), body_stats_details[0])
+            # print("Err24: no height input")
+            # print("bmi verf", body_stats_details[1], float(self.height_table.get_latest_height_value()), body_stats_details[0])
             self.bmi_table.insert_bmi(float(body_stats_details[1]), float(self.height_table.get_latest_height_value()*100), body_stats_details[0])
 
         # skeletal muscle verification code
@@ -1849,9 +2450,9 @@ class AFNTApp(MDApp):
             return self.show_error_popup("invalid body fat value")
         elif body_fat_code == 30:
             # return self.show_error_popup("invalid body fat format")
-            print("body fat verf", logged_user, body_stats_details[0])
+            # print("body fat verf", logged_user, body_stats_details[0])
             self.body_fat_table.calculate_body_fat(float(body_stats_details[1]), logged_user, body_stats_details[0])
-            print("Err27: no body fat input")
+            # print("Err27: no body fat input")
 
         # step_count verification code
         if step_count_code == 33:
@@ -1863,7 +2464,7 @@ class AFNTApp(MDApp):
             self.weight_table.insert_weight(body_stats_details[1], body_stats_details[0])
         if height_code == 22:
             self.height_table.insert_height(int(body_stats_details[2])/100, body_stats_details[0])
-            print("bmi2 verf:", float(body_stats_details[1]), float(body_stats_details[2]), body_stats_details[0])
+            # print("bmi2 verf:", float(body_stats_details[1]), float(body_stats_details[2]), body_stats_details[0])
             self.bmi_table.insert_bmi(float(body_stats_details[1]), float(body_stats_details[2]), body_stats_details[0])
         if skeletal_muscle_code == 25:
             self.skeletal_muscle_table.insert_skeletal_muscle(float(body_stats_details[4]), body_stats_details[0])
@@ -1872,15 +2473,11 @@ class AFNTApp(MDApp):
         if step_count_code == 32:
             self.step_count_table.insert_step_count(int(body_stats_details[5]), body_stats_details[0])
         
-        # self.local_db.print_bmi()
-        # print('\n')
-        # self.local_db.print_body_fat()
         self.local_db.print_step_count()
 
     def on_stop(self):
         self.local_db.close_connection()
 
-    # Workout Screen
 
 if __name__ == '__main__':
     AFNTApp().run()

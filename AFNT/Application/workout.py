@@ -11,10 +11,11 @@ class Workout():
         try:
             table_name = 'workouts'
             with self.connection:
-                self.cursor.execute(f"SELECT MAX(workout_id) FROM {table_name} WHERE workout_id LIKE 'C%'")
+                self.cursor.execute(f"SELECT MAX(CAST(SUBSTR(workout_id, 2)) AS INTEGER) FROM {table_name} WHERE workout_id LIKE 'C%'")
                 latest_id = self.cursor.fetchone()[0]
-
-            new_id_numeric = int(latest_id[1:]) + 1 if latest_id else 1
+            
+            latest_numeric_part = int(latest_id)
+            new_id_numeric = latest_numeric_part + 1
             new_id = f'C{new_id_numeric}'
 
             workout['workout_id'] = new_id

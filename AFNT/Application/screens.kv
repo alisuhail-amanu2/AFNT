@@ -113,6 +113,9 @@ WindowManager:
     WorkoutCreateScreen:
     ExerciseCreateScreen:
     ExerciseLogScreen:
+    ExerciseLogAllocateScreen:
+    ExerciseAllocateScreen:
+    GymFinderScreen:
 
 <LoginScreen>:
     name: 'login_screen'
@@ -472,6 +475,7 @@ WindowManager:
                     width: 0.80 * root.width
                     user_font_size: "72sp"
                     pos_hint: {'center_x': 0.5}
+                    on_release: root.switch_to_gym_finder()
                     Image:
                         source: 'img/map.png'
                         size: (self.parent.height, self.parent.height)
@@ -1146,13 +1150,27 @@ WindowManager:
 
                     Button:
                         id: save
-                        text: "Save"
+                        text: "Allocate Workout"
                         value: "save"
                         size_hint_x: None
                         width: self.parent.width
                         background_normal: ''
                         background_color: 0.0, 0.8, 1, 1
                         on_release: root.allocate_save_button()
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: allocate_exercise
+                        text: "Allocate Exercise"
+                        value: "allocate_exercise"
+                        size_hint_x: None
+                        width: self.parent.width
+                        background_normal: ''
+                        background_color: 0.0, 0.8, 1, 1
+                        on_release: root.switch_to_exercise_allocate()
 
                 AnchorLayout:
                     anchor_x: "center"
@@ -1515,10 +1533,182 @@ WindowManager:
                         width: self.parent.width
                         background_normal: ''
                         background_color: 0.0, 0.8, 1, 1
-                        # on_release: root.update_row()
+                        on_release: root.switch_to_exercise_log_allocate()
 
-# <WorkoutManager>:
-#     name: "workout_manager_screen"
+<ExerciseLogAllocateScreen>:
+    name: "exercise_log_allocate_screen"
+    MDTopAppBar:
+        title: "Allocate Exercise Log"
+        bold: True
+        halign: 'center'
+        font_size: '24sp'
+        pos_hint: {"top": 1}
+        elevation: 4
+        left_action_items:
+            [["arrow-left", lambda x: root.switch_to_exercise_log()]]
+        md_bg_color: 0, 0, 0.5, 
+    
+    ScrollView:
+        do_scroll_y: True
+        do_scroll_x: False
+        bar_width: 0
+        size_hint: (0.9, 0.85)
+        pos_hint: {'center_x': 0.5, 'top': 0.85}
 
-# <ExerciseManager>:
-#     name: "exercise_manager_screen"
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (None, None)
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            height: dp(700)
+            width: self.parent.width
+            spacing: 20
+            padding: 10
+            canvas.before:
+                Color:
+                    rgba: 0.95, 0.95, 0.95, 1
+                RoundedRectangle:
+                    size: self.size
+                    pos: self.pos
+                    radius: [10,]
+
+            BoxLayout:
+                id: exercise_log_allocate_datatable_box
+                orientation:'vertical'
+            AnchorLayout:
+                anchor_x: "center"
+                anchor_y: "center"
+                size_hint: (0.95, None)
+                pos_hint: {"center_x": 0.5}
+                spacing: 10
+
+                Button:
+                    id: allocate_exercise_log
+                    text: "Allocate Exercise"
+                    value: "allocate_exercise"
+                    size_hint_x: None
+                    background_normal: ''
+                    width: self.parent.width
+                    background_color: 0.0, 0.8, 1, 1
+                    on_release: root.allocate_log_save_button()
+
+<ExerciseAllocateScreen>:
+    name: "exercise_allocate_screen"
+    MDTopAppBar:
+        title: "Allocate Exercise"
+        bold: True
+        halign: 'center'
+        font_size: '24sp'
+        pos_hint: {"top": 1}
+        elevation: 4
+        left_action_items:
+            [["arrow-left", lambda x: root.switch_to_workout_allocate()]]
+        md_bg_color: 0, 0, 0.5, 
+    
+    ScrollView:
+        do_scroll_y: True
+        do_scroll_x: False
+        bar_width: 0
+        size_hint: (0.9, 0.85)
+        pos_hint: {'center_x': 0.5, 'top': 0.85}
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (None, None)
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            height: dp(700)
+            width: self.parent.width
+            spacing: 20
+            padding: 10
+            canvas.before:
+                Color:
+                    rgba: 0.95, 0.95, 0.95, 1
+                RoundedRectangle:
+                    size: self.size
+                    pos: self.pos
+                    radius: [10,]
+
+            BoxLayout:
+                id: exercise_allocate_datatable_box
+                orientation:'vertical'
+
+            GridLayout:
+                cols: 2
+                size_hint: (0.95, None)
+                width: self.parent.width
+                pos_hint: {"center_x": 0.5}
+                spacing: 10
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: remove_exercise_log
+                        text: "Remove Exercise"
+                        value: "remove_exercise"
+                        size_hint_x: None
+                        background_normal: ''
+                        width: self.parent.width
+                        background_color: 0.0, 0.8, 1, 1
+                        on_release: root.remove_row()
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: edit_exercise_logs
+                        text: "Edit Exercise"
+                        value: "edit_exercise"
+                        size_hint_x: None
+                        width: self.parent.width
+                        background_normal: ''
+                        background_color: 0.0, 0.8, 1, 1
+                        on_release: root.update_row()
+                
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: allocate_exercise
+                        text: "Allocate Exercise"
+                        value: "_exercise"
+                        size_hint_x: None
+                        width: self.parent.width
+                        background_normal: ''
+                        background_color: 0.0, 0.8, 1, 1
+                        on_release: root.allocate_save_button()
+
+<GymFinderScreen>:
+    name: "gym_finder_screen"
+    MDTopAppBar:
+        title: "Gym Finder"
+        bold: True
+        halign: 'center'
+        font_size: '24sp'
+        pos_hint: {"top": 1}
+        elevation: 4
+        left_action_items:
+            [["arrow-left", lambda x: root.switch_to_dashboard()]]
+        md_bg_color: 0, 0, 0.5, 
+    
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: (None, None)
+        size_hint: (0.9, 0.85)
+        pos_hint: {'center_x': 0.5, 'top': 0.85}
+        height: dp(700)
+
+        canvas.before:
+            Color:
+                rgba: 0.95, 0.95, 0.95, 1
+            RoundedRectangle:
+                size: self.size
+                pos: self.pos
+                radius: [10,]
+
+
+        BoxLayout:
+            id: gym_finder_map
+            orientation:'vertical'
