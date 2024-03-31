@@ -2158,7 +2158,6 @@ class ArduinoWatch(Screen):
 
 class AFNTApp(MDApp):
     selected_gender = StringProperty("")
-
     def build(self):
         self.local_db = LocalDB('local_db.db')
         self.water_intake_table = WaterIntake(self.local_db.connection)

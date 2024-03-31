@@ -104,7 +104,6 @@ class Exercise():
         except Exception as e:
             print(f"Error removing workout log: {e}")
 
-
     def drop_exercise(self):
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS exercises")

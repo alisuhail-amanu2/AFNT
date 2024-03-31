@@ -55,7 +55,6 @@ class WorkoutLog():
             print("Error retrieving latest workout log id:", e)
             return None
 
-
     def get_workout_log_by_id(self, workout_log_id):
         with self.connection:
             self.cursor.execute("SELECT * FROM workout_logs WHERE workout_log_id=?", (workout_log_id,))
