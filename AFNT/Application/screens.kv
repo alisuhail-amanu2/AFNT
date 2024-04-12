@@ -1,16 +1,6 @@
 #:kivy 2.3.0
 #:import utils kivy.utils
-# <PP>:
-#     id: popup_value
-#     Label:
-#         size_hint: 0.6, 0.2
-#         pos_hint: {'center_x': 0.5, 'center_y': 0.5}
 
-#     Button:
-#         text: "BACK"
-#         size_hint: 0.8, 0.2
-#         pos_hint: {"x": 0.1, "y": 0.1}
-#         # on_release: app.dismiss_popup()
 <RoundedButtonWorkout@Button>:
     background_color: (0, 0, 0, 0)
     background_normal: ''
@@ -116,6 +106,9 @@ WindowManager:
     ExerciseLogAllocateScreen:
     ExerciseAllocateScreen:
     GymFinderScreen:
+    MealHistoryScreen:
+    ArduinoWatchScreen:
+    ArduinoWatchPlotsScreen:
 
 <LoginScreen>:
     name: 'login_screen'
@@ -458,6 +451,7 @@ WindowManager:
                     width: 0.80 * root.width
                     user_font_size: "72sp"
                     pos_hint: {'center_x': 0.5}
+                    on_release: root.switch_to_meal_history()
 
                     Image:
                         source: 'img/meal.png'
@@ -530,6 +524,9 @@ WindowManager:
                     width: 0.80 * root.width
                     user_font_size: "72sp"
                     pos_hint: {'center_x': 0.5}
+                    on_release: 
+                        root.switch_to_arduino_watch()
+                        root.manager.transition.direction = "left"
                     Image:
                         source: 'img/smartwatch.png'
                         size: (self.parent.height, self.parent.height)
@@ -1712,3 +1709,283 @@ WindowManager:
         BoxLayout:
             id: gym_finder_map
             orientation:'vertical'
+
+<MealHistoryScreen>:
+    name: "meal_history_screen"
+    MDTopAppBar:
+        title: "Meal Planner"
+        bold: True
+        halign: 'center'
+        font_size: '24sp'
+        pos_hint: {"top": 1}
+        elevation: 4
+        left_action_items:
+            [["arrow-left", lambda x: root.switch_to_dashboard()]]
+        md_bg_color: 0, 0, 0.5, 
+    
+    ScrollView:
+        do_scroll_y: True
+        do_scroll_x: False
+        bar_width: 0
+        size_hint: (0.9, 0.85)
+        pos_hint: {'center_x': 0.5, 'top': 0.85}
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (None, None)
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            height: dp(700)
+            width: self.parent.width
+            spacing: 20
+            padding: 10
+            canvas.before:
+                Color:
+                    rgba: 0.95, 0.95, 0.95, 1
+                RoundedRectangle:
+                    size: self.size
+                    pos: self.pos
+                    radius: [10,]
+
+            GridLayout:
+                cols: 2
+                size_hint: (0.9, None)
+                width: self.parent.width
+                pos_hint: {"center_x": 0.5}
+                spacing: 10
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    MDTextField:
+                        id: meal_log_date_from
+                        hint_text: "From *"
+                        on_focus: root.handle_meal_log_date_from_input()
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    MDTextField:
+                        id: meal_log_date_to
+                        hint_text: "To *"
+                        on_focus: root.handle_meal_log_date_to_input()
+
+            BoxLayout:
+                id: meal_log_datatable_box
+                orientation:'vertical'
+
+            GridLayout:
+                cols: 2
+                size_hint: (0.95, None)
+                width: self.parent.width
+                pos_hint: {"center_x": 0.5}
+                spacing: 10
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: remove_meal_log
+                        text: "Remove Meal Logs"
+                        value: "remove_meal_log"
+                        size_hint_x: None
+                        background_normal: ''
+                        width: self.parent.width
+                        background_color: 0.0, 0.8, 1, 1
+                        # on_release: root.remove_row()
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: edit_meal_logs
+                        text: "Edit Meal Logs"
+                        value: "edit_meal_logs"
+                        size_hint_x: None
+                        width: self.parent.width
+                        background_normal: ''
+                        background_color: 0.0, 0.8, 1, 1
+                        # on_release: root.update_row()
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: view_meal_log
+                        text: "View Meal Log"
+                        value: "view_meal_log"
+                        size_hint_x: None
+                        width: self.parent.width
+                        background_normal: ''
+                        background_color: 0.0, 0.8, 1, 1
+                        # on_release: root.switch_to_exercise_log()
+
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "center"
+
+                    Button:
+                        id: allocate_meal
+                        text: "Meal Manager"
+                        value: "allocate_meal"
+                        size_hint_x: None
+                        width: self.parent.width
+                        background_normal: ''
+                        background_color: 0.0, 0.8, 1, 1
+                        # on_release: root.switch_to_meal_allocate()
+
+<ArduinoWatchScreen>:
+    name: "arduino_watch_screen"
+    MDTopAppBar:
+        title: "Arduino Watch Graphs"
+        bold: True
+        halign: 'center'
+        font_size: '24sp'
+        pos_hint: {"top": 1}
+        elevation: 4
+        left_action_items:
+            [["arrow-left", lambda x: root.switch_to_dashboard()]]
+        md_bg_color: 0, 0, 0.5, 
+    
+    ScrollView:
+        do_scroll_y: True
+        do_scroll_x: False
+        bar_width: 0
+        size_hint: (0.9, 0.85)
+        pos_hint: {'center_x': 0.5, 'top': 0.85}
+
+        # BoxLayout:
+        #     orientation: 'vertical'
+        #     size_hint: (None, None)
+        #     pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        #     height: dp(700)
+        #     width: self.parent.width
+        #     spacing: 20
+        #     padding: 10
+        #     canvas.before:
+        #         Color:
+        #             rgba: 0.95, 0.95, 0.95, 1
+        #         RoundedRectangle:
+        #             size: self.size
+        #             pos: self.pos
+        #             radius: [10,]
+
+            # GridLayout:
+            #     cols: 2
+            #     size_hint: (0.9, None)
+            #     width: self.parent.width
+            #     pos_hint: {"center_x": 0.5}
+            #     spacing: 10
+
+            #     AnchorLayout:
+            #         anchor_x: "center"
+            #         anchor_y: "center"
+
+            #         MDTextField:
+            #             id: meal_log_date_from
+            #             hint_text: "From *"
+            #             on_focus: root.handle_meal_log_date_from_input()
+
+            #     AnchorLayout:
+            #         anchor_x: "center"
+            #         anchor_y: "center"
+
+            #         MDTextField:
+            #             id: meal_log_date_to
+            #             hint_text: "To *"
+            #             on_focus: root.handle_meal_log_date_to_input()
+
+            # BoxLayout:
+            #     id: meal_log_datatable_box
+            #     orientation:'vertical'
+
+        GridLayout:
+            cols: 1
+            size_hint: (0.95, 0.5)
+            width: self.parent.width
+            pos_hint: {"center_x": 0.5}
+            spacing: 10
+
+            AnchorLayout:
+                anchor_x: "center"
+                anchor_y: "center"
+
+                Button:
+                    id: heart_rate
+                    text: "Heart Rate"
+                    value: "heart_rate"
+                    size_hint_x: None
+                    background_normal: ''
+                    width: self.parent.width
+                    background_color: 0.0, 0.8, 1, 1
+                    on_release: root.switch_to_arduino_watch_plots(self, self.value)
+
+
+            AnchorLayout:
+                anchor_x: "center"
+                anchor_y: "center"
+
+                Button:
+                    id: blood_oxygen_level
+                    text: "Blood Oxygen Level"
+                    value: "blood_oxygen_level"
+                    size_hint_x: None
+                    width: self.parent.width
+                    background_normal: ''
+                    background_color: 0.0, 0.8, 1, 1
+                    on_release: root.switch_to_arduino_watch_plots(self, self.value)
+
+            AnchorLayout:
+                anchor_x: "center"
+                anchor_y: "center"
+
+                Button:
+                    id: step_count
+                    text: "Step Count"
+                    value: "step_count"
+                    size_hint_x: None
+                    width: self.parent.width
+                    background_normal: ''
+                    background_color: 0.0, 0.8, 1, 1
+                    on_release: root.switch_to_arduino_watch_plots(self, self.value)
+
+            AnchorLayout:
+                anchor_x: "center"
+                anchor_y: "center"
+
+                Button:
+                    id: body_temperature
+                    text: "Body Temperature"
+                    value: "body_temperature"
+                    size_hint_x: None
+                    width: self.parent.width
+                    background_normal: ''
+                    background_color: 0.0, 0.8, 1, 1
+                    on_release: root.switch_to_arduino_watch_plots(self, self.value)
+
+
+<ArduinoWatchPlotsScreen>:
+    name: "arduino_watch_plots_screen"
+    
+    BoxLayout:
+        id: box2
+        orientation: 'vertical'
+        size_hint_y:.9
+        size_hint: (.9, 0.9)
+        pos_hint: {'center_x': 0.5, "top":1}
+        spacing: 10
+
+    Button:
+        text: "Back"
+        pos_hint: {"center_x":.5, "y":.02}
+        size_hint_y: 0.05
+        size_hint_x: None
+        background_normal: ''
+        background_color: 0.0, 0.8, 1, 1
+        on_release: 
+            root.switch_to_arduino_watch()
+            box2.clear_widgets()

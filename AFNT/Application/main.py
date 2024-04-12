@@ -36,6 +36,7 @@ from kivymd.uix.tab import MDTabs, MDTabsBase
 from kivy.utils import get_color_from_hex
 from kivy.clock import Clock
 from kivy_garden.mapview import MapView
+from matplotlib.ticker import MultipleLocator
 
 from datetime import datetime, timedelta
 from local_db import LocalDB
@@ -51,6 +52,9 @@ from workout import Workout
 from workout_log import WorkoutLog
 from exercise import Exercise
 from exercise_log import ExerciseLog
+from meal import Meal
+from meal_log import MealLog
+from arduino_watch import ArduinoWatch
 
 logged_user = ''
 
@@ -526,19 +530,24 @@ class DashboardScreen(Screen):
         plots_screen.clear_workout_log_datatable_box()
         plots_screen.create_workout_log_datatable()
 
+    def switch_to_meal_history(self):
+        self.manager.transition.direction = 'left'
+        self.manager.current = 'meal_history_screen'
+        plots_screen = self.manager.get_screen('meal_history_screen')
+        plots_screen.clear_meal_log_datatable_box()
+        plots_screen.create_meal_log_datatable()
+
     def switch_to_gym_finder(self):
         self.manager.transition.direction = 'left'
         self.manager.current = 'gym_finder_screen'
         
         plots_screen = self.manager.get_screen('gym_finder_screen')
-        # plots_screen.clear_workout_log_datatable_box()
         plots_screen.create_map_view()
-
 
     def switch_to_water_intake(self):
         self.manager.current = 'water_intake_screen'
 
-    def switch_to_arduino_watch_screen(self):
+    def switch_to_arduino_watch(self):
         self.manager.current = 'arduino_watch_screen'
 
     def switch_to_body_stats(self):
@@ -1684,9 +1693,6 @@ class ExerciseAllocateScreen(Screen):
         else:
             print("No exercises selected")
 
-
-#-----------------------------------------------------------
-
 class GymFinderScreen(Screen):
     def switch_to_dashboard(self):
         self.manager.transition.direction = 'right'
@@ -1729,6 +1735,184 @@ class GymFinderScreen(Screen):
     #         nearby_gyms.append({'name': name, 'address': address, 'lat': lat, 'lon': lon})
 
     #     return nearby_gyms
+
+class MealHistoryScreen(Screen):
+    def __init__(self, **kwargs):
+        super(MealHistoryScreen, self).__init__(**kwargs)
+        self.local_db = LocalDB('local_db.db')
+        self.meal_logs = MealLog(self.local_db.connection)
+        self.selected_rows = []
+
+        self.from_selected_date = datetime.today().strftime('%d/%m/%Y')
+
+        from_selected_date_obj = datetime.strptime(self.from_selected_date, '%d/%m/%Y')
+        self.to_selected_date_obj = from_selected_date_obj + timedelta(days=7)
+        self.to_selected_date = self.to_selected_date_obj.strftime('%d/%m/%Y')
+
+    def switch_to_dashboard(self):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'dashboard_screen'
+        self.selected_rows.clear()
+        self.clear_meal_log_datatable_box()
+
+    # def switch_to_meal_allocate(self):
+    #     self.selected_rows.clear()
+    #     self.manager.transition.direction = 'left'
+    #     self.manager.current = 'meal_allocate_screen'
+    #     self.clear_meal_log_datatable_box
+        
+    #     plots_screen = self.manager.get_screen('meal_allocate_screen')
+    #     plots_screen.clear_meal_allocate_datatable_box()
+    #     plots_screen.create_meal_allocate_datatable()
+
+    # def switch_to_meal_manager(self):
+    #     self.selected_rows.clear()
+    #     self.manager.transition.direction = 'left'
+    #     self.manager.current = 'meal_manager_screen'
+
+    # def switch_to_food_item_log(self):
+    #     if self.selected_rows:
+    #         self.manager.transition.direction = 'left'
+    #         self.manager.current = 'food_item_log_screen'
+    #         plots_screen = self.manager.get_screen('food_item_log_screen')
+    #         plots_screen.create_food_item_log_datatable()
+    #         # self.selected_rows.clear()
+
+    def clear_meal_log_datatable_box(self):
+        meal_log_datatable_box = self.ids.meal_log_datatable_box
+        meal_log_datatable_box.clear_widgets()
+        self.selected_rows.clear()
+
+    # From date input
+    def handle_meal_log_date_from_input(self):
+        if not hasattr(self, 'meal_log_date_from_date'):
+            self.meal_log_date_from_date = MDDatePicker()
+            self.meal_log_date_from_date.bind(on_save=self.meal_log_date_from_on_save, on_cancel=self.on_cancel)
+        self.meal_log_date_from_date.open()
+
+    def meal_log_date_from_on_save(self, instance, value, date_range):
+        screen = self.manager.get_screen('meal_history_screen')
+        self.from_selected_date = value.strftime("%d/%m/%Y")
+        screen.ids.meal_log_date_from.text = self.from_selected_date
+        # print(instance, value, date_range)
+        self.clear_meal_log_datatable_box()
+        self.create_meal_log_datatable()
+
+    # To date input
+    def handle_meal_log_date_to_input(self):
+        if not hasattr(self, 'meal_log_date_to_date'):
+            self.meal_log_date_to_date = MDDatePicker()
+            self.meal_log_date_to_date.bind(on_save=self.meal_log_date_to_on_save, on_cancel=self.on_cancel)
+        self.meal_log_date_to_date.open()
+
+    def meal_log_date_to_on_save(self, instance, value, date_range):
+        screen = self.manager.get_screen('meal_history_screen')
+        self.to_selected_date = value.strftime("%d/%m/%Y")
+        screen.ids.meal_log_date_to.text = self.to_selected_date
+        # print(instance, value, date_range)
+        self.clear_meal_log_datatable_box()
+        self.create_meal_log_datatable()
+
+    def on_cancel(self, instance, value):
+        instance.dismiss()
+
+    def create_meal_log_datatable(self):
+        # self.manager = ScreenManager()
+        screen = self.manager.get_screen('meal_history_screen')
+        screen.ids.meal_log_date_from.text = self.from_selected_date
+        screen.ids.meal_log_date_to.text = self.to_selected_date
+
+        # print('from', self.from_selected_date)
+        # print('to',  self.to_selected_date)
+
+        meal_log_datatable_box = self.ids.meal_log_datatable_box
+        # meal_log_data = self.meal_logs.get_meal_logs_details()
+        meal_log_data = self.meal_logs.get_date_selected_meal_logs(self.from_selected_date, self.to_selected_date)
+
+        if meal_log_data:
+            self.meal_log_datatable = MDDataTable(
+                pos_hint={'center_x': 0.5, 'center_y': 0.5},
+                size_hint=(0.95, 0.3),
+                check=True,
+                use_pagination=True,
+                rows_num=6,
+                pagination_menu_height='240dp',
+                pagination_menu_pos="auto",
+                background_color=[1, 0, 0, .5],
+                column_data=[
+                    ["Log ID", dp(25)],
+                    ["Name", dp(25)],
+                    ["Energy (Kcal)", dp(20)],
+                    ["Serving", dp(15)],
+                    ["Protein (g)", dp(20)],
+                    ["Fats (g)", dp(15)],
+                    ["Carbs (g)", dp(15)],
+                    ["Sugar (g)", dp(15)],
+                    ["Fibre (g)", dp(15)],
+                    ["Iron (mg)", dp(15)],
+                    ["Date Assigned", dp(25)],
+                    ["Time Assigned", dp(25)],
+                    ["Status", dp(25)]
+                ],
+                row_data=meal_log_data
+            )
+            self.meal_log_datatable.bind(on_check_press=self.rows_selected)
+        else:
+            self.meal_log_datatable = Label(text='No meals Recorded', color = 'red', font_size = "20sp", bold = True)
+            
+        meal_log_datatable_box.add_widget(self.meal_log_datatable)
+
+    def on_start_date_selected(self, instance, start_date):
+        self.update_row_data(start_date, self.end_date_input.text)
+
+    def on_end_date_selected(self, instance, end_date):
+        self.update_row_data(self.start_date_input.text, end_date)
+
+    def update_row_data(self, start_date, end_date):
+        row_data = self.meal_logs.get_meal_logs_details_by_date_range(start_date, end_date)
+        self.meal_log_datatable.row_data = row_data
+
+    def rows_selected(self, instance_table, current_row):
+        row_data = tuple(current_row)
+        modified_row_data = (int(row_data[0]),) + row_data[1:]
+        if modified_row_data in self.selected_rows:
+            self.selected_rows.remove(modified_row_data)
+        else:
+            self.selected_rows.append(modified_row_data)
+        # print("self.selected_rows.", self.selected_rows)
+
+    def remove_row(self):
+        if self.selected_rows:
+            # print("selected_rows:", self.selected_rows)
+            for row in self.selected_rows:
+                meal_log_id = row[0]
+                # print("worky", meal_log_id)
+                self.meal_logs.remove_meal_log(row[0])
+        self.clear_meal_log_datatable_box()
+        self.create_meal_log_datatable()
+        self.selected_rows.clear()
+
+    def update_row(self):
+        # if self.selected_rows:
+        #     for selected_row in self.selected_rows:
+        #         update_popup = UpdateMealLogPopup(selected_row, update_meal_log_callback=self.update_row_callback)
+        #         update_popup.open()
+        pass
+
+    def update_row_callback(self, meal_log_id, date_assigned, time_assigned, is_complete):
+        # print("updated data", meal_log_id, date_assigned, time_assigned, is_complete)
+        if is_complete == 'Yes':
+            updated_is_complete = 1
+        else:
+            updated_is_complete = 0
+            
+        self.meal_logs.update_meal_log( meal_log_id, date_assigned, time_assigned, updated_is_complete)
+        self.clear_meal_log_datatable_box()
+        self.create_meal_log_datatable()
+        self.selected_rows.clear()
+
+    def get_selected_rows(self):
+        return self.selected_rows
 
 class BodyStatsScreen(Screen):
     def switch_to_dashboard(self):
@@ -2152,9 +2336,172 @@ class WaterIntakePlotsScreen(Screen):
         finally:
             local_db.close_connection()
 
-class ArduinoWatch(Screen):
+class ArduinoWatchScreen(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def switch_to_dashboard(self):
+        self.manager.transition.direction = 'right'
         self.manager.current = 'dashboard_screen'
+
+    def switch_to_arduino_watch_plots(self, button_instance, button_value):
+        plots_screen = self.manager.get_screen('arduino_watch_plots_screen')
+
+        if button_value == 'heart_rate':
+            plots_screen.plot_heart_rate()
+        elif button_value == 'blood_oxygen_level':
+            plots_screen.plot_oxygen_level()
+        elif button_value == 'step_count':
+            plots_screen.plot_step_count()
+        elif button_value == 'body_temperature':
+            plots_screen.plot_body_temperature()
+
+        self.manager.transition.direction = 'left'
+        plots_screen = self.manager.current = 'arduino_watch_plots_screen'
+
+class ArduinoWatchPlotsScreen(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.arduino_watch = ArduinoWatch()
+
+    def switch_to_dashboard(self):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'dashboard_screen'
+
+    def switch_to_arduino_watch(self):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'arduino_watch_screen'
+
+    def plot_heart_rate(self):
+        try:
+            heart_rate_data = self.arduino_watch.heart_rate_data()
+            box2 = self.ids.box2
+            box2.clear_widgets()
+
+            if not heart_rate_data:
+                return box2.add_widget(Label(text='No Heart Rate Data Detected.', color = 'red', font_size = "20sp", bold = True))
+
+            epoch_times = [int(entry[0]) for entry in heart_rate_data]
+            heart_rates = [entry[1] for entry in heart_rate_data]
+
+            start_time = epoch_times[0]
+            normalized_times = [time - start_time for time in epoch_times]
+
+            fig, ax = plt.subplots()
+            ax.plot(normalized_times, heart_rates, color='red', alpha=0.7)
+            ax.set_xlabel('Seconds')
+            ax.set_ylabel('Heart Rate (bpm)')
+            ax.set_title('Heart Rate')
+            ax.grid(axis='y')
+
+            ax.yaxis.set_major_locator(MultipleLocator(10))
+
+            canvas = FigureCanvasKivyAgg(fig)
+            box2.add_widget(canvas)
+
+
+        except Exception as e:
+            print("Error:", e)
+
+    def display_no_data_message(self):
+        # Clear existing widgets in box2 and add a label with the message
+        self.clear_widgets()
+        message_label = Label(text="No Data Found", font_size=16)
+        self.add_widget(message_label)
+
+    def plot_oxygen_level(self):
+        try:
+            oxygen_level_data = self.arduino_watch.oxygen_level_data()
+
+            box2 = self.ids.box2
+            box2.clear_widgets()
+            if not oxygen_level_data:
+                return box2.add_widget(Label(text='No Blood Oxygen Data Detected.', color = 'red', font_size = "20sp", bold = True))
+
+            epoch_times = [int(entry[0]) for entry in oxygen_level_data]
+            oxygen_levels = [entry[1] for entry in oxygen_level_data]
+
+            start_time = epoch_times[0]
+            normalized_times = [time - start_time for time in epoch_times]
+
+            fig, ax = plt.subplots()
+            bar_width = 1
+            ax.bar(normalized_times, oxygen_levels, width=bar_width, color='red', alpha=0.7)
+            ax.set_xlabel('Seconds')
+            ax.set_ylabel('Blood Oxygen %')
+            ax.set_title('Blood Oxygen (Percent)')
+            ax.grid(axis='y')
+
+            ax.yaxis.set_major_locator(MultipleLocator(5))
+            ax.set_ylim(bottom=75)
+
+            canvas = FigureCanvasKivyAgg(fig)
+            box2.add_widget(canvas)
+
+        except Exception as e:
+            print("Error:", e)
+
+    def plot_step_count(self):
+        try:
+            step_count_data = self.arduino_watch.step_count_data()
+            box2 = self.ids.box2
+            box2.clear_widgets()
+            if not step_count_data:
+                return box2.add_widget(Label(text='No Step Data Detected.', color = 'red', font_size = "20sp", bold = True))
+
+            epoch_times = [int(entry[0]) for entry in step_count_data]
+            step_counts = [entry[1] for entry in step_count_data]
+
+            start_time = epoch_times[0]
+            normalized_times = [time - start_time for time in epoch_times]
+
+            fig, ax = plt.subplots()
+            bar_width = 1
+            ax.bar(normalized_times, step_counts, width=bar_width, color='brown', alpha=0.7)
+            ax.set_xlabel('Seconds')
+            ax.set_ylabel('Total Steps')
+            ax.set_title('Step Count')
+            ax.grid(axis='y')
+
+            ax.yaxis.set_major_locator(MultipleLocator(2))
+            ax.set_ylim(bottom=0)
+
+            canvas = FigureCanvasKivyAgg(fig)
+            box2.add_widget(canvas)
+
+        except Exception as e:
+            print("Error:", e)
+
+    def plot_body_temperature(self):
+        try:
+            body_temperature_data = self.arduino_watch.body_temperature_data()
+            box2 = self.ids.box2
+            box2.clear_widgets()
+            if not body_temperature_data:
+                return box2.add_widget(Label(text='No Body Temperature Data Detected.', color = 'red', font_size = "20sp", bold = True))
+
+            epoch_times = [int(entry[0]) for entry in body_temperature_data]
+            body_temperatures = [entry[1] for entry in body_temperature_data]
+
+            start_time = epoch_times[0]
+            normalized_times = [time - start_time for time in epoch_times]
+
+            fig, ax = plt.subplots()
+            bar_width = 1
+            ax.bar(normalized_times, body_temperatures, width=bar_width, color='purple', alpha=0.7)
+            ax.set_xlabel('Seconds')
+            ax.set_ylabel('Body Temperature °C')
+            ax.set_title('Body Temperature (Degrees Celsius)')
+            ax.grid(axis='y')
+
+            ax.yaxis.set_major_locator(MultipleLocator(1))
+            ax.set_ylim(bottom=30)
+
+            canvas = FigureCanvasKivyAgg(fig)
+            box2.add_widget(canvas)
+
+        except Exception as e:
+            print("Error:", e)
 
 class AFNTApp(MDApp):
     selected_gender = StringProperty("")
@@ -2457,10 +2804,11 @@ class AFNTApp(MDApp):
         if step_count_code == 33:
             return self.show_error_popup("invalid step count")
         elif step_count_code == 31:
-            print("Err24: no step_count input")
+            print("Err24: no step count input")
         
         if weight_code == 20:
             self.weight_table.insert_weight(body_stats_details[1], body_stats_details[0])
+            print('inserting weight')
         if height_code == 22:
             self.height_table.insert_height(int(body_stats_details[2])/100, body_stats_details[0])
             # print("bmi2 verf:", float(body_stats_details[1]), float(body_stats_details[2]), body_stats_details[0])
@@ -2471,8 +2819,11 @@ class AFNTApp(MDApp):
             self.body_fat_table.insert_body_fat(float(body_stats_details[1]), float(body_stats_details[3]), body_stats_details[0])
         if step_count_code == 32:
             self.step_count_table.insert_step_count(int(body_stats_details[5]), body_stats_details[0])
+            # self.local_db.print_step_count()
         
-        self.local_db.print_step_count()
+        return self.show_success_popup("successfully updated record")
+        
+        # self.local_db.print_step_count()
 
     def on_stop(self):
         self.local_db.close_connection()

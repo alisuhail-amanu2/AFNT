@@ -27,7 +27,7 @@ const int STEP_TRIGGER = 250; // The LRA Wireling will notify you of inactivity 
 const int DATA_INTERVAL = 5; // Data is recorded to the SD card every 5 seconds.
 const bool DEBUG_MD = false; // If set to true, enables debug mode.
 const int FAST_DATA_INTERVAL = DATA_INTERVAL * 1000; // Performance optimization.
-int stepsTowardGoal = 20; // keeps track of how many steps you have taken the the past hour as compared to your goal.
+int stepsTowardGoal = 20; // Keeps track of how many steps you have taken the the past hour as compared to your goal.
 
 
 // Heart rate, Blood oxygen Level and body temperature concentration variables.
@@ -54,7 +54,7 @@ int accelSensorPort = 3;
 unsigned long stepTimestamps[STEP_TRIGGER] = {};
 unsigned long loopStart = 0;
 uint32_t doVibrate = 0;
-bool firstSD = true;
+bool firstSD = false;
 RTCZero rtc;
 
 
@@ -76,12 +76,12 @@ void dailyStepReset(); // Reset step data by day.
 void setup(void)
 {
   Serial.begin(9600);
-  delay(5000); // replaces the above
+  delay(5000);
   initStepTimestamps();
   Wire.begin();
   Wireling.begin();
 
-  // Set the cursor to the following coordinates before it prints "BMA250 Test"
+  // Set the cursor to the following coordinates before it prints "BMA250 Test".
   if (accelSensorPort) {
     Wireling.selectPort(accelSensorPort);
     accel_sensor.begin(BMA250_range_4g, BMA250_update_time_16ms); // Sets up the BMA250 accel_sensorerometer
@@ -93,7 +93,7 @@ void setup(void)
     pulseSensor.begin();
   }
 
-  // Check for SD card
+  // Check for SD card.
   SerialUSB.println("Initializing SD card...");
   if (SD.begin(chipSelect, SD_SCK_MHZ(50)))
   {
@@ -159,7 +159,7 @@ void loop() {
   static unsigned long batteryTimer = millis(); // Used to check the battery voltage every 5 seconds.
   static unsigned long goalTimer = millis(); // Used to check if you are meeting your daily goals.
 
-  // These variables are used to keep track of how many steps were taken in recent minutes
+  // These variables are used to keep track of how many steps were taken in recent minutes.
   static unsigned long one = millis();
   static unsigned long two = millis();
   static unsigned long five = millis();
@@ -186,7 +186,7 @@ void loop() {
     createString(displayString, dataString, firstSD);
     validateSD(dataString, displayString, firstSD);
 
-    // Update batteryTimer to the current millis() value
+    // Update batteryTimer to the current millis() value.
     batteryTimer = millis();
   }
 
@@ -224,8 +224,8 @@ void updateTime(uint8_t *b) {
   setTime(k, m, s, d, M, y);
 #elif defined(ARDUINO_ARCH_SAMD)
   // For SAMD architecture (e.g., Arduino Zero), use RTCZero library for RTC management.
-  rtc.setTime(k, m, s);                  // Set time (hour, minute, second)
-  rtc.setDate(d, M, y - 2000);           // Set date (day, month, year)
+  rtc.setTime(k, m, s);                  // Set time (hour, minute, second).
+  rtc.setDate(d, M, y - 2000);           // Set date (day, month, year).
 #endif
 }
 
@@ -242,7 +242,7 @@ int minutesLeftInHour()
 // Function to calculate daily step goal in percentage.
 float percentOfDailyStepGoal(int totalSteps)
 {
-  const float DAILY_GOAL = (float)STEP_TRIGGER * 16.00; // 16 waking hours in day
+  const float DAILY_GOAL = (float)STEP_TRIGGER * 16.00; // 16 waking hours in day.
   if (DEBUG_MD) {
     SerialUSB.print("total steps: ");
     SerialUSB.println(totalSteps);
@@ -257,11 +257,11 @@ float getBattVoltage(void) {
   const int VBATTpin = A4;
   float VCC = getVCC();
 
-  // Use resistor division and math to get the voltage
+  // Use resistor division and math to get the voltage.
   float resistorDiv = 0.5;
   float ADCres = 1023.0;
   float battVoltageReading = analogRead(VBATTpin);
-  battVoltageReading = analogRead(VBATTpin); // Throw out first value
+  battVoltageReading = analogRead(VBATTpin); // Throw out first value.
   float battVoltage = VCC * battVoltageReading / ADCres / resistorDiv;
 
   return battVoltage;
@@ -275,18 +275,18 @@ float getVCC() {
   while (ADC->STATUS.bit.SYNCBUSY == 1);
   ADC->SAMPCTRL.bit.SAMPLEN = 0x1;
   while (ADC->STATUS.bit.SYNCBUSY == 1);
-  ADC->INPUTCTRL.bit.MUXPOS = 0x19;         // Internal bandgap input
+  ADC->INPUTCTRL.bit.MUXPOS = 0x19; // Internal bandgap input.
   while (ADC->STATUS.bit.SYNCBUSY == 1);
-  ADC->CTRLA.bit.ENABLE = 0x01;             // Enable ADC
+  ADC->CTRLA.bit.ENABLE = 0x01; // Enable ADC.
   while (ADC->STATUS.bit.SYNCBUSY == 1);
-  ADC->SWTRIG.bit.START = 1;  // Start conversion
-  ADC->INTFLAG.bit.RESRDY = 1;  // Clear the Data Ready flag
+  ADC->SWTRIG.bit.START = 1; // Start conversion
+  ADC->INTFLAG.bit.RESRDY = 1; // Clear the Data Ready flag.
   while (ADC->STATUS.bit.SYNCBUSY == 1);
-  ADC->SWTRIG.bit.START = 1;  // Start the conversion again to throw out first value
-  while ( ADC->INTFLAG.bit.RESRDY == 0 );   // Waiting for conversion to complete
+  ADC->SWTRIG.bit.START = 1;  // Start the conversion again to throw out first value.
+  while ( ADC->INTFLAG.bit.RESRDY == 0 ); // Waiting for conversion to complete.
   uint32_t valueRead = ADC->RESULT.reg;
   while (ADC->STATUS.bit.SYNCBUSY == 1);
-  ADC->CTRLA.bit.ENABLE = 0x00;             // Disable ADC
+  ADC->CTRLA.bit.ENABLE = 0x00; // Disable ADC.
   while (ADC->STATUS.bit.SYNCBUSY == 1);
   SYSCTRL->VREF.reg &= ~SYSCTRL_VREF_BGOUTEN;
   float vcc = (1.1 * 1023.0) / valueRead;
@@ -301,7 +301,7 @@ float getBatteryPercent()
     SerialUSB.print("battery left: ");
     // SerialUSB.println(min(batteryLeft * 83.333333, 100));
   }
-  return min((batteryLeft * 83.333333), 100); // hard upper limit of 100 as it often shows over 100 when charging
+  return min((batteryLeft * 83.333333), 100); // Hard upper limit of 100 as it often shows over 100 when charging.
 }
 
 int stepsInPastXMinutes(int x)
@@ -377,7 +377,7 @@ void logData(String dataString, String displayString) {
   }
 
   if (firstSD) {
-    // If it's the first time writing to the file, write column headings
+    // If it's the first time writing to the file, write column headings.
     file.println(displayString);
     // Set firstSD to false after writing column headings.
     firstSD = false;
@@ -418,7 +418,7 @@ void createString(String &displayString, String &dataString, bool firstSD) {
   String datetime = twoDigits(year) + "-" + twoDigits(month) + "-" + twoDigits(day) + " " +
                     twoDigits(hours) + ":" + twoDigits(minutes) + ":" + twoDigits(seconds);
   
-  // Construct data row string
+  // Construct data row string.
   dataString += String(epoch);
   dataString += ",";
   dataString += datetime;

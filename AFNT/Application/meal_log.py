@@ -58,3 +58,59 @@ class MealLog():
     def drop_meal_log(self):
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS meal_logs")
+
+    def get_date_selected_meal_logs(self, from_date, to_date):
+        try:
+            # Convert date strings to datetime objects
+            from_date = datetime.strptime(from_date, "%d/%m/%Y") if from_date else None
+            to_date = datetime.strptime(to_date, "%d/%m/%Y") if to_date else None
+
+            with self.connection:
+                # Use parameterized query to prevent SQL injection
+                query = """
+                    SELECT 
+                        wl.meal_log_id,
+                        w.description,
+                        w.energy_tot_kcal,
+                        w.serving,
+                        w.protein_tot_g,
+                        w.lipid_tot_g,
+                        w.carbs_tot_g,
+                        w.sugar_tot_g,
+                        w.fiber_tot_g,
+                        w.iron_tot_mg,
+                        wl.date_ate,
+                        wl.time_ate,
+                        CASE 
+                            WHEN wl.ate = 1 THEN 'Yes' 
+                            ELSE 'No' 
+                        END AS ate
+                    FROM 
+                        meal_logs AS wl
+                    JOIN 
+                        meals AS w ON wl.meal_id = w.meal_id
+                    WHERE 
+                        wl.is_active = 1
+                """
+
+                self.cursor.execute(query)
+                meal_logs = self.cursor.fetchall()
+
+                # Filter meal logs based on date range
+                filtered_logs = []
+                for log in meal_logs:
+                    log_date = datetime.strptime(log[10], "%d/%m/%Y")
+                    if (not from_date or log_date >= from_date) and (not to_date or log_date <= to_date):
+                        filtered_logs.append(log)
+                
+                return filtered_logs
+
+        except Exception as e:
+            print(f"Error retrieving meal logs: {e}")
+            return []
+
+
+# db = LocalDB('local_db.db')
+
+# meallog = MealLog(db.connection)
+# print(meallog.get_date_selected_meal_logs('01/09/2023', '06/09/2023'))
