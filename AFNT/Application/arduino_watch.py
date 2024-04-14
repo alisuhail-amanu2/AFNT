@@ -73,6 +73,3 @@ class ArduinoWatch():
             print("Error:", e)
         
         return step_count_list
-
-aw = ArduinoWatch()
-print(aw.oxygen_level_data())

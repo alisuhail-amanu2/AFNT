@@ -1,44 +1,43 @@
+# Kivy Libaries
 import kivy
 from kivy.app import App
+from kivy.lang import Builder
+from kivy.animation import Animation
+from kivy.properties import StringProperty, ObjectProperty, NumericProperty
+from kivy.metrics import dp
+from kivy.utils import get_color_from_hex
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.scrollview import ScrollView
+from kivy.uix.label import Label
+from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.widget import Widget
+from kivy.uix.popup import Popup
+from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.anchorlayout import AnchorLayout
+from kivy_garden.matplotlib.backend_kivyagg import FigureCanvasKivyAgg
+from kivy_garden.mapview import MapView
+
+# KivyMD Libaries
 from kivymd.app import MDApp
-from kivy.lang import Builder
+from kivymd.theming import ThemeManager
 from kivymd.uix.screen import Screen
-from kivymd.uix.button import MDRoundFlatButton, MDTextButton, MDIconButton, MDRectangleFlatButton, MDRaisedButton
-from kivymd.uix.relativelayout import MDRelativeLayout
-from kivymd.uix.textfield import MDTextField
-from kivy.uix.widget import Widget
-from kivy.uix.popup import Popup
-from kivy.uix.label import Label
-from kivy.uix.floatlayout import FloatLayout
+from kivymd.uix.tab import MDTabs, MDTabsBase
+from kivymd.uix.dropdownitem import MDDropDownItem
+from kivymd.uix.floatlayout import MDFloatLayout
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.textfield import MDTextField, MDTextFieldRect
+from kivymd.uix.datatables import MDDataTable
 from kivymd.uix.pickers import MDDatePicker, MDTimePicker
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.toolbar import MDTopAppBar
-from kivy.animation import Animation
-from kivymd.uix.datatables import MDDataTable
-from kivy.properties import StringProperty, ObjectProperty, NumericProperty
-from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.scrollview import ScrollView
-from kivy.metrics import dp
-from kivymd.theming import ThemeManager
-from kivy_garden.matplotlib.backend_kivyagg import FigureCanvasKivyAgg
-import matplotlib.pyplot as plt
-from kivymd.uix.floatlayout import MDFloatLayout
-from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.textfield import MDTextField, MDTextFieldRect
-from kivy.uix.gridlayout import GridLayout
-from kivymd.uix.dropdownitem import MDDropDownItem
-from kivymd.uix.tab import MDTabs, MDTabsBase
-from kivy.utils import get_color_from_hex
-from kivy.clock import Clock
-from kivy_garden.mapview import MapView
-from matplotlib.ticker import MultipleLocator
+from kivymd.uix.relativelayout import MDRelativeLayout
+from kivymd.uix.textfield import MDTextField
+from kivymd.uix.button import MDRoundFlatButton, MDTextButton, MDIconButton, MDRectangleFlatButton, MDRaisedButton
 
-from datetime import datetime, timedelta
+# LocalDB tables
 from local_db import LocalDB
 from user import User
 from weight import Weight
@@ -56,8 +55,17 @@ from meal import Meal
 from meal_log import MealLog
 from arduino_watch import ArduinoWatch
 
+from datetime import datetime, timedelta
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
+
 logged_user = ''
 
+class ClickableTextFieldRound(MDRelativeLayout):
+    password_input_field = ObjectProperty()
+    input_password = StringProperty('')
+
+# Sucess Popup
 class SuccessPopup(Popup):
     def show_popup(self, title, para):
         content = Label(text=para)
@@ -68,6 +76,7 @@ class SuccessPopup(Popup):
     def on_popup_dismiss(self, instance):
         pass
 
+# Fail Popup
 class FailPopup(Popup):
     def show_popup(self, title, para):
         content = Label(text=para)
@@ -78,35 +87,19 @@ class FailPopup(Popup):
     def on_popup_dismiss(self, instance):
         pass
 
-class ResizableDataTable(MDDataTable):
-    total_width = NumericProperty(0)
-
-    def __init__(self, selected_item, **kwargs):
-        super().__init__(**kwargs)
-        # self.bind(pos=self.update_width, size=self.update_width)
-        self.selected_item = selected_item
-
-    def update_width(self, instance, value):
-        # Calculate the total available width for columns
-        self.total_width = self.size[0]
-
-class ClickableTextFieldRound(MDRelativeLayout):
-    password_input_field = ObjectProperty()
-    input_password = StringProperty('')
-
+# Popup
 class PP(FloatLayout):
     popup_label = StringProperty()
     def __init__(self, message, **kwargs):
         super().__init__(**kwargs)
         self.add_widget(Label(text=message, size_hint=(0.2, 0.1), pos_hint={'center_x': 0.5, 'center_y': 0.5}))
-        # self.add_widget(Button(text="BACK", size_hint=(0.8, 0.2), pos_hint={"x": 0.1, "y": 0.1}))
 
+# Popup for updating workout logs
 class UpdateWorkoutLogPopup(Popup):
     def __init__(self, selected_row, update_workout_log_callback, **kwargs):
         super(UpdateWorkoutLogPopup, self).__init__(**kwargs)
         self.update_workout_log_callback = update_workout_log_callback
         self.selected_row = selected_row
-        # print("in update workout log",self.selected_row)
 
         self.title = "Update Workout Log"
         self.title_color = get_color_from_hex("#000000")
@@ -142,7 +135,6 @@ class UpdateWorkoutLogPopup(Popup):
         button_layout.add_widget(cancel_button)
 
         layout.add_widget(button_layout)
-
         self.content = layout
 
     def show_date_picker(self, instance, value):
@@ -187,6 +179,7 @@ class UpdateWorkoutLogPopup(Popup):
         self.update_workout_log_callback(workout_log_id, date_assigned, time_assigned, is_complete)
         self.dismiss()
 
+# Popup for updating allocated workouts
 class UpdateWorkoutAllocatePopup(Popup):
     def __init__(self, selected_row, update_workout_allocate_callback, **kwargs):
         super(UpdateWorkoutAllocatePopup, self).__init__(**kwargs)
@@ -200,7 +193,6 @@ class UpdateWorkoutAllocatePopup(Popup):
 
         layout = BoxLayout(orientation='vertical')
 
-        # print("self.selected_row", self.selected_row)
         self.workout_name_input = MDTextField(hint_text="Enter Workout Name")
         layout.add_widget(self.workout_name_input)
         self.workout_name_input.text = self.selected_row[1]
@@ -225,7 +217,6 @@ class UpdateWorkoutAllocatePopup(Popup):
         button_layout.add_widget(cancel_button)
 
         layout.add_widget(button_layout)
-
         self.content = layout
 
     def show_workout_type_menu(self, instance, value):
@@ -252,6 +243,7 @@ class UpdateWorkoutAllocatePopup(Popup):
         self.update_workout_allocate_callback(workout_id, workout_name, description, workout_type)
         self.dismiss()
 
+# Popup for updating exercise logs
 class UpdateExerciseLogPopup(Popup):
     def __init__(self, selected_row, update_exercise_log_callback, **kwargs):
         super(UpdateExerciseLogPopup, self).__init__(**kwargs)
@@ -265,7 +257,6 @@ class UpdateExerciseLogPopup(Popup):
 
         layout = BoxLayout(orientation='vertical')
 
-        # print("self.selected_row", self.selected_row)
         self.sets_input = MDTextField(hint_text="Sets", input_filter="int")
         layout.add_widget(self.sets_input)
         self.sets_input.text = self.selected_row[2]
@@ -342,6 +333,7 @@ class UpdateExerciseLogPopup(Popup):
         self.update_exercise_log_callback(exercise_log_id, sets, reps, weight, rest, distance, rpe, is_complete)
         self.dismiss()
 
+# Popup for updating allocated exercises
 class UpdateExerciseAllocatePopup(Popup):
     def __init__(self, selected_row, update_exercise_allocate_callback, **kwargs):
         super(UpdateExerciseAllocatePopup, self).__init__(**kwargs)
@@ -355,7 +347,6 @@ class UpdateExerciseAllocatePopup(Popup):
 
         layout = BoxLayout(orientation='vertical')
 
-        # print("self.selected_row", self.selected_row)
         self.exercise_name_input = MDTextField(hint_text="Enter Exercise Name")
         layout.add_widget(self.exercise_name_input)
         self.exercise_name_input.text = self.selected_row[1]
@@ -395,13 +386,11 @@ class UpdateExerciseAllocatePopup(Popup):
         button_layout.add_widget(cancel_button)
 
         layout.add_widget(button_layout)
-
         self.content = layout
 
     def handle_exercise_name_input(self, text):
         self.ids.exercise_name_input.error = not text
     
-    # Exercise type
     def show_exercise_type_menu(self, instance, value):
         menu_items = [
             {"viewclass": "OneLineListItem", "text": "Cardio", "on_release": lambda x="Cardio": self.set_selected_exercise_type(x, instance)},
@@ -418,10 +407,7 @@ class UpdateExerciseAllocatePopup(Popup):
 
     def set_selected_exercise_type(self, selected_exercise_type_text, textfield_instance):
         self.exercise_type_input.text = selected_exercise_type_text
-        # print("Selected workout type:", selected_exercise_type_text)
 
-
-    # Body part
     def show_body_part_menu(self, instance, value):
         menu_items = [
             {"viewclass": "OneLineListItem", "text": "Upper Body", "on_release": lambda x="Upper Body": self.set_selected_body_part(x, instance)},
@@ -442,9 +428,7 @@ class UpdateExerciseAllocatePopup(Popup):
 
     def set_selected_body_part(self, selected_body_part_text, textfield_instance):
         self.body_part_input.text = selected_body_part_text
-        # print("Selected body_part", selected_body_part_text)
 
-    # Equipment
     def show_equipment_menu(self, instance, value):
         menu_items = [
             {"viewclass": "OneLineListItem", "text": "Body Only", "on_release": lambda x="Body Only": self.set_selected_equipment(x, instance)},
@@ -464,9 +448,7 @@ class UpdateExerciseAllocatePopup(Popup):
 
     def set_selected_equipment(self, selected_equipment_text, textfield_instance):
         self.equipment_input.text = selected_equipment_text
-        # print("Selected equipment", selected_equipment_text)
 
-    # Level
     def show_level_menu(self, instance, value):
         menu_items = [
             {"viewclass": "OneLineListItem", "text": "Beginner", "on_release": lambda x="Beginner": self.set_selected_level(x, instance)},
@@ -479,7 +461,6 @@ class UpdateExerciseAllocatePopup(Popup):
 
     def set_selected_level(self, selected_level_text, textfield_instance):
         self.level_input.text = selected_level_text
-        # print("Selected level", selected_level_text)
 
     def select_exercise_type(self, selected_exercise_type_text):
         self.exercise_type_input.text = selected_exercise_type_text
@@ -493,14 +474,14 @@ class UpdateExerciseAllocatePopup(Popup):
         body_part = self.body_part_input.text
         equipment = self.equipment_input.text
         level = self.level_input.text
-        
-        # print("damn", exercise_id, exercise_name, description, exercise_type, body_part, equipment, level)
         self.update_exercise_allocate_callback(exercise_id, exercise_name, description, exercise_type, body_part, equipment, level)
         self.dismiss()
 
+# Class for managing the app screens
 class WindowManager(ScreenManager):
     pass
 
+# Login screen
 class LoginScreen(Screen):
     def switch_to_registration(self):
         self.manager.current = 'registration_screen'
@@ -514,10 +495,12 @@ class LoginScreen(Screen):
             duration=0.5)
         animate.start(widget)
 
+# Registration screen for creating new account
 class RegistrationScreen(Screen):
     def switch_to_login(self):
         self.manager.current = 'login_screen'
 
+# Dashboard screen
 class DashboardScreen(Screen):
     def logout(self):
         self.manager.transition.direction = 'down'
@@ -553,6 +536,7 @@ class DashboardScreen(Screen):
     def switch_to_body_stats(self):
         self.manager.current = 'body_stats_screen'
 
+# Workout History screen. This screen is used for managing workout logs (Display/Add/Edit/Delete etc)
 class WorkoutHistoryScreen(Screen):
     def __init__(self, **kwargs):
         super(WorkoutHistoryScreen, self).__init__(**kwargs)
@@ -593,7 +577,6 @@ class WorkoutHistoryScreen(Screen):
             self.manager.current = 'exercise_log_screen'
             plots_screen = self.manager.get_screen('exercise_log_screen')
             plots_screen.create_exercise_log_datatable()
-            # self.selected_rows.clear()
 
     def clear_workout_log_datatable_box(self):
         workout_log_datatable_box = self.ids.workout_log_datatable_box
@@ -607,14 +590,6 @@ class WorkoutHistoryScreen(Screen):
             self.workout_log_date_from_date.bind(on_save=self.workout_log_date_from_on_save, on_cancel=self.on_cancel)
         self.workout_log_date_from_date.open()
 
-    def workout_log_date_from_on_save(self, instance, value, date_range):
-        screen = self.manager.get_screen('workout_history_screen')
-        self.from_selected_date = value.strftime("%d/%m/%Y")
-        screen.ids.workout_log_date_from.text = self.from_selected_date
-        # print(instance, value, date_range)
-        self.clear_workout_log_datatable_box()
-        self.create_workout_log_datatable()
-
     # To date input
     def handle_workout_log_date_to_input(self):
         if not hasattr(self, 'workout_log_date_to_date'):
@@ -622,30 +597,32 @@ class WorkoutHistoryScreen(Screen):
             self.workout_log_date_to_date.bind(on_save=self.workout_log_date_to_on_save, on_cancel=self.on_cancel)
         self.workout_log_date_to_date.open()
 
+    def workout_log_date_from_on_save(self, instance, value, date_range):
+        screen = self.manager.get_screen('workout_history_screen')
+        self.from_selected_date = value.strftime("%d/%m/%Y")
+        screen.ids.workout_log_date_from.text = self.from_selected_date
+        self.clear_workout_log_datatable_box()
+        self.create_workout_log_datatable()
+
     def workout_log_date_to_on_save(self, instance, value, date_range):
         screen = self.manager.get_screen('workout_history_screen')
         self.to_selected_date = value.strftime("%d/%m/%Y")
         screen.ids.workout_log_date_to.text = self.to_selected_date
-        # print(instance, value, date_range)
         self.clear_workout_log_datatable_box()
         self.create_workout_log_datatable()
 
     def on_cancel(self, instance, value):
         instance.dismiss()
 
+    # Creating datatable for workout logs
     def create_workout_log_datatable(self):
-        # self.manager = ScreenManager()
         screen = self.manager.get_screen('workout_history_screen')
         screen.ids.workout_log_date_from.text = self.from_selected_date
         screen.ids.workout_log_date_to.text = self.to_selected_date
-
-        # print('from', self.from_selected_date)
-        # print('to',  self.to_selected_date)
-
         workout_log_datatable_box = self.ids.workout_log_datatable_box
-        # workout_log_data = self.workout_logs.get_workout_logs_details()
         workout_log_data = self.workout_logs.get_date_selected_workout_logs(self.from_selected_date, self.to_selected_date)
 
+        # Worrkout lod datatable displays data like the ID, workout name, date and time assigned, as well as the completion status
         if workout_log_data:
             self.workout_log_datatable = MDDataTable(
                 pos_hint={'center_x': 0.5, 'center_y': 0.5},
@@ -661,13 +638,13 @@ class WorkoutHistoryScreen(Screen):
                     ["Name", dp(25)],
                     ["Date Assigned", dp(25)],
                     ["Time Assigned", dp(25)],
-                    ["Status", dp(25)]
+                    ["Complete", dp(25)]
                 ],
                 row_data=workout_log_data
             )
             self.workout_log_datatable.bind(on_check_press=self.rows_selected)
         else:
-            self.workout_log_datatable = Label(text='No Workouts Recorded', color = 'red', font_size = "20sp", bold = True)
+            self.workout_log_datatable = Label(text='No Workouts Recorded', color = 'red', font_size = "20sp", bold = True) # Return error message if no workout logs detected
             
         workout_log_datatable_box.add_widget(self.workout_log_datatable)
 
@@ -677,6 +654,7 @@ class WorkoutHistoryScreen(Screen):
     def on_end_date_selected(self, instance, end_date):
         self.update_row_data(self.start_date_input.text, end_date)
 
+    # Update datatable rows
     def update_row_data(self, start_date, end_date):
         row_data = self.workout_logs.get_workout_logs_details_by_date_range(start_date, end_date)
         self.workout_log_datatable.row_data = row_data
@@ -688,14 +666,11 @@ class WorkoutHistoryScreen(Screen):
             self.selected_rows.remove(modified_row_data)
         else:
             self.selected_rows.append(modified_row_data)
-        # print("self.selected_rows.", self.selected_rows)
 
     def remove_row(self):
         if self.selected_rows:
-            # print("selected_rows:", self.selected_rows)
             for row in self.selected_rows:
                 workout_log_id = row[0]
-                # print("worky", workout_log_id)
                 self.workout_logs.remove_workout_log(row[0])
         self.clear_workout_log_datatable_box()
         self.create_workout_log_datatable()
@@ -708,7 +683,6 @@ class WorkoutHistoryScreen(Screen):
                 update_popup.open()
 
     def update_row_callback(self, workout_log_id, date_assigned, time_assigned, is_complete):
-        # print("updated data", workout_log_id, date_assigned, time_assigned, is_complete)
         if is_complete == 'Yes':
             updated_is_complete = 1
         else:
@@ -722,6 +696,10 @@ class WorkoutHistoryScreen(Screen):
     def get_selected_rows(self):
         return self.selected_rows
 
+"""
+Workout Allocate screen. Used for allocating workouts to a selected datetime
+Also responsible for creating new workouts and exercises
+"""
 class WorkoutAllocateScreen(Screen):
     def __init__(self, **kwargs):
         super(WorkoutAllocateScreen, self).__init__(**kwargs)
@@ -759,7 +737,6 @@ class WorkoutAllocateScreen(Screen):
         if self.selected_rows:
             self.manager.transition.direction = 'left'
             self.manager.current = 'exercise_allocate_screen'
-            # self.clear_workout_allocate_datatable_box()
             plots_screen = self.manager.get_screen('exercise_allocate_screen')
             plots_screen.clear_exercise_allocate_datatable_box()
             plots_screen.create_exercise_allocate_datatable()
@@ -780,7 +757,6 @@ class WorkoutAllocateScreen(Screen):
         screen = self.manager.get_screen('workout_allocate_screen')
         self.selected_date = value.strftime("%d/%m/%Y")
         screen.ids.workout_allocate_date.text = self.selected_date
-        # print(instance, value, date_range)
         self.clear_workout_allocate_datatable_box()
         self.create_workout_allocate_datatable()
 
@@ -794,23 +770,19 @@ class WorkoutAllocateScreen(Screen):
         screen = self.manager.get_screen('workout_allocate_screen')
         self.selected_time = value.strftime("%H:%M:%S")
         screen.ids.workout_allocate_time.text = self.selected_time
-        # print(instance, value)
         self.clear_workout_allocate_datatable_box()
         self.create_workout_allocate_datatable()
 
     def on_cancel(self, instance, value):
         instance.dismiss()
 
+    # Creates workout datatable and displays the workout ID, workout name, description, type and rating (for preset workouts)
     def create_workout_allocate_datatable(self):
         screen = self.manager.get_screen('workout_allocate_screen')
         screen.ids.workout_allocate_date.text = self.selected_date
         screen.ids.workout_allocate_time.text = self.selected_time
-
-        # print('selected datetime', self.selected_date, self.selected_time)
-
         workout_allocate_datatable_box = self.ids.workout_allocate_datatable_box
         workout_allocate_data = self.workout.get_workout_details()
-        # print(workout_allocate_data)
 
         if workout_allocate_data:
             self.workout_allocate_datatable = MDDataTable(
@@ -834,7 +806,7 @@ class WorkoutAllocateScreen(Screen):
             )
             self.workout_allocate_datatable.bind(on_check_press=self.rows_selected)
         else:
-            self.workout_allocate_datatable = Label(text='No Workouts Recorded', color = 'red', font_size = "20sp", bold = True)
+            self.workout_allocate_datatable = Label(text='No Workouts Recorded', color = 'red', font_size = "20sp", bold = True) # Display error message if no workouts detected
             
         workout_allocate_datatable_box.add_widget(self.workout_allocate_datatable)
         self.selected_rows.clear()
@@ -846,11 +818,9 @@ class WorkoutAllocateScreen(Screen):
             self.selected_rows.remove(modified_row_data)
         else:
             self.selected_rows.append(modified_row_data)
-        # print("self.selected_rows.", self.selected_rows)
 
     def remove_row(self):
         if self.selected_rows:
-            # print("selected_rows:", self.selected_rows)
             for row in self.selected_rows:
                 workout_id = row[0]
                 self.workout.remove_workout(row[0])
@@ -865,9 +835,8 @@ class WorkoutAllocateScreen(Screen):
                 self.selected_rows.clear()
                 update_popup.open()
 
+    # For updating workout stats
     def update_row_callback(self, workout_id, workout_name, description, workout_type):
-        # print("updated data", workout_id, workout_name, description, workout_type)
-
         workout_update = {
             'workout_name': workout_name,
             'description': description,
@@ -884,8 +853,6 @@ class WorkoutAllocateScreen(Screen):
 
     def allocate_save_button(self):
         if self.selected_rows:
-            # print("selected data", self.selected_rows, self.selected_date, self.selected_time)
-            # print("datadata", self.selected_rows[0][0])
             insert_workout_log = {
                 'workout_id': self.selected_rows[0][0],
                 'date_assigned': self.selected_date,
@@ -897,7 +864,6 @@ class WorkoutAllocateScreen(Screen):
             new_workout_log_id = self.workout_logs.insert_workout_log(insert_workout_log)
             if new_workout_log_id:
                 latest_workout_log = self.workout_logs.get_latest_workout_log_id(self.selected_rows[0][0])
-                # print("old workout log, new workout log", latest_workout_log, new_workout_log_id)
                 self.exercise_log.allocate_exercise_logs(latest_workout_log, new_workout_log_id)
                 
                 self.selected_rows.clear()
@@ -911,6 +877,7 @@ class WorkoutAllocateScreen(Screen):
     def get_selected_rows(self):
         return self.selected_rows
 
+# Workout Create screen. This screen is used for creating a new workout
 class WorkoutCreateScreen(Screen):
     def __init__(self, **kwargs):
         super(WorkoutCreateScreen, self).__init__(**kwargs)
@@ -951,7 +918,6 @@ class WorkoutCreateScreen(Screen):
 
     def set_selected_workout_type(self, selected_workout_type_text, textfield_instance):
         self.ids.workout_type_input.text = selected_workout_type_text
-        print("Selected workout type:", selected_workout_type_text)
 
     def show_level_menu(self, instance):
         menu_items = [
@@ -965,7 +931,6 @@ class WorkoutCreateScreen(Screen):
 
     def set_selected_level(self, selected_level_text, textfield_instance):
         self.ids.level_input.text = selected_level_text
-        print("Selected level", selected_level_text)
 
     def verify_workout_create_input(self):
         workout_name = self.ids.workout_name_input.text
@@ -989,10 +954,10 @@ class WorkoutCreateScreen(Screen):
             "time_created":datetime.now().strftime('%H:%M:%S'), 
             "is_active": 1,
         }
-        print("workout", workout_data)
         self.workout.insert_workout(workout_data)
         return self.success_popup.show_popup('Success', 'Workout Created Successfully')
 
+# Exercise Create screen. This screen is used for creating a new exercise
 class ExerciseCreateScreen(Screen):
     def __init__(self, **kwargs):
         super(ExerciseCreateScreen, self).__init__(**kwargs)
@@ -1014,7 +979,7 @@ class ExerciseCreateScreen(Screen):
     def handle_exercise_name_input(self, text):
         self.ids.exercise_name_input.error = not text
     
-    # Exercise type
+    # Exercise type dropdown
     def show_exercise_type_menu(self, instance):
         menu_items = [
             {"viewclass": "OneLineListItem", "text": "Cardio", "on_release": lambda x="Cardio": self.set_selected_exercise_type(x, instance)},
@@ -1031,9 +996,8 @@ class ExerciseCreateScreen(Screen):
     
     def set_selected_exercise_type(self, selected_exercise_type_text, textfield_instance):
         self.ids.exercise_type_input.text = selected_exercise_type_text
-        # print("Selected workout type:", selected_exercise_type_text)
 
-    # Body part
+    # Body part dropdown
     def show_body_part_menu(self, instance):
         menu_items = [
             {"viewclass": "OneLineListItem", "text": "Upper Body", "on_release": lambda x="Upper Body": self.set_selected_body_part(x, instance)},
@@ -1054,9 +1018,8 @@ class ExerciseCreateScreen(Screen):
 
     def set_selected_body_part(self, selected_body_part_text, textfield_instance):
         self.ids.body_part_input.text = selected_body_part_text
-        # print("Selected body_part", selected_body_part_text)
 
-    # Equipment
+    # Equipment dropdown
     def show_equipment_menu(self, instance):
         menu_items = [
             {"viewclass": "OneLineListItem", "text": "Body Only", "on_release": lambda x="Body Only": self.set_selected_equipment(x, instance)},
@@ -1076,9 +1039,8 @@ class ExerciseCreateScreen(Screen):
 
     def set_selected_equipment(self, selected_equipment_text, textfield_instance):
         self.ids.equipment_input.text = selected_equipment_text
-        # print("Selected equipment", selected_equipment_text)
 
-    # Level
+    # Level dropdown
     def show_level_menu(self, instance):
         menu_items = [
             {"viewclass": "OneLineListItem", "text": "Beginner", "on_release": lambda x="Beginner": self.set_selected_level(x, instance)},
@@ -1093,7 +1055,7 @@ class ExerciseCreateScreen(Screen):
         self.ids.level_input.text = selected_level_text
         # print("Selected level", selected_level_text)
 
-    # Duration
+    # Duration input
     def handle_exercise_create_duration_input(self):
         if not hasattr(self, 'duration_input'):
             self.duration_input = MDTimePicker()
@@ -1104,12 +1066,11 @@ class ExerciseCreateScreen(Screen):
         screen = self.manager.get_screen('exercise_create_screen')
         self.selected_time = value.strftime("%H:%M:%S")
         screen.ids.duration_input.text = self.selected_time
-        # print(instance, value)
 
     def on_cancel(self, instance, value):
         instance.dismiss()
 
-    # Verify create exercise input data
+    # Verify exercise input data
     def verify_workout_create_input(self):
         exercise_name = self.ids.exercise_name_input.text
         workout_description = self.ids.exercise_description_input.text
@@ -1126,7 +1087,6 @@ class ExerciseCreateScreen(Screen):
         distance_m = self.ids.distance_input.text
 
         if not exercise_name:
-            # print("ex name failed")
             return self.fail_popup.show_popup('Failed', 'Enter exercise name')
         if not exercise_type:
             return self.fail_popup.show_popup('Failed', 'Select exercise type')
@@ -1140,39 +1100,32 @@ class ExerciseCreateScreen(Screen):
             try:
                 sets = int(sets)
             except ValueError:
-                # print("sets failed")
                 return self.fail_popup.show_popup('Failed', 'Sets must be an integer')
         if reps:
             try:
                 reps = int(reps)
             except ValueError:
-                # print("reps failed")
                 return self.fail_popup.show_popup('Failed', 'Reps must be an integer')
         if rest_s:
             try:
                 rest_s = int(rest_s)
             except ValueError:
-                # print("rest_s failed")
                 return self.fail_popup.show_popup('Failed', 'Rest must be an integer')
         if weight_kg:
             try:
                 weight_kg = float(weight_kg)
             except ValueError:
-                # print("weight failed")
                 return self.fail_popup.show_popup('Failed', 'Weight must be a number')
         if distance_m:
             try:
                 distance_m = float(distance_m)
             except ValueError:
-                # print("distance failed")
                 return self.fail_popup.show_popup('Failed', 'Distance must be a number')
 
         # Check if weight_kg and distance_m have two decimal points
         if weight_kg and not (weight_kg * 100).is_integer():
-            # print("weight failed again")
             return self.fail_popup.show_popup('Failed', 'Weight must have two decimal points')
         if distance_m and not (distance_m * 100).is_integer():
-            # print("distance failed again")
             return self.fail_popup.show_popup('Failed', 'Distance must have two decimal points')
 
         exercise_data = {
@@ -1186,10 +1139,8 @@ class ExerciseCreateScreen(Screen):
             "rating_description": '',
             "is_active": 1,
         }
-        # print("exercise_data", exercise_data)
-        self.exercise.insert_exercise(exercise_data)
+        self.exercise.insert_exercise(exercise_data) # Inserting new exercise
         exercise_details = self.exercise.get_exercise_by_name(exercise_name)
-        # print("exercise_details", exercise_details)
 
         exercise_log_data = {
             "exercise_id": exercise_details[0][0],
@@ -1207,11 +1158,10 @@ class ExerciseCreateScreen(Screen):
             "details": '',
             "is_active": 1,
         }
-        # print("exercise_log", exercise_log_data)
-
-        self.exercise_log.insert_exercise_log(exercise_log_data)
+        self.exercise_log.insert_exercise_log(exercise_log_data) # Creating exercise log for the new exercise
         return self.success_popup.show_popup('Success', 'Exercise Created Successfully')
 
+# Exercise log screen. This screen is used for managing exercise logs (Display/Add/Edit/Delete etc)
 class ExerciseLogScreen(Screen):
     def __init__(self, **kwargs):
         super(ExerciseLogScreen, self).__init__(**kwargs)
@@ -1219,7 +1169,6 @@ class ExerciseLogScreen(Screen):
         self.exercise_log = ExerciseLog(self.local_db.connection)
         self.selected_rows = []
         self.workout_log_rows = []
-        # print("intial workout_log", self.workout_log_rows)
     
     def switch_to_workout_history(self):
         self.manager.transition.direction = 'right'
@@ -1239,7 +1188,6 @@ class ExerciseLogScreen(Screen):
         plots_screen = self.manager.get_screen('exercise_log_allocate_screen')
         plots_screen.clear_exercise_log_allocate_datatable_box()
         plots_screen.create_exercise_log_allocate_datatable()
-        # self.selected_rows.clear()
 
     def clear_exercise_log_datatable_box(self):
         exercise_log_datatable_box = self.ids.exercise_log_datatable_box
@@ -1249,12 +1197,10 @@ class ExerciseLogScreen(Screen):
         self.workout_log_rows = self.manager.get_screen('workout_history_screen').get_selected_rows()
         return self.workout_log_rows[-1][0]
 
+    # Create exercise log datatable. Contains exercise log ID, exercise name, description, sets, repitations, weight (kg), rest (sec), distance (m), rpe (difficulty) and completion status. 
     def create_exercise_log_datatable(self):
         exercise_log_datatable_box = self.ids.exercise_log_datatable_box
-        # print("self.workout_log_rows", self.workout_log_rows)
-
         exercise_log_data = self.exercise_log.get_exercise_logs_details(self.get_workout_log_data_from_selected_rows())
-        # print("exercise_log_data", exercise_log_data)
 
         if exercise_log_data:
             self.exercise_log_datatable = MDDataTable(
@@ -1275,13 +1221,13 @@ class ExerciseLogScreen(Screen):
                     ["Rest (sec)", dp(20)],
                     ["Distance (m)", dp(20)],
                     ["RPE", dp(15)],
-                    ["Status", dp(15)]
+                    ["Complete", dp(15)]
                 ],
                 row_data=exercise_log_data
             )
             self.exercise_log_datatable.bind(on_check_press=self.rows_selected)
         else:
-            self.exercise_log_datatable = Label(text='No Exercises Allocated', color = 'red', font_size = "20sp", bold = True)
+            self.exercise_log_datatable = Label(text='No Exercises Allocated', color = 'red', font_size = "20sp", bold = True) # Display error message if no exercise log found
             
         exercise_log_datatable_box.add_widget(self.exercise_log_datatable)
 
@@ -1293,11 +1239,11 @@ class ExerciseLogScreen(Screen):
         else:
             self.selected_rows.append(modified_row_data)
 
+    # Remove exercise log
     def remove_row(self):
         if self.selected_rows:
             for row in self.selected_rows:
                 exercise_log_id = row[0]
-                # print("worky", exercise_log_id)
                 self.exercise_log.remove_exercise_log(row[0])
         self.clear_exercise_log_datatable_box()
         self.create_exercise_log_datatable()
@@ -1309,8 +1255,8 @@ class ExerciseLogScreen(Screen):
                 update_popup = UpdateExerciseLogPopup(selected_row, update_exercise_log_callback=self.update_row_callback)
                 update_popup.open()
 
+    # Update exercise log
     def update_row_callback(self, exercise_log_id, sets, reps, weight, rest, distance, rpe, is_complete):
-        # print("updated data", exercise_log_id, sets, reps, weight, rest, distance, rpe, is_complete)
         updated_is_complete = 1 if is_complete == 'Yes' else 0
         updated_values = {
             'sets': sets,
@@ -1321,7 +1267,6 @@ class ExerciseLogScreen(Screen):
             'rpe': rpe,
             'is_complete': updated_is_complete
         }
-        
         self.exercise_log.update_exercise_log(exercise_log_id, updated_values)
         self.clear_exercise_log_datatable_box()
         self.create_exercise_log_datatable()
@@ -1330,6 +1275,7 @@ class ExerciseLogScreen(Screen):
     def get_selected_rows(self):
         return self.selected_rows
 
+# Exercise Log Allocate screen. This screen is used for allocating exercise logs to a workout log
 class ExerciseLogAllocateScreen(Screen):
     def __init__(self, **kwargs):
         super(ExerciseLogAllocateScreen, self).__init__(**kwargs)
@@ -1338,19 +1284,16 @@ class ExerciseLogAllocateScreen(Screen):
         self.exercise_log = ExerciseLog(self.local_db.connection)
         self.workout = Workout(self.local_db.connection)
         self.workout_log = WorkoutLog(self.local_db.connection)
-
         self.select_workout_type = ""
         self.exercise_log_allocate_data = ""
         self.selected_rows = []
         self.exercise_log_rows = []
-
         self.fail_popup = FailPopup()
         self.success_popup = SuccessPopup()
 
     def switch_to_exercise_log(self):
         self.manager.transition.direction = 'right'
         self.manager.current = 'exercise_log_screen'
-
         plots_screen = self.manager.get_screen('exercise_log_screen')
         plots_screen.clear_exercise_log_datatable_box()
         plots_screen.create_exercise_log_datatable()
@@ -1364,6 +1307,7 @@ class ExerciseLogAllocateScreen(Screen):
         workout_log_id = self.manager.get_screen('exercise_log_screen').get_workout_log_data_from_selected_rows()
         return workout_log_id
 
+    # Exercise log datatable. Contains exercise log ID, exercise name, sets, repetitions, weight (kg), rest(sec), duration, and distance (m) 
     def create_exercise_log_allocate_datatable(self):
         exercise_log_allocate_datatable_box = self.ids.exercise_log_allocate_datatable_box
         self.exercise_log_allocate_data = self.exercise_log.get_all_exercise_logs_details()
@@ -1376,7 +1320,7 @@ class ExerciseLogAllocateScreen(Screen):
                 width=300,
                 pos_hint={'center_x': 0.5, 'center_y': 0.9}
             )
-
+            # Search button for exercise logs
             self.search_button = Button(
                 text="Search",
                 size_hint=(None, None),
@@ -1415,7 +1359,7 @@ class ExerciseLogAllocateScreen(Screen):
             exercise_log_allocate_datatable_box.add_widget(self.exercise_log_allocate_datatable)
             self.selected_rows.clear()
         else:
-            self.exercise_log_allocate_datatable = Label(text='No Exercises Logs Recorded', color='red', font_size="20sp", bold=True)
+            self.exercise_log_allocate_datatable = Label(text='No Exercises Log(s) Recorded', color='red', font_size="20sp", bold=True) # Display error message if no exercise logs detected
             exercise_log_allocate_datatable_box.add_widget(self.exercise_log_allocate_datatable)
 
     def on_search_button_release(self, instance):
@@ -1433,18 +1377,13 @@ class ExerciseLogAllocateScreen(Screen):
             self.selected_rows.remove(modified_row_data)
         else:
             self.selected_rows.append(modified_row_data)
-        # print("self.selected_rows.", self.selected_rows)
 
+    # Function for allocating exercise log to the selected workout log
     def allocate_log_save_button(self):
-        # print("print", self.selected_rows)
         workout_log_id = self.get_workout_log_id()
-        # print("workout_log_id", workout_log_id)
-        
         if self.selected_rows:
             for exercise_logs in self.selected_rows:
                 exercise_id = self.exercise_log.get_exercise_id(exercise_logs[0])
-                # print("exercise_id", exercise_id)
-                # print(exercise_logs)
                 exercise_log_data = {
                     'exercise_id': exercise_id,
                     'workout_log_id': workout_log_id,
@@ -1461,14 +1400,13 @@ class ExerciseLogAllocateScreen(Screen):
                     'details': '',
                     'is_active': 1, 
                 }
-                # print("exercise log data", exercise_log_data)
-
                 self.exercise_log.insert_exercise_log(exercise_log_data)
             
-            return self.success_popup.show_popup('Success', 'Exercise Logs Allocated Successfully')
+            return self.success_popup.show_popup('Success', 'Exercise Log(s) Allocated Successfully')
         else:
-            print("No exercise logs selected")
+            print("No exercise log(s) selected")
 
+# Exercise Allocate screen. This screen is used for allocating exercises to a workout
 class ExerciseAllocateScreen(Screen):
     def __init__(self, **kwargs):
         super(ExerciseAllocateScreen, self).__init__(**kwargs)
@@ -1477,18 +1415,15 @@ class ExerciseAllocateScreen(Screen):
         self.exercise_log = ExerciseLog(self.local_db.connection)
         self.workout = Workout(self.local_db.connection)
         self.workout_log = WorkoutLog(self.local_db.connection)
-
         self.select_workout_type = ""
         self.exercise_allocate_data = ""
         self.selected_rows = []
-
         self.fail_popup = FailPopup()
         self.success_popup = SuccessPopup()
 
     def switch_to_workout_allocate(self):
         self.manager.transition.direction = 'right'
         self.manager.current = 'workout_allocate_screen'
-
         plots_screen = self.manager.get_screen('workout_allocate_screen')
         plots_screen.clear_workout_allocate_datatable_box()
         plots_screen.create_workout_allocate_datatable()
@@ -1498,10 +1433,9 @@ class ExerciseAllocateScreen(Screen):
         exercise_allocate_datatable_box.clear_widgets()
         self.selected_rows.clear()
 
+    # Exercise datatable. Contains exercise ID, exercise name, type, body part, equipment, level and rating (only for preset exercises)
     def create_exercise_allocate_datatable(self):
-        self.allocate_workout_rows = self.manager.get_screen('workout_allocate_screen').get_selected_rows()
-        # print("self.allocate_workout_rows", self.allocate_workout_rows)
-        
+        self.allocate_workout_rows = self.manager.get_screen('workout_allocate_screen').get_selected_rows()        
         exercise_allocate_datatable_box = self.ids.exercise_allocate_datatable_box
         self.exercise_allocate_data = self.exercise.get_all_exercises()
 
@@ -1514,6 +1448,7 @@ class ExerciseAllocateScreen(Screen):
                 pos_hint={'center_x': 0.5, 'center_y': 0.9}
             )
 
+            # Search button for exercises
             self.search_button = Button(
                 text="Search",
                 size_hint=(None, None),
@@ -1551,7 +1486,7 @@ class ExerciseAllocateScreen(Screen):
             exercise_allocate_datatable_box.add_widget(self.exercise_allocate_datatable)
             self.selected_rows.clear()
         else:
-            self.exercise_allocate_datatable = Label(text='No Exercises Recorded', color='red', font_size="20sp", bold=True)
+            self.exercise_allocate_datatable = Label(text='No Exercises Recorded', color='red', font_size="20sp", bold=True) # Display error message if no exercises found
             exercise_allocate_datatable_box.add_widget(self.exercise_allocate_datatable)
 
     def on_search_button_release(self, instance):
@@ -1569,8 +1504,8 @@ class ExerciseAllocateScreen(Screen):
             self.selected_rows.remove(modified_row_data)
         else:
             self.selected_rows.append(modified_row_data)
-        # print("self.selected_rows.", self.selected_rows)
 
+    # Function for deleting exercises. Note only custom exercises made by the user can be deleted, not the preset exercises
     def remove_row(self):
         if self.selected_rows:
             for row in self.selected_rows:
@@ -1578,11 +1513,12 @@ class ExerciseAllocateScreen(Screen):
                 status = self.exercise.remove_exercise(exercise_id)
                 if status == 0:
                     allocate_workout_success = FailPopup()
-                    allocate_workout_success.show_popup('Failed', 'Cannot delete preset exercises.')
+                    allocate_workout_success.show_popup('Failed', 'Cannot delete preset exercises')
         
         self.clear_exercise_allocate_datatable_box()
         self.create_exercise_allocate_datatable()
 
+    # Function that calls the UpdateExerciseAllocatePopup class for updating exercises
     def update_row(self):
         if self.selected_rows:
             for selected_row in self.selected_rows:
@@ -1590,9 +1526,8 @@ class ExerciseAllocateScreen(Screen):
                 self.selected_rows.clear()
                 update_popup.open()
 
+    # Function that updates the exercise log
     def update_row_callback(self, exercise_id, exercise_name, description, exercise_type, body_part, equipment, level):
-        # print("updated data", exercise_id, exercise_name, description, exercise_type, body_part, equipment, level)
-
         workout_update = {
             'exercise_name': exercise_name,
             'description': description,
@@ -1601,7 +1536,6 @@ class ExerciseAllocateScreen(Screen):
             'equipment': equipment,
             'level': level,
         }
-            
         self.exercise.update_exercise(exercise_id, workout_update)
         self.clear_exercise_allocate_datatable_box()
         self.create_exercise_allocate_datatable()
@@ -1612,19 +1546,15 @@ class ExerciseAllocateScreen(Screen):
 
     def allocate_save_button(self):
         self.allocate_workout_rows = self.manager.get_screen('workout_allocate_screen').get_selected_rows()
-        # print("self.allocate_workout_rows", self.allocate_workout_rows[0][0])
-
-        if self.selected_rows:
+        if self.selected_rows: # Selected exercise
             for exercise_row in self.selected_rows:
                 if exercise_row:
                     workout_log_data = self.workout_log.get_workout_logs_by_workout_id(self.allocate_workout_rows[0][0])
-                    if workout_log_data:
+                    if workout_log_data: # Selected workout
                         for workout_logs in workout_log_data:
-                            # print(workout_logs[0])
-                            if workout_logs[4] == 0 and workout_logs[7] == 1:  # not complete and active
-                                # print('workout_logs', workout_logs)
+                            if workout_logs[4] == 0 and workout_logs[7] == 1:  # If selected workout is not complete and active
                                 exercise_logs = self.exercise_log.get_latest_exercise_log_by_exercise_id(exercise_row[0])
-                                if exercise_logs:  # if any past exercise log record exists
+                                if exercise_logs:  # If any past exercise log record exists
                                     insert_exercise_log = {
                                         'exercise_id': exercise_row[0],
                                         'workout_log_id': workout_logs[0],
@@ -1641,9 +1571,8 @@ class ExerciseAllocateScreen(Screen):
                                         'details': exercise_logs[12],
                                         'is_active': 1,
                                     }
-                                    self.exercise_log.insert_exercise_log(insert_exercise_log)
+                                    self.exercise_log.insert_exercise_log(insert_exercise_log) # Insert the latest exercise log data to the selected exercise, inside the workout
                                 else:
-                                    # print("6 No Exercise Record Found")
                                     insert_exercise_log = {
                                         'exercise_id': exercise_row[0],
                                         'workout_log_id': workout_logs[0],
@@ -1660,6 +1589,7 @@ class ExerciseAllocateScreen(Screen):
                                         'details': '',
                                         'is_active': 1,
                                     }
+                                    # If no exercise log record found for the selected exercise, then create a new exercise log with default values
                                     self.exercise_log.insert_exercise_log(insert_exercise_log)
                     else:
                         new_workout_log_data = {
@@ -1671,6 +1601,8 @@ class ExerciseAllocateScreen(Screen):
                             'time_completed': '',
                             'is_active': 0,
                         }
+
+                        # If selected workout has never been used, create new workout log and fill with with default values
                         workout_log_id = self.workout_log.insert_workout_log(new_workout_log_data)
                         for exercise_row in self.selected_rows:
                             insert_exercise_log = {
@@ -1689,15 +1621,17 @@ class ExerciseAllocateScreen(Screen):
                                 'details': '',
                                 'is_active': 1,
                             }
-                            self.exercise_log.insert_exercise_log(insert_exercise_log)
+                            self.exercise_log.insert_exercise_log(insert_exercise_log) # Allocate the selected exercise with default values
         else:
-            print("No exercises selected")
+            print("No exercise(s) selected") # Error message if no exercise selected
 
+# Gym Finder Screen. This screen is used for searching for the closest gyms, user location data required to use this functionality (Incomplete)
 class GymFinderScreen(Screen):
     def switch_to_dashboard(self):
         self.manager.transition.direction = 'right'
         self.manager.current = 'dashboard_screen'
 
+    # Create map view, currently default location is set to Bristol, England.
     def create_map_view(self):
         mapview = MapView(zoom=15, lat=51.454514, lon=-2.587910)
         gym_finder_map = self.ids.gym_finder_map
@@ -1736,15 +1670,14 @@ class GymFinderScreen(Screen):
 
     #     return nearby_gyms
 
+# Meal History Screen. This screen is used for managing meal logs (Display/Add/Edit/Delete etc). (Incomplete)
 class MealHistoryScreen(Screen):
     def __init__(self, **kwargs):
         super(MealHistoryScreen, self).__init__(**kwargs)
         self.local_db = LocalDB('local_db.db')
         self.meal_logs = MealLog(self.local_db.connection)
         self.selected_rows = []
-
         self.from_selected_date = datetime.today().strftime('%d/%m/%Y')
-
         from_selected_date_obj = datetime.strptime(self.from_selected_date, '%d/%m/%Y')
         self.to_selected_date_obj = from_selected_date_obj + timedelta(days=7)
         self.to_selected_date = self.to_selected_date_obj.strftime('%d/%m/%Y')
@@ -1790,14 +1723,6 @@ class MealHistoryScreen(Screen):
             self.meal_log_date_from_date.bind(on_save=self.meal_log_date_from_on_save, on_cancel=self.on_cancel)
         self.meal_log_date_from_date.open()
 
-    def meal_log_date_from_on_save(self, instance, value, date_range):
-        screen = self.manager.get_screen('meal_history_screen')
-        self.from_selected_date = value.strftime("%d/%m/%Y")
-        screen.ids.meal_log_date_from.text = self.from_selected_date
-        # print(instance, value, date_range)
-        self.clear_meal_log_datatable_box()
-        self.create_meal_log_datatable()
-
     # To date input
     def handle_meal_log_date_to_input(self):
         if not hasattr(self, 'meal_log_date_to_date'):
@@ -1805,26 +1730,28 @@ class MealHistoryScreen(Screen):
             self.meal_log_date_to_date.bind(on_save=self.meal_log_date_to_on_save, on_cancel=self.on_cancel)
         self.meal_log_date_to_date.open()
 
+    def meal_log_date_from_on_save(self, instance, value, date_range):
+        screen = self.manager.get_screen('meal_history_screen')
+        self.from_selected_date = value.strftime("%d/%m/%Y")
+        screen.ids.meal_log_date_from.text = self.from_selected_date
+        self.clear_meal_log_datatable_box()
+        self.create_meal_log_datatable()
+
     def meal_log_date_to_on_save(self, instance, value, date_range):
         screen = self.manager.get_screen('meal_history_screen')
         self.to_selected_date = value.strftime("%d/%m/%Y")
         screen.ids.meal_log_date_to.text = self.to_selected_date
-        # print(instance, value, date_range)
         self.clear_meal_log_datatable_box()
         self.create_meal_log_datatable()
 
     def on_cancel(self, instance, value):
         instance.dismiss()
 
+    # Meal log datatable. Contains meal log ID, meal name, energy (kcal), serving portion, protein (g), fats (g), carbs (g), sugar (g), fibre (g), iron (mg), date and time assigned and completion status
     def create_meal_log_datatable(self):
-        # self.manager = ScreenManager()
         screen = self.manager.get_screen('meal_history_screen')
         screen.ids.meal_log_date_from.text = self.from_selected_date
         screen.ids.meal_log_date_to.text = self.to_selected_date
-
-        # print('from', self.from_selected_date)
-        # print('to',  self.to_selected_date)
-
         meal_log_datatable_box = self.ids.meal_log_datatable_box
         # meal_log_data = self.meal_logs.get_meal_logs_details()
         meal_log_data = self.meal_logs.get_date_selected_meal_logs(self.from_selected_date, self.to_selected_date)
@@ -1852,14 +1779,13 @@ class MealHistoryScreen(Screen):
                     ["Iron (mg)", dp(15)],
                     ["Date Assigned", dp(25)],
                     ["Time Assigned", dp(25)],
-                    ["Status", dp(25)]
+                    ["Complete", dp(25)]
                 ],
                 row_data=meal_log_data
             )
             self.meal_log_datatable.bind(on_check_press=self.rows_selected)
         else:
-            self.meal_log_datatable = Label(text='No meals Recorded', color = 'red', font_size = "20sp", bold = True)
-            
+            self.meal_log_datatable = Label(text='No Meals Recorded', color = 'red', font_size = "20sp", bold = True) # Display error message if no meal log detected
         meal_log_datatable_box.add_widget(self.meal_log_datatable)
 
     def on_start_date_selected(self, instance, start_date):
@@ -1868,6 +1794,7 @@ class MealHistoryScreen(Screen):
     def on_end_date_selected(self, instance, end_date):
         self.update_row_data(self.start_date_input.text, end_date)
 
+    # Function for updating meal log
     def update_row_data(self, start_date, end_date):
         row_data = self.meal_logs.get_meal_logs_details_by_date_range(start_date, end_date)
         self.meal_log_datatable.row_data = row_data
@@ -1879,19 +1806,18 @@ class MealHistoryScreen(Screen):
             self.selected_rows.remove(modified_row_data)
         else:
             self.selected_rows.append(modified_row_data)
-        # print("self.selected_rows.", self.selected_rows)
 
+    # Function for removing meal log
     def remove_row(self):
         if self.selected_rows:
-            # print("selected_rows:", self.selected_rows)
             for row in self.selected_rows:
                 meal_log_id = row[0]
-                # print("worky", meal_log_id)
                 self.meal_logs.remove_meal_log(row[0])
         self.clear_meal_log_datatable_box()
         self.create_meal_log_datatable()
         self.selected_rows.clear()
 
+    # Function for calling the UpdateMealLogPopup for updating meal log data (Incomplete)
     def update_row(self):
         # if self.selected_rows:
         #     for selected_row in self.selected_rows:
@@ -1899,13 +1825,13 @@ class MealHistoryScreen(Screen):
         #         update_popup.open()
         pass
 
+    # Function for updating meal log data
     def update_row_callback(self, meal_log_id, date_assigned, time_assigned, is_complete):
         # print("updated data", meal_log_id, date_assigned, time_assigned, is_complete)
         if is_complete == 'Yes':
             updated_is_complete = 1
         else:
             updated_is_complete = 0
-            
         self.meal_logs.update_meal_log( meal_log_id, date_assigned, time_assigned, updated_is_complete)
         self.clear_meal_log_datatable_box()
         self.create_meal_log_datatable()
@@ -1914,15 +1840,20 @@ class MealHistoryScreen(Screen):
     def get_selected_rows(self):
         return self.selected_rows
 
+""" 
+Body Statistics screen. This screen is used for managing body stats data (Display/Add/Edit/Delete etc). Delete data functionality has not been fully implemented as of now (Partically Incomplete).
+This screen contains an input form, where the user can manually enter weight (kg), height (cm), body fat (kg), skeletal muscle mass (kg) and step data. Only date and weight are required fields.
+Also note that user does not need to enter body fat and BMI, this is automatically calculated using the user's gender, latest height and weight inputs.
+"""
 class BodyStatsScreen(Screen):
     def switch_to_dashboard(self):
         self.manager.transition.direction = 'right'
         self.manager.current = 'dashboard_screen'
 
+    # Select what type of body data graph to view
     def switch_to_body_stats_plots(self, button_instance, button_value):
         selected_month = self.ids.month.text
         selected_year = self.ids.year.text
-
         plots_screen = self.manager.get_screen('body_stats_plots_screen')
 
         if button_value == 'weight':
@@ -1944,6 +1875,12 @@ class BodyStatsScreen(Screen):
         self.manager.transition.direction = 'left'
         self.manager.current = 'body_stats_plots_screen'
 
+"""
+Body Statistics Plots screen. This screen is used for viewing the selected body stat data using plots. The graphs can be generated using the selected month and year inputs in the `BodyStatsScreen`.
+
+The user can generate monthly and yearly graphs of the following body data:
+Weight, BMI, body fat, skeletal muscle, and steps.
+"""
 class BodyStatsPlotsScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -1955,13 +1892,11 @@ class BodyStatsPlotsScreen(Screen):
     def plot_monthly_weight(self, selected_month, selected_year):
         local_db = LocalDB('local_db.db')
         weight = Weight(local_db.connection)
-
         try:
             box2 = self.ids.box2
             fig2, ax3 = plt.subplots()
             canvas = fig2.canvas
             weight_data = weight.monthly_weight_data(selected_month, selected_year)
-
             plt.plot(weight_data[0], weight_data[1], color='brown', alpha=0.7)
             plt.xlabel('Day of the Month')
             plt.ylabel('Weight (kg)')
@@ -1969,7 +1904,6 @@ class BodyStatsPlotsScreen(Screen):
             plt.xticks(weight_data[2])
             plt.grid(axis='y')
             plt.axhline(y=75, color='r', linestyle='--')
-
             canvas = FigureCanvasKivyAgg(plt.gcf())
             box2.add_widget(canvas)
         
@@ -1981,13 +1915,11 @@ class BodyStatsPlotsScreen(Screen):
     def plot_yearly_weight(self, selected_year):
         local_db = LocalDB('local_db.db')
         weight = Weight(local_db.connection)
-
         try:
             box2 = self.ids.box2
             fig3, ax3 = plt.subplots()
             canvas = fig3.canvas
             weight_data = weight.yearly_weight_data(selected_year)
-
             plt.bar(weight_data[0], weight_data[1], color='brown')
             plt.axhline(y=75, color='r', linestyle='--')
             plt.xlabel('Month')
@@ -1995,7 +1927,6 @@ class BodyStatsPlotsScreen(Screen):
             plt.title(f'Yearly Average Weight for {selected_year}')
             plt.xticks(range(1, 13), ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
             plt.grid(axis='y')
-
             canvas = FigureCanvasKivyAgg(plt.gcf())
             box2.add_widget(canvas)
             
@@ -2007,7 +1938,6 @@ class BodyStatsPlotsScreen(Screen):
     def plot_monthly_bmi(self, selected_month, selected_year):
         local_db = LocalDB('local_db.db')
         bmi = BMI(local_db.connection)
-        
         try:
             box2 = self.ids.box2
             fig4, ax4 = plt.subplots()
@@ -2020,17 +1950,14 @@ class BodyStatsPlotsScreen(Screen):
 
             for i in range(len(bmi_ranges)):
                 plt.axhspan(bmi_ranges[i-1] if i > 0 else 0, bmi_ranges[i], color=colors[i], alpha=0.5)
-
             plt.plot(bmi_data[0], bmi_data[1], color='black', alpha=0.7)
             plt.title(f'Monthly BMI for {selected_month}/{selected_year}')
             plt.xlabel('Day of the Month')
             plt.ylabel('BMI')
             plt.xticks(bmi_data[2])
             plt.grid(axis='y')
-
             tick_labels = [f'{label} {value}' for label, value in zip(labels, bmi_ranges)]
             plt.yticks(bmi_ranges, tick_labels)
-
             canvas = FigureCanvasKivyAgg(plt.gcf())
             box2.add_widget(canvas)
         
@@ -2055,18 +1982,14 @@ class BodyStatsPlotsScreen(Screen):
 
             for i in range(len(bmi_ranges)):
                 plt.axhspan(bmi_ranges[i-1] if i > 0 else 0, bmi_ranges[i], color=colors[i], alpha=0.5)
-
             plt.plot(bmi_data[0], bmi_data[1], color='black', marker='o')
             plt.title(f'Yearly Average BMI for {selected_year}')
             plt.xlabel('Month')
             plt.xticks(bmi_data[0], bmi_data[2])
             plt.grid(True)
-
             tick_labels = [f'{label} {value}' for label, value in zip(labels, bmi_ranges)]
             plt.yticks(bmi_ranges, tick_labels)
-
             plt.tight_layout()
-
             canvas = FigureCanvasKivyAgg(plt.gcf())
             box2.add_widget(canvas)
         
@@ -2080,7 +2003,6 @@ class BodyStatsPlotsScreen(Screen):
         body_fat = BodyFat(local_db.connection)
         user = User()
         gender = user.get_user_gender(logged_user)
-        
         try:
             box2 = self.ids.box2
             fig5, ax5 = plt.subplots()
@@ -2097,17 +2019,14 @@ class BodyStatsPlotsScreen(Screen):
 
             for i in range(len(body_fat_ranges)):
                 plt.axhspan(body_fat_ranges[i-1] if i > 0 else 0, body_fat_ranges[i], color=colors[i], alpha=0.5)
-
             plt.plot(body_fat_data[0], body_fat_data[1], color='black', alpha=0.7)
             plt.title(f'Monthly Body Fat % for {selected_month}/{selected_year}')
             plt.xlabel('Day of the Month')
             plt.ylabel('Body Fat (%)')
             plt.xticks(body_fat_data[2])
             plt.grid(axis='y')
-
             tick_labels = [f'{label} {value}' for label, value in zip(labels, body_fat_ranges)]
             plt.yticks(body_fat_ranges, tick_labels)
-
             canvas = FigureCanvasKivyAgg(plt.gcf())
             box2.add_widget(canvas)
         
@@ -2121,7 +2040,6 @@ class BodyStatsPlotsScreen(Screen):
         body_fat = BodyFat(local_db.connection)
         user = User()
         gender = user.get_user_gender(logged_user)
-        
         try:
             box2 = self.ids.box2
             fig6, ax6 = plt.subplots()
@@ -2144,12 +2062,9 @@ class BodyStatsPlotsScreen(Screen):
             plt.xlabel('Month')
             plt.xticks(body_fat_data[0], body_fat_data[2])
             plt.grid(True)
-
             tick_labels = [f'{label} {value}' for label, value in zip(labels, body_fat_ranges)]
             plt.yticks(body_fat_ranges, tick_labels)
-
             plt.tight_layout()
-
             canvas = FigureCanvasKivyAgg(plt.gcf())
             box2.add_widget(canvas)
         
@@ -2161,13 +2076,11 @@ class BodyStatsPlotsScreen(Screen):
     def plot_monthly_skeletal_muscle(self, selected_month, selected_year):
         local_db = LocalDB('local_db.db')
         skeletal_muscle = SkeletalMuscle(local_db.connection)
-
         try:
             box2 = self.ids.box2
             fig7, ax7 = plt.subplots()
             canvas = fig7.canvas
             skeletal_muscle_data = skeletal_muscle.monthly_skeletal_muscle_data((selected_month), selected_year)
-
             plt.plot(skeletal_muscle_data[0], skeletal_muscle_data[1], color='brown', alpha=0.7)
             plt.xlabel('Day of the Month')
             plt.ylabel('Skeletal Muscle (kg)')
@@ -2185,20 +2098,17 @@ class BodyStatsPlotsScreen(Screen):
     def plot_yearly_skeletal_muscle(self, selected_year):
         local_db = LocalDB('local_db.db')
         skeletal_muscle = SkeletalMuscle(local_db.connection)
-
         try:
             box2 = self.ids.box2
             fig8, ax8 = plt.subplots()
             canvas = fig8.canvas
             skeletal_muscle_data = skeletal_muscle.yearly_skeletal_muscle_data(selected_year)
-
             plt.bar(skeletal_muscle_data[0], skeletal_muscle_data[1], color='brown')
             plt.xlabel('Month')
             plt.ylabel('Average Skeletal Muscle (kg)')
             plt.title(f'Yearly Average Skeletal Muscle for {selected_year}')
             plt.xticks(range(1, 13), ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
             plt.grid(axis='y')
-
             canvas = FigureCanvasKivyAgg(plt.gcf())
             box2.add_widget(canvas)
             
@@ -2210,13 +2120,11 @@ class BodyStatsPlotsScreen(Screen):
     def plot_monthly_step_count(self, selected_month, selected_year):
         local_db = LocalDB('local_db.db')
         step_count = StepCount(local_db.connection)
-
         try:
             box2 = self.ids.box2
             fig2, ax3 = plt.subplots()
             canvas = fig2.canvas
             step_count_data = step_count.monthy_step_count_data(selected_month, selected_year)
-
             plt.plot(step_count_data[0], step_count_data[1], color='brown', alpha=0.7)
             plt.xlabel('Day of the Month')
             plt.ylabel('Skeps Taken')
@@ -2224,7 +2132,6 @@ class BodyStatsPlotsScreen(Screen):
             plt.xticks(step_count_data[2])
             plt.grid(axis='y')
             plt.axhline(y=6000, color='r', linestyle='--')
-
             canvas = FigureCanvasKivyAgg(plt.gcf())
             box2.add_widget(canvas)
         
@@ -2236,13 +2143,11 @@ class BodyStatsPlotsScreen(Screen):
     def plot_yearly_step_count(self, selected_year):
         local_db = LocalDB('local_db.db')
         step_count = StepCount(local_db.connection)
-
         try:
             box2 = self.ids.box2
             fig3, ax3 = plt.subplots()
             canvas = fig3.canvas
             step_count_data = step_count.yearly_step_count_data(selected_year)
-
             plt.bar(step_count_data[0], step_count_data[1], color='brown')
             plt.axhline(y=6000, color='r', linestyle='--')
             plt.xlabel('Month')
@@ -2250,7 +2155,6 @@ class BodyStatsPlotsScreen(Screen):
             plt.title(f'Yearly Average Steps Taken for {selected_year}')
             plt.xticks(range(1, 13), ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
             plt.grid(axis='y')
-
             canvas = FigureCanvasKivyAgg(plt.gcf())
             box2.add_widget(canvas)
             
@@ -2259,6 +2163,10 @@ class BodyStatsPlotsScreen(Screen):
         finally:
             local_db.close_connection()
 
+"""
+Water Intake Screen. This function contains a form where the user can manually input water drank (per day) in millimetres (ml). User can also modify and delete (all records) water data.
+Users can also generate water intake graphs (monthly and annually) by inputing the selected month and year.
+"""
 class WaterIntakeScreen(Screen):
     def switch_to_dashboard(self):
         self.manager.transition.direction = 'right'
@@ -2267,13 +2175,13 @@ class WaterIntakeScreen(Screen):
     def switch_to_water_intake_plots(self):
         selected_month = self.ids.month.text
         selected_year = self.ids.year.text
-
         plots_screen = self.manager.get_screen('water_intake_plots_screen')
         plots_screen.plot_monthly_water_intake(selected_month, selected_year)
         plots_screen.plot_yearly_water_intake(selected_year)
         self.manager.transition.direction = 'left'
         self.manager.current = 'water_intake_plots_screen'
 
+# Water Intake Plots Screen. This screen is used for viewing the water intake data using plots. The graphs can be generated using the selected month and year inputs in the `WaterIntakeScreen`. 
 class WaterIntakePlotsScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -2285,14 +2193,11 @@ class WaterIntakePlotsScreen(Screen):
     def plot_monthly_water_intake(self, selected_month, selected_year):
         local_db = LocalDB('local_db.db')
         water_intake = WaterIntake(local_db.connection)
-
         try:
             box1 = self.ids.box1
             fig, ax = plt.subplots(figsize=(250, 150))
             canvas = fig.canvas
-
             water_intake_data = water_intake.monthly_water_intake_data(selected_month, selected_year)
-
             plt.bar(water_intake_data[0], water_intake_data[1], color='b', alpha=0.7)
             plt.title(f'Monthly Water Intake for {selected_month}/{selected_year}')
             plt.xlabel('Day of the Month')
@@ -2300,9 +2205,9 @@ class WaterIntakePlotsScreen(Screen):
             plt.axhline(y=2000, color='r', linestyle='--')
             plt.xticks(water_intake_data[2])
             plt.grid(axis='y')
-
             canvas = FigureCanvasKivyAgg(plt.gcf())
             box1.add_widget(canvas)
+
         except Exception as e:
             print("Error:", e)
         finally:
@@ -2311,15 +2216,11 @@ class WaterIntakePlotsScreen(Screen):
     def plot_yearly_water_intake(self, selected_year):
         local_db = LocalDB('local_db.db')
         water_intake = WaterIntake(local_db.connection)
-
         try:
             box1 = self.ids.box1
-            
             fig1, ax1 = plt.subplots()
             canvas = fig1.canvas
-
             water_intake_data = water_intake.yearly_water_intake_graph(selected_year)
-
             plt.figure(figsize=(12, 8))
             plt.bar(water_intake_data[0], water_intake_data[1], color='b', alpha=0.7)
             plt.xlabel('Month')
@@ -2328,14 +2229,18 @@ class WaterIntakePlotsScreen(Screen):
             plt.xticks(range(1, 13))
             plt.grid(axis='y')
             plt.axhline(y=2000, color='r', linestyle='--')
-
             canvas = FigureCanvasKivyAgg(plt.gcf())
             box1.add_widget(canvas)
+
         except Exception as e:
             print("Error:", e)
         finally:
             local_db.close_connection()
 
+"""
+Arduino Watch screen. This screen is used for synching with the Arduino Watch via Bluetooth LE. All the Arduino Watch data should be transferred to the LocalDB Database. (Incomplete)
+After the data from the Arduino Watch is synched, the user can choose to generate graphs on the data gathered by the Arduino Watch.
+"""
 class ArduinoWatchScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -2344,9 +2249,9 @@ class ArduinoWatchScreen(Screen):
         self.manager.transition.direction = 'right'
         self.manager.current = 'dashboard_screen'
 
+    # User can choose which data from the Arduino Watch to create a graph of
     def switch_to_arduino_watch_plots(self, button_instance, button_value):
         plots_screen = self.manager.get_screen('arduino_watch_plots_screen')
-
         if button_value == 'heart_rate':
             plots_screen.plot_heart_rate()
         elif button_value == 'blood_oxygen_level':
@@ -2355,10 +2260,15 @@ class ArduinoWatchScreen(Screen):
             plots_screen.plot_step_count()
         elif button_value == 'body_temperature':
             plots_screen.plot_body_temperature()
-
         self.manager.transition.direction = 'left'
         plots_screen = self.manager.current = 'arduino_watch_plots_screen'
 
+"""
+Arduino Watch Plots screen. This screen is used for viewing the selected body stat data using plots from the Arduino Watch. (Incomplete)
+
+The user can generate graphs of the following body data:
+Heart Rate, Blood Oxygen Level, Step Count, and Body Temperature.
+"""
 class ArduinoWatchPlotsScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -2380,50 +2290,36 @@ class ArduinoWatchPlotsScreen(Screen):
 
             if not heart_rate_data:
                 return box2.add_widget(Label(text='No Heart Rate Data Detected.', color = 'red', font_size = "20sp", bold = True))
-
             epoch_times = [int(entry[0]) for entry in heart_rate_data]
             heart_rates = [entry[1] for entry in heart_rate_data]
-
             start_time = epoch_times[0]
             normalized_times = [time - start_time for time in epoch_times]
-
             fig, ax = plt.subplots()
             ax.plot(normalized_times, heart_rates, color='red', alpha=0.7)
             ax.set_xlabel('Seconds')
             ax.set_ylabel('Heart Rate (bpm)')
             ax.set_title('Heart Rate')
             ax.grid(axis='y')
-
             ax.yaxis.set_major_locator(MultipleLocator(10))
-
             canvas = FigureCanvasKivyAgg(fig)
             box2.add_widget(canvas)
-
 
         except Exception as e:
             print("Error:", e)
 
-    def display_no_data_message(self):
-        # Clear existing widgets in box2 and add a label with the message
-        self.clear_widgets()
-        message_label = Label(text="No Data Found", font_size=16)
-        self.add_widget(message_label)
-
     def plot_oxygen_level(self):
         try:
             oxygen_level_data = self.arduino_watch.oxygen_level_data()
-
             box2 = self.ids.box2
             box2.clear_widgets()
+
             if not oxygen_level_data:
                 return box2.add_widget(Label(text='No Blood Oxygen Data Detected.', color = 'red', font_size = "20sp", bold = True))
-
             epoch_times = [int(entry[0]) for entry in oxygen_level_data]
             oxygen_levels = [entry[1] for entry in oxygen_level_data]
 
             start_time = epoch_times[0]
             normalized_times = [time - start_time for time in epoch_times]
-
             fig, ax = plt.subplots()
             bar_width = 1
             ax.bar(normalized_times, oxygen_levels, width=bar_width, color='red', alpha=0.7)
@@ -2431,10 +2327,8 @@ class ArduinoWatchPlotsScreen(Screen):
             ax.set_ylabel('Blood Oxygen %')
             ax.set_title('Blood Oxygen (Percent)')
             ax.grid(axis='y')
-
             ax.yaxis.set_major_locator(MultipleLocator(5))
             ax.set_ylim(bottom=75)
-
             canvas = FigureCanvasKivyAgg(fig)
             box2.add_widget(canvas)
 
@@ -2446,15 +2340,13 @@ class ArduinoWatchPlotsScreen(Screen):
             step_count_data = self.arduino_watch.step_count_data()
             box2 = self.ids.box2
             box2.clear_widgets()
+
             if not step_count_data:
                 return box2.add_widget(Label(text='No Step Data Detected.', color = 'red', font_size = "20sp", bold = True))
-
             epoch_times = [int(entry[0]) for entry in step_count_data]
             step_counts = [entry[1] for entry in step_count_data]
-
             start_time = epoch_times[0]
             normalized_times = [time - start_time for time in epoch_times]
-
             fig, ax = plt.subplots()
             bar_width = 1
             ax.bar(normalized_times, step_counts, width=bar_width, color='brown', alpha=0.7)
@@ -2462,10 +2354,8 @@ class ArduinoWatchPlotsScreen(Screen):
             ax.set_ylabel('Total Steps')
             ax.set_title('Step Count')
             ax.grid(axis='y')
-
             ax.yaxis.set_major_locator(MultipleLocator(2))
             ax.set_ylim(bottom=0)
-
             canvas = FigureCanvasKivyAgg(fig)
             box2.add_widget(canvas)
 
@@ -2477,15 +2367,13 @@ class ArduinoWatchPlotsScreen(Screen):
             body_temperature_data = self.arduino_watch.body_temperature_data()
             box2 = self.ids.box2
             box2.clear_widgets()
+
             if not body_temperature_data:
                 return box2.add_widget(Label(text='No Body Temperature Data Detected.', color = 'red', font_size = "20sp", bold = True))
-
             epoch_times = [int(entry[0]) for entry in body_temperature_data]
             body_temperatures = [entry[1] for entry in body_temperature_data]
-
             start_time = epoch_times[0]
             normalized_times = [time - start_time for time in epoch_times]
-
             fig, ax = plt.subplots()
             bar_width = 1
             ax.bar(normalized_times, body_temperatures, width=bar_width, color='purple', alpha=0.7)
@@ -2493,19 +2381,22 @@ class ArduinoWatchPlotsScreen(Screen):
             ax.set_ylabel('Body Temperature °C')
             ax.set_title('Body Temperature (Degrees Celsius)')
             ax.grid(axis='y')
-
             ax.yaxis.set_major_locator(MultipleLocator(1))
             ax.set_ylim(bottom=30)
-
             canvas = FigureCanvasKivyAgg(fig)
             box2.add_widget(canvas)
 
         except Exception as e:
             print("Error:", e)
 
+"""
+AFNT App class, this function is responsible for rendering the AFNT App and all its contents.
+The builder function in AFNTApp renders `screens.kv`, which contains all the screen definations and design (similar to HTML and CSS in websites).
+"""
 class AFNTApp(MDApp):
     selected_gender = StringProperty("")
-    def build(self):
+
+    def build(self): # Initializing the LocalDB and ScreenManager
         self.local_db = LocalDB('local_db.db')
         self.water_intake_table = WaterIntake(self.local_db.connection)
         self.weight_table = Weight(self.local_db.connection)
@@ -2520,25 +2411,21 @@ class AFNTApp(MDApp):
         self.exercise_log_table =ExerciseLog(self.local_db.connection)
         self.User = User()
 
-        self.sm = ScreenManager()
-        self.sm.add_widget(WorkoutHistoryScreen(name='workout_history_screen'))
-        self.sm.add_widget(WorkoutAllocateScreen(name='workout_allocate_screen'))
-
         return Builder.load_file('screens.kv')
 
-    # Display Error Popups
+    # Display error popups
     def show_error_popup(self, message):
         popup = PP(message)
         popupwind = Popup(title='Error', content=popup, size_hint=(None, None), size=(250, 150))
         popupwind.open()
 
-    # Display Success Popups
+    # Display success popups
     def show_success_popup(self, message):
         popup = PP(message)
         popupwind = Popup(title='Success', content=popup, size_hint=(None, None), size=(250, 150))
         popupwind.open()
 
-    # Login Screen
+    # Login screen input handling and validations
     def handle_username_input(self, text):
         screen = self.root.get_screen('login_screen')
         screen.ids.input_username.error = False if text else True
@@ -2550,8 +2437,8 @@ class AFNTApp(MDApp):
     def verify_login(self):
         global logged_user
         login_screen = self.root.get_screen('login_screen')
-        # login_details = [login_screen.ids.input_username.text, login_screen.ids.input_password.text]
-        login_details = ['asuha', '123']
+        login_details = [login_screen.ids.input_username.text, login_screen.ids.input_password.text]
+        # login_details = ['asuha', '123']
         logged_user = login_details[0]
         print(login_details)
 
@@ -2569,7 +2456,7 @@ class AFNTApp(MDApp):
         elif login_status == 2:
             return self.show_error_popup("invalid password")
         
-    # Registration Screen
+    # Registration screen input handling and validation functions
     def handle_new_username_input(self, text):
         screen = self.root.get_screen('registration_screen')
         screen.ids.input_new_username.error = False if text else True       
@@ -2590,10 +2477,8 @@ class AFNTApp(MDApp):
         screen = self.root.get_screen('registration_screen')
         formatted_date = value.strftime("%Y-%m-%d")
         screen.ids.date_input.text = formatted_date
-        # print(instance, value, date_range)
 
     def on_cancel(self, instance, value):
-        # self.root.ids.date_label.text = "Cancelled"
         instance.dismiss()
 
     def handle_new_dob_input(self):
@@ -2614,13 +2499,11 @@ class AFNTApp(MDApp):
     def select_gender(self, selected_gender_text, textfield_instance):
         self.selected_gender = selected_gender_text
         textfield_instance.text = self.selected_gender
-        # print(self.selected_gender)
 
     def verify_registration(self):
         registration_screen = self.root.get_screen('registration_screen')
         reg_details = [registration_screen.ids.input_new_username.text, registration_screen.ids.input_new_email.text, registration_screen.ids.input_new_password.text,
                          registration_screen.ids.input_new_phone.text, registration_screen.ids.date_input.text, registration_screen.ids.gender_input.text]
-        print(reg_details)
 
         if reg_details[0] == "":
             registration_screen.ids.input_new_username.error = True
@@ -2659,7 +2542,7 @@ class AFNTApp(MDApp):
         elif reg_status == 10:
             return self.show_success_popup("Registration Successfull!")
 
-    # Dashboard Screen
+    # Dashboard screen validations functions
     def handle_dropdown(self, category, instance):
         dashboard_screen = self.root.get_screen('dashboard_screen')
         menu_items = []
@@ -2677,7 +2560,6 @@ class AFNTApp(MDApp):
         self.menu.open()
 
     def selected_navbar_dropdown(self, selected_item_text):
-        # print(f"Selected: {selected_item_text}")
         if hasattr(self, 'menu'):
             self.menu.dismiss()  # Dismiss the menu if it exists
 
@@ -2685,7 +2567,7 @@ class AFNTApp(MDApp):
         dashboard_screen.logout()
         self.selected_navbar_dropdown("Logout")
 
-    # Water Intake Screen
+    # Water Intake screen input handling and validation functions
     def handle_water_intake_date_input(self):
         if not hasattr(self, 'water_date_dialog'):
             self.water_date_dialog = MDDatePicker()
@@ -2696,7 +2578,6 @@ class AFNTApp(MDApp):
         screen = self.root.get_screen('water_intake_screen')
         formatted_date = value.strftime("%d/%m/%Y")
         screen.ids.water_date_input.text = formatted_date
-        # print(instance, value, date_range)
     
     def handle_water_input(self, text):
         screen = self.root.get_screen('water_intake_screen')
@@ -2705,10 +2586,8 @@ class AFNTApp(MDApp):
     def verify_water_input(self):
         water_intake_screen = self.root.get_screen('water_intake_screen')
         water_details = [water_intake_screen.ids.water_input.text, water_intake_screen.ids.water_date_input.text]
-        # print(water_details)
 
         result_code = self.water_intake_table.verify_water_intake(water_details[0], water_details[1])
-
         if result_code == 15:
             return self.show_success_popup("water intake recorded\n successfully")
         elif result_code == 14:
@@ -2724,7 +2603,7 @@ class AFNTApp(MDApp):
         self.water_intake_table.remove_all_water_intake()
         self.show_success_popup("all water intake data\n successfully deleted")
 
-    # Body Statistics Screen
+    # Body Statistics screen input handling and validation
     def handle_body_stats_date_input(self):
         if not hasattr(self, 'body_stats_date'):
             self.body_stats_date = MDDatePicker()
@@ -2735,7 +2614,6 @@ class AFNTApp(MDApp):
         screen = self.root.get_screen('body_stats_screen')
         formatted_date = value.strftime("%d/%m/%Y")
         screen.ids.body_stats_date.text = formatted_date
-        # print(instance, value, date_range)
 
     def handle_weight_input(self, text):
         screen = self.root.get_screen('body_stats_screen')
@@ -2751,7 +2629,6 @@ class AFNTApp(MDApp):
         body_stats_details = [body_stats_screen.ids.body_stats_date.text, body_stats_screen.ids.weight_input.text, body_stats_screen.ids.height_input.text, 
                               body_stats_screen.ids.body_fat_input.text, body_stats_screen.ids.skeletal_muscle_input.text, body_stats_screen.ids.step_count_input.text]
         
-        # print("bsd", body_stats_details)
         verify_date = self.verify_date_input(body_stats_details[0])
 
         weight_code = self.weight_table.verify_weight(body_stats_details[1])
@@ -2766,7 +2643,7 @@ class AFNTApp(MDApp):
         print("skeletal_muscle_code", skeletal_muscle_code)
         print("step_count_code",step_count_code)
 
-        # weight verification code
+        # Weight validation handling
         if weight_code == 16:
             return self.show_error_popup("invalid weight")
         elif weight_code == 17:
@@ -2776,42 +2653,36 @@ class AFNTApp(MDApp):
         elif weight_code == 19:
             return self.show_error_popup("invalid weight format")
         
-        # height verification code
+        # Height validation handling
         if height_code == 23:
             return self.show_error_popup("invalid height")
         elif height_code == 24:
-            # print("Err24: no height input")
-            # print("bmi verf", body_stats_details[1], float(self.height_table.get_latest_height_value()), body_stats_details[0])
             self.bmi_table.insert_bmi(float(body_stats_details[1]), float(self.height_table.get_latest_height_value()*100), body_stats_details[0])
 
-        # skeletal muscle verification code
+        # Skeletal muscle validation handling
         if skeletal_muscle_code == 26:
             return self.show_error_popup("invalid skeletal muscle value")
         elif skeletal_muscle_code == 27:
-            # return self.show_error_popup("invalid skeletal muscle format")
             print("Err27: no skeletal muscle input")
 
-        # body fat verification code
+        # Body fat validation handling
         if body_fat_code == 29:
             return self.show_error_popup("invalid body fat value")
         elif body_fat_code == 30:
-            # return self.show_error_popup("invalid body fat format")
-            # print("body fat verf", logged_user, body_stats_details[0])
             self.body_fat_table.calculate_body_fat(float(body_stats_details[1]), logged_user, body_stats_details[0])
             # print("Err27: no body fat input")
 
-        # step_count verification code
+        # Step count validation handling
         if step_count_code == 33:
             return self.show_error_popup("invalid step count")
         elif step_count_code == 31:
             print("Err24: no step count input")
         
+        # Inserting values in LocalDB
         if weight_code == 20:
             self.weight_table.insert_weight(body_stats_details[1], body_stats_details[0])
-            print('inserting weight')
         if height_code == 22:
             self.height_table.insert_height(int(body_stats_details[2])/100, body_stats_details[0])
-            # print("bmi2 verf:", float(body_stats_details[1]), float(body_stats_details[2]), body_stats_details[0])
             self.bmi_table.insert_bmi(float(body_stats_details[1]), float(body_stats_details[2]), body_stats_details[0])
         if skeletal_muscle_code == 25:
             self.skeletal_muscle_table.insert_skeletal_muscle(float(body_stats_details[4]), body_stats_details[0])
@@ -2819,16 +2690,12 @@ class AFNTApp(MDApp):
             self.body_fat_table.insert_body_fat(float(body_stats_details[1]), float(body_stats_details[3]), body_stats_details[0])
         if step_count_code == 32:
             self.step_count_table.insert_step_count(int(body_stats_details[5]), body_stats_details[0])
-            # self.local_db.print_step_count()
-        
         return self.show_success_popup("successfully updated record")
-        
-        # self.local_db.print_step_count()
 
     def on_stop(self):
         self.local_db.close_connection()
 
-
+# Run the AFNT App
 if __name__ == '__main__':
     AFNTApp().run()
     print(kivy.__version__)
