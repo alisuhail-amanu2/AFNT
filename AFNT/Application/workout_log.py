@@ -2,11 +2,17 @@ from datetime import datetime
 import sqlite3
 from local_db import LocalDB
 
+"""
+This class handles all database and other operations related to the `workout_logs` table from LocalDB.
+"""
 class WorkoutLog():
+
+    # Initializing LocalDB connection
     def __init__(self, connection):
         self.connection = connection
         self.cursor = connection.cursor()
 
+    # Inserts the new workout log into the database
     def insert_workout_log(self, workout_log):
         try:
             with self.connection:
@@ -40,6 +46,7 @@ class WorkoutLog():
         except Exception as e:
             print(f"Error inserting workout log: {e}")
 
+    # Gets the workout_log_id by latest date, using workout_id
     def get_latest_workout_log_id(self, workout_id):
         try:
             with self.connection:
@@ -55,11 +62,13 @@ class WorkoutLog():
             print("Error retrieving latest workout log id:", e)
             return None
 
+    # Gets workout log record by workout_log_id
     def get_workout_log_by_id(self, workout_log_id):
         with self.connection:
             self.cursor.execute("SELECT * FROM workout_logs WHERE workout_log_id=?", (workout_log_id,))
             return self.cursor.fetchall()
 
+    # Gets the workout log record by workout_id
     def get_workout_logs_by_workout_id(self, workout_id):
         try:
             with self.connection:
@@ -71,11 +80,13 @@ class WorkoutLog():
             print("Error retrieving workout logs by workout id:", e)
             return None
 
+    # Gets all workout log data
     def get_all_workout_logs(self):
         with self.connection:
             self.cursor.execute("SELECT * FROM workout_logs")
             return self.cursor.fetchall()
 
+    # Gets workout log details using fields from both workouts and workout_logs table
     def get_workout_logs_details(self):
         try:
             with self.connection:
@@ -99,6 +110,7 @@ class WorkoutLog():
         except Exception as e:
             print(f"Error retrieving workout logs details: {e}")
 
+    # Gets workout logs from a date range
     def get_date_selected_workout_logs(self, from_date, to_date):
         try:
             with self.connection:
@@ -137,6 +149,7 @@ class WorkoutLog():
             print(f"Error retrieving workout logs: {e}")
             return []
 
+    # Updates workout log using workout_log_id and updating the values by passing the changed parameters.
     def update_workout_log(self, workout_log_id, date_assigned, time_assigned, is_complete):
         try:
             with self.connection:
@@ -152,6 +165,7 @@ class WorkoutLog():
         except Exception as e:
             print(f"Error updating workout log fields: {e}")
 
+    # Function for removing the workout log by setting `is_active` field to `0`. The database will only display those records with is_active = 1
     def remove_workout_log(self, workout_log_id):
         try:
             with self.connection:
@@ -159,6 +173,7 @@ class WorkoutLog():
         except Exception as e:
             print(f"Error removing workout log: {e}")
 
+    # Function to readd the removed workout log by setting its is_active to 1.
     def re_add_workout_log(self, workout_log_id):
         try:
             with self.connection:
@@ -166,22 +181,7 @@ class WorkoutLog():
         except Exception as e:
             print(f"Error removing workout log: {e}")
 
+    # Drops the workout_logs table from LocalDB
     def drop_workout_log(self):
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS workout_logs")
-
-# db = LocalDB('local_db.db')
-# workout_log = WorkoutLog(db.connection)
-# db.print_workout_logs()
-
-# print("workout records", workout_log.get_workout_logs_details('01/10/2023', '01/01/2024'))
-# print("workout records", workout_log.get_date_selected_workout_logs('01/02/2023', '28/02/2023'))
-# workout_log.update_workout_log(6, '10/02/2024', '16:20:00', 0)
-# workout_log.remove_workout_log(1)
-# workout_log.re_add_workout_log(5)
-# print(workout_log.get_workout_details())
-# workout_log.insert_workout_log()
-
-# db.print_workout_logs()
-# print(workout_log.get_workout_logs_by_workout_id('C1'))
-# db.close_connection()

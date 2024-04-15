@@ -4,18 +4,24 @@ import re
 from datetime import datetime
 from datetime import datetime as dt
 
+"""
+This class handles all database and other operations related to the `users` table from CentralDB.
+"""
 class User:
+
+    # Initializing centralDB csv file
     def __init__(self):
         self.current_file_path = os.path.abspath(__file__)
         self.project_root = os.path.dirname(os.path.dirname(self.current_file_path))
         self.users_file_path = os.path.join(self.project_root, 'Database', 'DatabaseCSV', 'Central', 'users.csv')
 
+    # Remove BOM (Byte Order Mark) from the beginning of the text
     def remove_bom(self, text):
-        # Remove BOM (Byte Order Mark) from the beginning of the text
         if text.startswith('\ufeff'):
             return text[1:]
         return text
 
+    # Gets all user data from the database
     def get_user_data(self):
         user_data = []
         with open(self.users_file_path, 'r', encoding='utf-8-sig') as csv_file:
@@ -24,23 +30,26 @@ class User:
                 user_data.append(row)
         return user_data
 
+    # Gets the users age using the username
     def get_user_age(self, username):
         user_data = self.get_user_data()
         for user in user_data:
-            if user[1] == username:  # Assuming username is in the second column
-                dob_str = user[10]  # Assuming DOB is in the 11th column
+            if user[1] == username:
+                dob_str = user[10]
                 if dob_str:
-                    dob = datetime.strptime(dob_str, '%d/%m/%Y')  # Parse DOB string to datetime object
+                    dob = datetime.strptime(dob_str, '%d/%m/%Y')  # parse dob string to datetime object
                     today = datetime.today()
                     age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
                     return age
 
+    # Gets the users gender using the username
     def get_user_gender(self, username):
         user_data = self.get_user_data()
         for user in user_data:
             if user[1] == username:
                 return user[9]
 
+    # Function to verify login details and allow user to login. Returns 0 for successful login, else 1 for invalid username and 2 for invalid password
     def handle_login(self, login_details):
         user_data = self.get_user_data()
 
@@ -53,6 +62,7 @@ class User:
 
         return 1  # Invalid Username
 
+    # Handles validation for user registration
     def handle_registration(self, reg_details):
         user_data = self.get_user_data()
 
@@ -103,17 +113,19 @@ class User:
                 'time_enrolled': dt.now().strftime('%H:%M:%S'),
                 'is_active': 1,
             })
-
         return 10
 
+    # Validate email format
     def is_valid_email(self, email):
         email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
         return re.match(email_regex, email)
 
+    # Validate phone number format
     def is_valid_phone(self, phone):
         phone_regex = r'^\d{10,}$'
         return re.match(phone_regex, phone)
 
+    # Validate user's age. User must be 13+ to use the app
     def is_valid_age(self, dob):
         dob_date = dt.strptime(dob, "%Y-%m-%d").date()
         today = datetime.today().date()

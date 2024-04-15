@@ -2,11 +2,17 @@ from datetime import datetime
 import sqlite3
 from local_db import LocalDB
 
+"""
+This class handles all database and other operations related to the `workouts` table from LocalDB.
+"""
 class Workout():
+
+    # Initializing LocalDB connection
     def __init__(self, connection):
         self.connection = connection
         self.cursor = connection.cursor()
 
+    # Function to insert new workouts
     def insert_workout(self, workout):
         try:
             table_name = 'workouts'
@@ -33,18 +39,23 @@ class Workout():
         except Exception as e:
             print(f"Error inserting workout: {e}")
 
+    # Gets workout record by workout_id
     def get_workout_by_id(self, workout_id):
         with self.connection:
             self.cursor.execute("SELECT * FROM workouts WHERE workout_id=?", (workout_id,))
             return self.cursor.fetchall()
 
+    # Gets workout record by workout_name
     def get_workout_by_name(self, workout_name):
         with self.connection:
             self.cursor.execute("SELECT * FROM workouts WHERE LOWER(workout_name) = LOWER(?)", (workout_name,))
             return self.cursor.fetchall()
 
+    # Update workout record using workout_id and updating the values using `updated_values` dictionary
     def update_workout(self, workout_id, updated_values):
         table_name = 'workouts'
+
+        # For updating custom workouts (workout_id starts with 'C')
         if workout_id.startswith('C'):
             set_clause = ', '.join(f"{key} = :{key}" for key in updated_values.keys())
             sql = f"UPDATE {table_name} SET {set_clause} WHERE workout_id = :workout_id"
@@ -52,6 +63,8 @@ class Workout():
 
             with self.connection:
                 self.cursor.execute(sql, updated_values)
+
+        # For updating preset workouts (Creates a new workout, with the same definations as the preset workout)
         else:
             with self.connection:
                 self.cursor.execute(f"PRAGMA table_info({table_name})")
@@ -74,6 +87,7 @@ class Workout():
                     insert_sql = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
                     self.cursor.execute(insert_sql, updated_record)
 
+    # For handling custom workouts, where workout_id starts with 'C' as compared with preset workouts whose workout_ids are integers
     def _get_next_custom_id_numeric(self):
         with self.connection:
             self.cursor.execute("SELECT MAX(CAST(SUBSTR(workout_id, 2) AS INTEGER)) FROM workouts WHERE workout_id LIKE 'C%'")
@@ -81,6 +95,7 @@ class Workout():
 
         return latest_id_numeric + 1 if latest_id_numeric else 1
 
+    # Gets all active workout details and returns the selected fields
     def get_workout_details(self):
         try:
             with self.connection:
@@ -101,6 +116,7 @@ class Workout():
         except Exception as e:
             print(f"Error retrieving workout details: {e}")
 
+    # Function for removing the workouts by setting `is_active` field to `0`. The database will only display those records with is_active = 1
     def remove_workout(self, workout_id):
         try:
             with self.connection:
@@ -108,6 +124,7 @@ class Workout():
         except Exception as e:
             print(f"Error removing workout log: {e}")
 
+    # Function to readd the removed workouts by setting its is_active to 1.
     def re_add_workout(self, workout_id):
         try:
             with self.connection:
@@ -115,16 +132,7 @@ class Workout():
         except Exception as e:
             print(f"Error removing workout log: {e}")
 
+    # Drops workouts from LocalDB
     def drop_workout(self):
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS workouts")
-
-# db = LocalDB('local_db.db')
-# workout = Workout(db.connection)
-
-# print(workout.get_workout_details())
-# workout.remove_workout('C1')
-# workout.re_add_workout('3')
-
-# db.print_workouts()
-# db.close_connection()

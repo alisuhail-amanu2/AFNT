@@ -1,13 +1,18 @@
 from datetime import datetime
 import sqlite3
 from local_db import LocalDB
-import matplotlib.pyplot as plt
 
+"""
+This class handles all database and other operations related to the `water_intake` table from LocalDB.
+"""
 class WaterIntake():
+
+    # Initializing LocalDB connection
     def __init__(self, connection):
         self.connection = connection
         self.cursor = connection.cursor()
 
+    # Inserts water intake (ml) along with the current datetime into the database
     def insert_water_intake(self, water_intake):
         try:
             with self.connection:
@@ -31,16 +36,19 @@ class WaterIntake():
         except Exception as e:
             print(f"Error inserting water intake log: {e}")
 
+    # Gets water intake record by water_intake_id
     def get_water_intake_by_id(self, water_intake_id):
         with self.connection:
             self.cursor.execute("SELECT * FROM water_intake WHERE water_intake_id=?", (water_intake_id,))
             return self.cursor.fetchall()
 
+    # Gets water intake record by selected date
     def get_water_intake_by_date(self, date_recorded):
         with self.connection:
             self.cursor.execute("SELECT * FROM water_intake WHERE date_recorded=?", (date_recorded,))
             return self.cursor.fetchall()
 
+    # Updates water intake record using water_intake_id and updating the values with the `updated_values` dictionary.
     def update_water_intake(self, water_intake_id, updated_values):
         table_name = 'water_intake'
         set_clause = ', '.join(f"{key} = :{key}" for key in updated_values.keys())
@@ -50,6 +58,7 @@ class WaterIntake():
         with self.connection:
             self.cursor.execute(sql, updated_values)
     
+    # Gets all water intake records and returns it in a list
     def get_all_water_intake(self):
         water_intakes = []
         sql = "SELECT * FROM water_intake"
@@ -59,14 +68,17 @@ class WaterIntake():
             water_intakes.append(row)
         return water_intakes
 
+    # Deletes all water intake records
     def remove_all_water_intake(self):
         with self.connection:
             self.cursor.execute("DELETE FROM water_intake")
 
+    # Drops the water_intake table from LocalDB
     def drop_water_intake(self):
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS water_intake")
 
+    # Verifies water intake input and the date selected by user
     def verify_water_intake(self, water_intake, date_recorded):
         water_intake_str = str(water_intake)
 
@@ -78,8 +90,8 @@ class WaterIntake():
             return 12  # Error code for invalid water intake format (non-integer)
         if water_intake <= 0:
             return 13  # Error code for no water intake provided
-        # if not date_recorded:
-        #     return 14  # Error code for no date selected
+        if not date_recorded:
+            return 14  # Error code for no date selected
 
         # Add current time
         time_recorded = datetime.now().strftime('%H:%M:%S')
@@ -95,6 +107,7 @@ class WaterIntake():
 
         return 15  # Success code
 
+    # Gets the water intake data using the selected month and year parameters and returns the dates, water intake values and days of the selected month in a list format
     def monthly_water_intake_data(self, selected_month, selected_year):
         days_in_month = 31
         if selected_month in [4, 6, 9, 11]:
@@ -118,7 +131,8 @@ class WaterIntake():
 
         data = [dates, water_intakes, days_of_month]
         return data
-        
+
+# Gets the water intake data using the selected year parameter and returns the months, average water intake values and calendar data in a list format
     def yearly_water_intake_graph(self, selected_year):
         sql = "SELECT water_intake_ml, date_recorded FROM water_intake WHERE SUBSTR(date_recorded, 7, 4) = ?"
         self.cursor.execute(sql, (str(selected_year),))
@@ -136,9 +150,3 @@ class WaterIntake():
         monthly_averages = {month: monthly_totals[month] / monthly_counts[month] if monthly_counts[month] != 0 else 0 for month in range(1, 13)}
         data = [monthly_averages.keys(), monthly_averages.values()]
         return data
-
-# db = LocalDB('local_db.db')
-# water = WaterIntake(db.connection)
-
-# db.print_water_intake()
-# db.close_connection()

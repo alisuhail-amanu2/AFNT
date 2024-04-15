@@ -10,6 +10,8 @@ LocalDB Class that stores all User Workout, Meal and Body Data in a SQLite Datab
 This class is responsible for creating localDB tables and intialising it and import data from the CSV file.
 """
 class LocalDB():
+
+    # Initializing LocalDB connection
     def __init__(self, local_db):
         self.local_db = local_db
         self.connection = sqlite3.connect(self.local_db)

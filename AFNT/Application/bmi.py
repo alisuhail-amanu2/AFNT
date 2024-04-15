@@ -1,14 +1,19 @@
 from datetime import datetime
 import sqlite3
 from local_db import LocalDB
-import matplotlib.pyplot as plt
 import calendar
 
+"""
+This class handles all database and other operations related to the `bmi` table from LocalDB.
+"""
 class BMI():
+
+    # Initializing LocalDB connection
     def __init__(self, connection):
         self.connection = connection
         self.cursor = connection.cursor()
 
+    # Gets the latest BMI value from the database using the date_recorded field
     def get_most_recent_bmi(self):
         try:
             with self.connection:
@@ -22,9 +27,11 @@ class BMI():
             print(f"Error fetching most recent bmi data: {e}")
             return 0
 
+    # Calculates the BMI values using the weight and height parameters
     def calculate_bmi(self, weight, height):
         return round(weight / ((height/100) * (height/100)), 1)
 
+    # Inserts the BMI value and the current datetime into the database after using `calculate_bmi` function
     def insert_bmi(self, weight, height, selected_date):
         try:
             bmi = self.calculate_bmi(weight, height)
@@ -51,11 +58,13 @@ class BMI():
         except Exception as e:
             print(f"Error inserting BMI data: {e}")
 
+    # Gets the BMI value by bmi_id
     def get_bmi_by_id(self, bmi_id):
         with self.connection:
             self.cursor.execute("SELECT * FROM bmi WHERE bmi_id=?", (bmi_id,))
             return self.cursor.fetchall()
 
+    # Updates the BMI record using the bmi_id for identification and updates the BMI record using the `updated_values` dictionary
     def update_bmi(self, bmi_id, updated_values):
         table_name = 'bmi'
         set_clause = ', '.join(f"{key} = :{key}" for key in updated_values.keys())
@@ -65,14 +74,17 @@ class BMI():
         with self.connection:
             self.cursor.execute(sql, updated_values)
 
+    # Deletes the BMI record using bmi_id
     def remove_bmi(self, bmi_id):
         with self.connection:
             self.cursor.execute("DELETE FROM bmi WHERE bmi_id=?", (bmi_id,))
 
+    # Drops the BMI table from LocalDB
     def drop_bmi(self):
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS bmi")
 
+    # Gets the BMI data using the selected month and year parameters and returns the dates, bmi values and days of the selected month in a list format
     def monthly_bmi_data(self, selected_month, selected_year):
         days_in_month = calendar.monthrange(selected_year, selected_month)[1]
         days_of_month = list(range(1, days_in_month + 1))
@@ -92,6 +104,7 @@ class BMI():
         
         return [dates, bmis, days_of_month]
 
+    # Gets the BMI data using the selected year parameter and returns the months, average bmi values and calendar data in a list format
     def yearly_bmi_data(self, selected_year):
         months = list(range(1, 13))
         avg_bmi_values = []
@@ -104,12 +117,3 @@ class BMI():
             avg_bmi_values.append(avg_bmi)
         
         return [months, avg_bmi_values, calendar.month_abbr[1:]]
-    
-# db = LocalDB('local_db.db')
-# bmi = BMI(db.connection)
-# bmi.insert_bmi(76, 184, '24/02/2024')
-# # bmi.remove_bmi(16)
-# # print("latest bmi value:", bmi.get_most_recent_bmi())
-
-# db.print_bmi()
-# db.close_connection()

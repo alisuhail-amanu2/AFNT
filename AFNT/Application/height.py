@@ -3,11 +3,17 @@ import sqlite3
 from local_db import LocalDB
 import matplotlib.pyplot as plt
 
+"""
+This class handles all database and other operations related to the `height` table from LocalDB.
+"""
 class Height():
+
+    # Initializing LocalDB connection
     def __init__(self, connection):
         self.connection = connection
         self.cursor = connection.cursor()
 
+    # Function for adding new  height (m) record into the database
     def insert_height(self, height, selected_date):
         try:
             current_time = datetime.now().strftime('%H:%M:%S')
@@ -39,11 +45,13 @@ class Height():
         except Exception as e:
             print(f"Error inserting height data: {e}")
 
+    # Gets height record using height_id
     def get_height_by_id(self, height_id):
         with self.connection:
             self.cursor.execute("SELECT * FROM height WHERE height_id=?", (height_id,))
             return self.cursor.fetchall()
-        
+    
+    # Gets latest height value using the latest date and time recorded
     def get_latest_height_value(self):
         try:
             with self.connection:
@@ -55,10 +63,10 @@ class Height():
             print(f"Error retrieving latest height value: {e}")
             return None
 
-
         except sqlite3.Error as e:
             print(f"Error retrieving latest height value: {e}")
 
+    # Update height record using height_id and updating the values using `updated_values` dictionary 
     def update_height(self, height_id, updated_values):
         table_name = 'height'
         set_clause = ', '.join(f"{key} = :{key}" for key in updated_values.keys())
@@ -68,30 +76,22 @@ class Height():
         with self.connection:
             self.cursor.execute(sql, updated_values)
 
+    # Remove the height record using height_id from the database
     def remove_height(self, height_id):
         with self.connection:
             self.cursor.execute("DELETE FROM height WHERE height_id=?", (height_id,))
 
+    # Drop the height table from LocalDB
     def drop_height(self):
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS height")
     
+    # Verify the height input entered by user 
     def verify_height(self, height):
         if not height:
             return 24  # empty height
         try:
-            # Convert height data from string to float
-            height_float = int(height)
+            height_float = int(height) # Convert height data from string to float
             return 22  # valid height
         except ValueError:
             return 23  # invalid height format
-
-# db = LocalDB('local_db.db')
-# height = Height(db.connection)
-
-# height.insert_height(189, '29/02/2024')
-# print(height.verify_height(['232.3', '04/02/2024']))
-# db.print_height()
-# print("latest height value", height.get_latest_height_value())
-
-# db.close_connection()

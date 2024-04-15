@@ -1,14 +1,18 @@
 from local_db import LocalDB
 from datetime import datetime
-import re
-
 import sqlite3
 
+"""
+This class handles all database and other operations related to the `step_count` table from LocalDB.
+"""
 class StepCount():
+
+    # Initializing LocalDB connection
     def __init__(self, connection):
         self.connection = connection
         self.cursor = connection.cursor()
 
+    # Inserts step count for the day, along with the current date and time
     def insert_step_count(self, step_count, selected_date):
         try:
             current_time = datetime.now().strftime('%H:%M:%S')
@@ -40,19 +44,22 @@ class StepCount():
         except Exception as e:
             print(f"Error inserting step_count data: {e}")
 
+    # Verify the step count input entered by user
     def verify_step_count(self, step_count):
         if not step_count:
             return 31  # empty step_count
-
         try:
             step_count_int = int(step_count)
             return 32  # valid step_count
         except ValueError:
             return 33  # step_count contains invalid characters
 
-    def delete_step_count(self):
-        pass
+    # Delete step count record from database
+    def delete_step_count(self, step_id):
+        with self.connection:
+            self.cursor.execute("DELETE FROM step_count WHERE step_id=?", (step_id,))
 
+    # Gets the step count data using the selected month and year parameters and returns the dates, step count values and days of the selected month in a list format
     def monthy_step_count_data(self, selected_month, selected_year):
         days_in_month = 31
         if selected_month in [4, 6, 9, 11]:
@@ -79,6 +86,7 @@ class StepCount():
 
         return [dates, step_counts, days_of_month]
 
+    # Gets the step count data using the selected year parameter and returns the months, average step count values and calendar data in a list format
     def yearly_step_count_data(self, selected_year):
         sql = "SELECT step, date_recorded FROM step_count WHERE SUBSTR(date_recorded, 7, 4) = ?"
         self.cursor.execute(sql, (str(selected_year),))
@@ -98,15 +106,3 @@ class StepCount():
         averages = list(monthly_averages.values())
 
         return [months, averages]
-
-
-# db = LocalDB('local_db.db')
-
-# step = StepCount(db.connection)
-# step_data = ['6500', '07/02/2024']
-# print(step.verify_step_count('4,455'))
-# step.insert_step_count('6500', '07/02/2024')
-# print(step.monthy_step_count_data(10, 2023))
-
-# db.print_step_count()
-# db.close_connection()

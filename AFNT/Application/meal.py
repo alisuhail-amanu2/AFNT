@@ -2,11 +2,17 @@ from datetime import datetime
 import sqlite3
 from local_db import LocalDB
 
+"""
+This class handles all database and other operations related to the `meals` table from LocalDB.
+"""
 class Meal():
+
+    # Initializing LocalDB connection
     def __init__(self, connection):
         self.connection = connection
         self.cursor = connection.cursor()
 
+    # Function for adding new meal record into the database
     def insert_meal(self, meal):
         try:
             table_name = 'meals'
@@ -32,19 +38,23 @@ class Meal():
         except Exception as e:
             print(f"Error inserting meal: {e}")
 
+    # Gets meal record by meal_id
     def get_meal_by_id(self, meal_id):
         with self.connection:
             self.cursor.execute("SELECT * FROM meals WHERE meal_id=?", (meal_id,))
             return self.cursor.fetchall()
 
+    # Gets meal record by type
     def get_meal_by_type(self, type):
         with self.connection:
             self.cursor.execute("SELECT * FROM meals WHERE LOWER(type) = LOWER(?)", (type,))
             return self.cursor.fetchall()
 
+    # Update meal record using meal_id and updating the values using `updated_values` dictionary 
     def update_meal(self, meal_id, updated_values):
         table_name = 'meals'
 
+        # For custom meals
         if meal_id.startswith('C'):
             set_clause = ', '.join(f"{key} = :{key}" for key in updated_values.keys())
             sql = f"UPDATE {table_name} SET {set_clause} WHERE meal_id = :meal_id"
@@ -52,6 +62,8 @@ class Meal():
 
             with self.connection:
                 self.cursor.execute(sql, updated_values)
+
+        # For preset meals, create a new custom meal record
         else:
             with self.connection:
                 self.cursor.execute(f"PRAGMA table_info({table_name})")
@@ -74,6 +86,7 @@ class Meal():
                     insert_sql = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
                     self.cursor.execute(insert_sql, updated_record)
 
+    # Handles custom meals added by user. This adds a 'C' character infront of the meal_id to indicate that its a custom meal
     def _get_next_custom_id_numeric(self):
         with self.connection:
             self.cursor.execute("SELECT MAX(CAST(SUBSTR(meal_id, 2) AS INTEGER)) FROM meals WHERE meal_id LIKE 'C%'")
@@ -81,6 +94,7 @@ class Meal():
 
         return latest_id_numeric + 1 if latest_id_numeric else 1
 
+    # Removes meal from the database
     def remove_meal(self, meal_id):
         with self.connection:
             if meal_id.startswith('C'):
@@ -88,6 +102,7 @@ class Meal():
             else:
                 print("Cannot delete preset meals.")
 
+    # Drops meals table from LocalDB
     def drop_meal(self):
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS meals")

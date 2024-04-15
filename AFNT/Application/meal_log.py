@@ -2,11 +2,17 @@ from datetime import datetime
 import sqlite3
 from local_db import LocalDB
 
+"""
+This class handles all database and other operations related to the `meal_logs` table from LocalDB.
+"""
 class MealLog():
+
+    # Initializing LocalDB connection
     def __init__(self, connection):
         self.connection = connection
         self.cursor = connection.cursor()
 
+    # Function for adding new meal log record into the database
     def insert_meal_log(self, meal_log):
         try:
             with self.connection:
@@ -30,11 +36,13 @@ class MealLog():
         except Exception as e:
             print(f"Error inserting meal log: {e}")
 
+    # Get meal log by meal_log_id
     def get_meal_log_by_id(self, meal_log_id):
         with self.connection:
             self.cursor.execute("SELECT * FROM meal_logs WHERE meal_log_id=?", (meal_log_id,))
             return self.cursor.fetchall()
 
+    # Update meal log record using meal_log_id and updating the values using `updated_values` dictionary 
     def update_meal_log(self, meal_log_id, updated_values):
         table_name = 'meal_logs'
         set_clause = ', '.join(f"{key} = :{key}" for key in updated_values.keys())
@@ -44,21 +52,17 @@ class MealLog():
         with self.connection:
             self.cursor.execute(sql, updated_values)
 
-    def _get_next_custom_id_numeric(self):
-        with self.connection:
-            self.cursor.execute("SELECT MAX(CAST(SUBSTR(meal_log_id, 2) AS INTEGER)) FROM meal_logs WHERE meal_log_id LIKE 'C%'")
-            latest_id_numeric = self.cursor.fetchone()[0]
-
-        return latest_id_numeric + 1 if latest_id_numeric else 1
-
+    # Remove meal log from the database
     def remove_meal_log(self, meal_log_id):
         with self.connection:
             self.cursor.execute("DELETE FROM meal_logs WHERE meal_log_id=?", (meal_log_id,))
 
+    # Drops the meal_logs table from LocalDB
     def drop_meal_log(self):
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS meal_logs")
 
+    # Get meal_log records using the from a selected date range. Also retrives columns from both meal and meal_logs tables and returns it in a list
     def get_date_selected_meal_logs(self, from_date, to_date):
         try:
             # Convert date strings to datetime objects
@@ -108,9 +112,3 @@ class MealLog():
         except Exception as e:
             print(f"Error retrieving meal logs: {e}")
             return []
-
-
-# db = LocalDB('local_db.db')
-
-# meallog = MealLog(db.connection)
-# print(meallog.get_date_selected_meal_logs('01/09/2023', '06/09/2023'))

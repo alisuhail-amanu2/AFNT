@@ -1,13 +1,16 @@
 from datetime import datetime
 import sqlite3
 from local_db import LocalDB
-import re
 
+"""
+This class handles all database and other operations related to the `body_fat` table from LocalDB.
+"""
 class Exercise():
     def __init__(self, connection):
         self.connection = connection
         self.cursor = connection.cursor()
 
+    # Function for adding new exercise record into the database
     def insert_exercise(self, exercise):
         try:
             table_name = 'exercises'
@@ -35,24 +38,29 @@ class Exercise():
         except Exception as e:
             print(f"Error inserting exercise: {e}")
 
+    # Get exercise record by exercise_id
     def get_exercise_by_id(self, exercise_id):
         with self.connection:
             self.cursor.execute("SELECT * FROM exercises WHERE exercise_id=?", (exercise_id,))
             return self.cursor.fetchall()
 
+    # Get exercise by exercise_name
     def get_exercise_by_name(self, exercise_name):
         with self.connection:
             self.cursor.execute("SELECT * FROM exercises WHERE LOWER(exercise_name) = LOWER(?)", (exercise_name,))
             return self.cursor.fetchall()
 
+    # Get all exercise records (selected columns)
     def get_all_exercises(self):
         with self.connection:
             self.cursor.execute("SELECT exercise_id, exercise_name, type, body_part, equipment, level, rating FROM exercises")
             return self.cursor.fetchall()
 
+    # Update exercise record using exercise_id and updating the values using `updated_values` dictionary
     def update_exercise(self, exercise_id, updated_values):
         table_name = 'exercises'
 
+        # For updating custom exercises (exercise_id starts with 'C')
         if exercise_id.startswith('C'):
             set_clause = ', '.join(f"{key} = :{key}" for key in updated_values.keys())
             sql = f"UPDATE {table_name} SET {set_clause} WHERE exercise_id = :exercise_id"
@@ -60,6 +68,8 @@ class Exercise():
 
             with self.connection:
                 self.cursor.execute(sql, updated_values)
+        
+        # For updating preset exercises (Creates a new exercise, with the same definations as the preset exercise)
         else:
             with self.connection:
                 self.cursor.execute(f"PRAGMA table_info({table_name})")
@@ -82,6 +92,7 @@ class Exercise():
                     insert_sql = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
                     self.cursor.execute(insert_sql, updated_record)
 
+    # For handling custom exercises, where exercise_id starts with 'C' as compared with preset exercises whose exercise_ids are integers
     def _get_next_custom_id_numeric(self):
         with self.connection:
             self.cursor.execute("SELECT MAX(CAST(SUBSTR(exercise_id, 2) AS INTEGER)) FROM exercises WHERE exercise_id LIKE 'C%'")
@@ -89,6 +100,7 @@ class Exercise():
 
         return latest_id_numeric + 1 if latest_id_numeric else 1
 
+    # Function for removing the exercise by setting `is_active` field to `0`. The database will only display those records with is_active = 1
     def remove_exercise(self, exercise_id):
         with self.connection:
             if exercise_id.startswith('C'):
@@ -97,6 +109,7 @@ class Exercise():
                 print("Cannot delete preset exercises.")
                 return 0
 
+    # Function to readd the removed exercises by setting its is_active to 1.
     def re_add_workout(self, workout_id):
         try:
             with self.connection:
@@ -104,35 +117,7 @@ class Exercise():
         except Exception as e:
             print(f"Error removing workout log: {e}")
 
+    # Drops the exercises table from LocalDB
     def drop_exercise(self):
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS exercises")
-
-# db = LocalDB('local_db.db')
-# exercise = Exercise(db.connection)
-# exercise_data = ['-=', '07/02/2024']
-# print(exercise.monthly_exercise_data('10', '2023'))
-# exercise.remove_exercise(13)
-
-# exercise.remove_exercise('C9')
-
-# exercise_data = {
-#     "exercise_name": 'Test 0',
-#     "description": '',
-#     "type": 'exercise_type',
-#     "body_part": 'body_part',
-#     "equipment": 'equipment',
-#     "level": 'exercise_level',
-#     "rating": '0',
-#     "rating_description": 'fd',
-#     "is_active": 1,
-# }
-
-# exercise.insert_exercise(exercise_data)
-# value = exercise.get_exercise_by_name('Test 1')
-
-# print(value[0][0])
-# db.print_exercises()
-
-# print(exercise.get_all_exercises())
-# db.close_connection()

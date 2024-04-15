@@ -3,11 +3,17 @@ import sqlite3
 from local_db import LocalDB
 import matplotlib.pyplot as plt
 
+"""
+This class handles all database and other operations related to the `skeletal_muscle` table from LocalDB.
+"""
 class SkeletalMuscle():
+
+    # Initializing LocalDB connection
     def __init__(self, connection):
         self.connection = connection
         self.cursor = connection.cursor()
 
+    # Inserts skeletal_muscle (kg) record into the database with the current date and time
     def insert_skeletal_muscle(self, skeletal_muscle, selected_date):
         try:
             current_time = datetime.now().strftime('%H:%M:%S')
@@ -39,11 +45,13 @@ class SkeletalMuscle():
         except Exception as e:
             print(f"Error inserting skeletal_muscle data: {e}")
 
+    # Gets the skeletal muscle record by skeletal_muscle_id
     def get_skeletal_muscle_by_id(self, skeletal_muscle_id):
         with self.connection:
             self.cursor.execute("SELECT * FROM skeletal_muscle WHERE skeletal_muscle_id=?", (skeletal_muscle_id,))
             return self.cursor.fetchall()
 
+    # Updates skeletal muscle record using skeletal_muscle_id and updating the values using `updated_values` dictionary 
     def update_skeletal_muscle(self, skeletal_muscle_id, updated_values):
         table_name = 'skeletal_muscle'
         set_clause = ', '.join(f"{key} = :{key}" for key in updated_values.keys())
@@ -53,24 +61,27 @@ class SkeletalMuscle():
         with self.connection:
             self.cursor.execute(sql, updated_values)
 
+    # Removes the skeletal muscle record using skeletal_muscle_id from the database
     def remove_skeletal_muscle(self, skeletal_muscle_id):
         with self.connection:
             self.cursor.execute("DELETE FROM skeletal_muscle WHERE skeletal_muscle_id=?", (skeletal_muscle_id,))
 
+    # Drops the skeletal_muscle table from LocalDB
     def drop_skeletal_muscle(self):
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS skeletal_muscle")
 
+    # Verifys the skeletal_muscle value entered by user
     def verify_skeletal_muscle(self, skeletal_muscle):
         if not skeletal_muscle:
             return 27  # empty skeletal_muscle
         try:
-            # Convert skeletal_muscle data from string to float
-            skeletal_muscle_float = float(skeletal_muscle)
+            skeletal_muscle_float = float(skeletal_muscle) # Convert skeletal_muscle data from string to float
             return 25  # valid skeletal_muscle
         except ValueError:
             return 26  # invalid skeletal muscle format
 
+    # Gets the skeletal muscle data using the selected month and year parameters and returns the dates, skeletal muscle values and days of the selected month in a list format
     def monthly_skeletal_muscle_data(self, selected_month, selected_year):
         days_in_month = 31
         if selected_month in [4, 6, 9, 11]:
@@ -97,6 +108,7 @@ class SkeletalMuscle():
 
         return [dates, skeletal_muscles, days_of_month]
   
+    # Gets the skeletal muscle data using the selected year parameter and returns the months, average skeletal muscle values and calendar data in a list format
     def yearly_skeletal_muscle_data(self, selected_year):
         sql = "SELECT skeletal_muscle_kg, date_recorded FROM skeletal_muscle WHERE SUBSTR(date_recorded, 7, 4) = ?"
         self.cursor.execute(sql, (str(selected_year),))
@@ -116,11 +128,3 @@ class SkeletalMuscle():
         averages = list(monthly_averages.values())
 
         return [months, averages]
-
-# db = LocalDB('local_db.db')
-# skeletal_muscle = SkeletalMuscle(db.connection)
-
-# skeletal_muscle.insert_skeletal_muscle(12, '01/02/2024')
-# print(skeletal_muscle.verify_skeletal_muscle('54.43'))
-# db.print_skeletal_muscle()
-# db.close_connection()

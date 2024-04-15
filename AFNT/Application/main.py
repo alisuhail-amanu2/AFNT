@@ -536,7 +536,7 @@ class DashboardScreen(Screen):
     def switch_to_body_stats(self):
         self.manager.current = 'body_stats_screen'
 
-# Workout History screen. This screen is used for managing workout logs (Display/Add/Edit/Delete etc)
+# Workout History screen. This screen is responsible for managing workout logs (Display/Add/Edit/Delete etc)
 class WorkoutHistoryScreen(Screen):
     def __init__(self, **kwargs):
         super(WorkoutHistoryScreen, self).__init__(**kwargs)
@@ -696,10 +696,7 @@ class WorkoutHistoryScreen(Screen):
     def get_selected_rows(self):
         return self.selected_rows
 
-"""
-Workout Allocate screen. Used for allocating workouts to a selected datetime
-Also responsible for creating new workouts and exercises
-"""
+# Workout Allocate screen. Used for allocating workouts to a selected datetime
 class WorkoutAllocateScreen(Screen):
     def __init__(self, **kwargs):
         super(WorkoutAllocateScreen, self).__init__(**kwargs)
@@ -877,7 +874,7 @@ class WorkoutAllocateScreen(Screen):
     def get_selected_rows(self):
         return self.selected_rows
 
-# Workout Create screen. This screen is used for creating a new workout
+# Workout Create screen. This screen is responsible for creating a new workout
 class WorkoutCreateScreen(Screen):
     def __init__(self, **kwargs):
         super(WorkoutCreateScreen, self).__init__(**kwargs)
@@ -957,7 +954,7 @@ class WorkoutCreateScreen(Screen):
         self.workout.insert_workout(workout_data)
         return self.success_popup.show_popup('Success', 'Workout Created Successfully')
 
-# Exercise Create screen. This screen is used for creating a new exercise
+# Exercise Create screen. This screen is responsible for creating a new exercise
 class ExerciseCreateScreen(Screen):
     def __init__(self, **kwargs):
         super(ExerciseCreateScreen, self).__init__(**kwargs)
@@ -1161,7 +1158,7 @@ class ExerciseCreateScreen(Screen):
         self.exercise_log.insert_exercise_log(exercise_log_data) # Creating exercise log for the new exercise
         return self.success_popup.show_popup('Success', 'Exercise Created Successfully')
 
-# Exercise log screen. This screen is used for managing exercise logs (Display/Add/Edit/Delete etc)
+# Exercise log screen. This screen is responsible for managing exercise logs (Display/Add/Edit/Delete etc)
 class ExerciseLogScreen(Screen):
     def __init__(self, **kwargs):
         super(ExerciseLogScreen, self).__init__(**kwargs)
@@ -1275,7 +1272,7 @@ class ExerciseLogScreen(Screen):
     def get_selected_rows(self):
         return self.selected_rows
 
-# Exercise Log Allocate screen. This screen is used for allocating exercise logs to a workout log
+# Exercise Log Allocate screen. This screen is responsible for allocating exercise logs to a workout log
 class ExerciseLogAllocateScreen(Screen):
     def __init__(self, **kwargs):
         super(ExerciseLogAllocateScreen, self).__init__(**kwargs)
@@ -1406,7 +1403,7 @@ class ExerciseLogAllocateScreen(Screen):
         else:
             print("No exercise log(s) selected")
 
-# Exercise Allocate screen. This screen is used for allocating exercises to a workout
+# Exercise Allocate screen. This screen is responsible for allocating exercises to a workout
 class ExerciseAllocateScreen(Screen):
     def __init__(self, **kwargs):
         super(ExerciseAllocateScreen, self).__init__(**kwargs)
@@ -1625,7 +1622,7 @@ class ExerciseAllocateScreen(Screen):
         else:
             print("No exercise(s) selected") # Error message if no exercise selected
 
-# Gym Finder Screen. This screen is used for searching for the closest gyms, user location data required to use this functionality (Incomplete)
+# Gym Finder Screen. This screen is responsible for searching for the closest gyms, user location data required to use this functionality (Incomplete)
 class GymFinderScreen(Screen):
     def switch_to_dashboard(self):
         self.manager.transition.direction = 'right'
@@ -1670,7 +1667,7 @@ class GymFinderScreen(Screen):
 
     #     return nearby_gyms
 
-# Meal History Screen. This screen is used for managing meal logs (Display/Add/Edit/Delete etc). (Incomplete)
+# Meal History Screen. This screen is responsible for managing meal logs (Display/Add/Edit/Delete etc). (Incomplete)
 class MealHistoryScreen(Screen):
     def __init__(self, **kwargs):
         super(MealHistoryScreen, self).__init__(**kwargs)
@@ -1839,6 +1836,30 @@ class MealHistoryScreen(Screen):
 
     def get_selected_rows(self):
         return self.selected_rows
+
+# Meal Allocate screen. Used for allocating meals to a selected datetime
+class MealAllocateSceen(Screen):
+    pass
+
+# Meal Create screen. This screen is responsible for creating a new meal (Incomplete)
+class MealCreateScreen(Screen):
+    pass
+
+# Food Item Create screen. This screen is responsible for creating a new food item (Incomplete)
+class FoodItemCreateScreen(Screen):
+    pass
+
+# Food Item log screen. This screen is responsible for managing food item logs (Display/Add/Edit/Delete etc). (Incomplete)
+class FoodItemLogScreen(Screen):
+    pass
+
+# Food Item Allocate screen. This screen is responsible for allocating food item logs to a meal log (Incomplete)
+class FoodItemLogAllocateScreen(Screen):
+    pass
+
+# Food Item Allocate screen. This screen is responsible for allocating food items to a meal (Incomplete)
+class FoodItemAllocateScreen(Screen):
+    pass
 
 """ 
 Body Statistics screen. This screen is used for managing body stats data (Display/Add/Edit/Delete etc). Delete data functionality has not been fully implemented as of now (Partically Incomplete).
@@ -2670,7 +2691,7 @@ class AFNTApp(MDApp):
             return self.show_error_popup("invalid body fat value")
         elif body_fat_code == 30:
             self.body_fat_table.calculate_body_fat(float(body_stats_details[1]), logged_user, body_stats_details[0])
-            # print("Err27: no body fat input")
+            print("Err27: no body fat input")
 
         # Step count validation handling
         if step_count_code == 33:
