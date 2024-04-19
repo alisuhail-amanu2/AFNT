@@ -1508,6 +1508,7 @@ class ExerciseAllocateScreen(Screen):
             for row in self.selected_rows:
                 exercise_id = row[0]
                 status = self.exercise.remove_exercise(exercise_id)
+                self.success_popup.show_popup('Success', 'Removed custom exercise')
                 if status == 0:
                     allocate_workout_success = FailPopup()
                     allocate_workout_success.show_popup('Failed', 'Cannot delete preset exercises')
@@ -1569,6 +1570,7 @@ class ExerciseAllocateScreen(Screen):
                                         'is_active': 1,
                                     }
                                     self.exercise_log.insert_exercise_log(insert_exercise_log) # Insert the latest exercise log data to the selected exercise, inside the workout
+                                    self.success_popup.show_popup('Success', 'Exercise(s) Allocated Successfully')
                                 else:
                                     insert_exercise_log = {
                                         'exercise_id': exercise_row[0],
@@ -1588,6 +1590,7 @@ class ExerciseAllocateScreen(Screen):
                                     }
                                     # If no exercise log record found for the selected exercise, then create a new exercise log with default values
                                     self.exercise_log.insert_exercise_log(insert_exercise_log)
+                                    self.success_popup.show_popup('Success', 'Exercise(s) Allocated Successfully')
                     else:
                         new_workout_log_data = {
                             'workout_id': self.allocate_workout_rows[0][0],
@@ -1619,6 +1622,7 @@ class ExerciseAllocateScreen(Screen):
                                 'is_active': 1,
                             }
                             self.exercise_log.insert_exercise_log(insert_exercise_log) # Allocate the selected exercise with default values
+                            self.success_popup.show_popup('Success', 'Exercise(s) Allocated Successfully')
         else:
             print("No exercise(s) selected") # Error message if no exercise selected
 

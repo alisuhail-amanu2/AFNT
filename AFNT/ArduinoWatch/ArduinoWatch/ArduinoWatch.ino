@@ -48,7 +48,7 @@ const byte month = 4;
 const byte year = 24;
 
 // Which port is each sensor connected to. initial 0 value represents that they are not connected.
-int pulseSensorPort = 1;
+int pulseSensorPort = 2;
 int accelSensorPort = 3;
 
 unsigned long stepTimestamps[STEP_TRIGGER] = {};

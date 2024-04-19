@@ -53,7 +53,7 @@ class Exercise():
     # Get all exercise records (selected columns)
     def get_all_exercises(self):
         with self.connection:
-            self.cursor.execute("SELECT exercise_id, exercise_name, type, body_part, equipment, level, rating FROM exercises")
+            self.cursor.execute("SELECT exercise_id, exercise_name, type, body_part, equipment, level, rating FROM exercises WHERE is_active = 1")
             return self.cursor.fetchall()
 
     # Update exercise record using exercise_id and updating the values using `updated_values` dictionary

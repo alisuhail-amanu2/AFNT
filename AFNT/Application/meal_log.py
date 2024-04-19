@@ -55,7 +55,7 @@ class MealLog():
     # Remove meal log from the database
     def remove_meal_log(self, meal_log_id):
         with self.connection:
-            self.cursor.execute("DELETE FROM meal_logs WHERE meal_log_id=?", (meal_log_id,))
+            self.cursor.execute("UPDATE meal_logs SET is_active = 0 WHERE meal_log_id=?", (meal_log_id,))
 
     # Drops the meal_logs table from LocalDB
     def drop_meal_log(self):

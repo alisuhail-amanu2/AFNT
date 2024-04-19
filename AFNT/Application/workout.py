@@ -16,17 +16,19 @@ class Workout():
     def insert_workout(self, workout):
         try:
             table_name = 'workouts'
-            with self.connection:
-                self.cursor.execute(f"SELECT MAX(CAST(SUBSTR(workout_id, 2)) AS INTEGER) FROM {table_name} WHERE workout_id LIKE 'C%'")
-                latest_id = self.cursor.fetchone()[0]
             
-            latest_numeric_part = int(latest_id)
+            # Retrieve the latest numeric part of the workout_id starting with 'C'
+            self.cursor.execute(f"SELECT MAX(CAST(SUBSTR(workout_id, 2) AS INTEGER)) FROM {table_name} WHERE workout_id LIKE 'C%'")
+            latest_id = self.cursor.fetchone()[0]
+            
+            # Determine the new numeric part for the next workout_id
+            latest_numeric_part = latest_id if latest_id is not None else 0
             new_id_numeric = latest_numeric_part + 1
             new_id = f'C{new_id_numeric}'
 
+            # Assign the new workout_id to the workout dictionary
             workout['workout_id'] = new_id
-
-            columns = ', '.join(key for key in workout.keys())
+            columns = ', '.join(workout.keys())
             placeholders = ', '.join(':' + key for key in workout.keys())
             sql = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
             
