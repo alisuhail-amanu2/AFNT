@@ -1,0 +1,119 @@
+#:kivy 2.3.0
+<Project>:
+    orientation: "vertical"
+
+    canvas.before:
+        Color:
+            rgb: .6, .6, .6
+        Rectangle:
+            pos: self.pos
+            size: self.size
+   
+    SomeMenu_ActionBar:
+        id: ActionBar
+
+    ScreenManager:
+        id: sm
+        WelcomeScreen:
+        FirstScreen:
+        SecondScreen:
+            Graph:
+                id: graph_screen
+
+<SomeMenu_ActionBar@ActionBar>:
+
+    ActionView:
+        id: ActionView
+
+        HiddenIcon_ActionPrevious:
+
+        ActionGroup:
+            id: App_ActionGroup
+            mode: "spinner"
+            text: "Jump to Screen"
+
+            ActionButton:
+                text: "Welcome Screen"
+                on_release:
+                    app.root.ids.sm.current = 'welcome'
+                    app.root.ids.sm.transition.direction = "right"
+            ActionButton:
+                text: "First Screen"
+                on_release:
+                    app.root.ids.sm.current = 'first'
+                    app.root.ids.sm.transition.direction = "left"
+            ActionButton:
+                text: "Second Screen"
+                on_release:
+                    app.root.ids.sm.current = 'second'
+                    app.root.ids.sm.transition.direction = "left"
+       
+        ActionGroup:
+            id: App_ActionGroup
+            mode: 'spinner'
+            text: 'App'
+
+            ActionButton:
+                text: 'Settings'
+                on_press: app.open_settings()
+            ActionButton:
+                text: 'Quit'
+                on_press: app.get_running_app().stop()
+       
+        ActionGroup:
+            id: File_ActionGroup
+            mode: 'spinner'
+            text: 'File'
+
+            ActionButton:
+                text: 'Open'
+            ActionButton:
+                text: 'Save'
+       
+        ActionButton:
+            text: 'Back to Main Menu'
+            on_release:
+                app.root.ids.sm.current = 'welcome'
+                app.root.ids.sm.transition.direction = "right"
+
+<HiddenIcon_ActionPrevious@ActionPrevious>:
+    title: ''
+    with_previous: False
+    app_icon: ''
+    app_icon_width: 0
+    app_icon_height: 0
+    size_hint_x: None
+    width: len(self.title)*10
+
+<WelcomeScreen>:
+    name: 'welcome'
+    Label:
+        text: 'Welcome Screen'
+        font_size: sp(50)
+
+<FirstScreen>:
+    id: first
+    name: 'first'
+    Label:
+        text: 'First Screen'
+
+<SecondScreen>:
+    id: second
+    name: 'second'
+    Graph:
+        id: graph_screen
+<Graph>:
+    id: boxgraph
+    BoxLayout:
+        size_hint_y: .9
+        pos_hint: {"top": 1}
+       
+    BoxLayout:
+        size_hint_y: .1
+        TextInput:
+            id: name
+            multiline: False
+
+        Button:
+            text: "Save"
+            on_release: root.save()

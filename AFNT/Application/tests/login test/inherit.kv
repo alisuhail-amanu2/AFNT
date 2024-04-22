@@ -1,0 +1,32 @@
+#:kivy 2.2.1
+<Button>
+    font_size: 32
+    background_normal: ''
+    background_color: (0,0,1,0)
+
+
+
+<MyLayout>
+    BoxLayout:
+        orientation: "vertical"
+        size: root.width, root.height
+        padding: 10
+        spacing: 10
+
+        Label:
+            text: 'Name'
+
+        TextInput:
+            multiline: False
+
+        Label:
+            text: 'favorite pizza'
+            
+        TextInput:
+            multiline: False
+
+        Button:
+            text: "Submit"
+
+        Button:
+            text: "Clear"
