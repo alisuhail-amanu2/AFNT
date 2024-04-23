@@ -11,7 +11,7 @@
 1. Open Visual Studio Code or any other IDE.
 2. Select the AFNT directory.
 3. Activate the `.venv` virtual environment as the Python environment. 
-   ![Activate VENV](static/img/image.png)
+![Activate VENV](static/img/image.png)
 4. Open the `app.py` file located in `AFNT\app.py`.
 5. Run the file.
 6. Copy the URL shown in the terminal, and paste it into your browser's address bar.
