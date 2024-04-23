@@ -2719,8 +2719,3 @@ class AFNTApp(MDApp):
 
     def on_stop(self):
         self.local_db.close_connection()
-
-# Run the AFNT App
-if __name__ == '__main__':
-    AFNTApp().run()
-    print(kivy.__version__)
