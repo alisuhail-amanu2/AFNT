@@ -1965,8 +1965,8 @@ class BodyStatsPlotsScreen(Screen):
         bmi = BMI(local_db.connection)
         try:
             box2 = self.ids.box2
-            fig4, ax4 = plt.subplots()
-            canvas = fig4.canvas
+            fig, ax = plt.subplots()
+            canvas = fig.canvas
             bmi_data = bmi.monthly_bmi_data(int(selected_month), int(selected_year))
 
             bmi_ranges = [18.5, 24.9, 29.9, 39.9, 52]
@@ -1978,11 +1978,11 @@ class BodyStatsPlotsScreen(Screen):
             plt.plot(bmi_data[0], bmi_data[1], color='black', alpha=0.7)
             plt.title(f'Monthly BMI for {selected_month}/{selected_year}')
             plt.xlabel('Day of the Month')
-            plt.ylabel('BMI')
             plt.xticks(bmi_data[2])
             plt.grid(axis='y')
             tick_labels = [f'{label} {value}' for label, value in zip(labels, bmi_ranges)]
             plt.yticks(bmi_ranges, tick_labels)
+            plt.tight_layout()
             canvas = FigureCanvasKivyAgg(plt.gcf())
             box2.add_widget(canvas)
         
@@ -1997,8 +1997,8 @@ class BodyStatsPlotsScreen(Screen):
         
         try:
             box2 = self.ids.box2
-            fig5, ax5 = plt.subplots()
-            canvas = fig5.canvas
+            fig, ax = plt.subplots()
+            canvas = fig.canvas
             bmi_data = bmi.yearly_bmi_data(int(selected_year))
 
             bmi_ranges = [18.5, 24.9, 29.9, 39.9, 52]
