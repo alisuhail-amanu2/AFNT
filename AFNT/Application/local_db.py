@@ -123,17 +123,6 @@ class LocalDB():
             meal_id TEXT PRIMARY KEY NOT NULL,
             type TEXT NOT NULL,
             description TEXT,
-            water_tot_g INTEGER,
-            energy_tot_kcal INTEGER,
-            protein_tot_g REAL,
-            lipid_tot_g REAL,
-            carbs_tot_g REAL,
-            fiber_tot_g REAL,
-            sugar_tot_g REAL,
-            calcium_tot_mg REAL,
-            iron_tot_mg REAL,
-            cholestrl_tot_mg REAL,
-            serving REAL NOT NULL,
             date_created DATE,
             time_created TIME,
             is_active BOOLEAN NOT NULL
@@ -143,6 +132,14 @@ class LocalDB():
             CREATE TABLE IF NOT EXISTS meal_logs (
             meal_log_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             meal_id TEXT NOT NULL,
+            energy_tot_kcal INTEGER,
+            protein_tot_g REAL,
+            lipid_tot_g REAL,
+            carbs_tot_g REAL,
+            fiber_tot_g REAL,
+            sugar_tot_g REAL,
+            calcium_tot_mg REAL,
+            iron_tot_mg REAL,
             ate BOOLEAN NOT NULL,
             date_ate DATE,
             time_ate TIME,
@@ -412,25 +409,14 @@ class LocalDB():
                     meal_id = row['meal_id']
                     type = row['type']
                     description = row['description']
-                    water_tot_g = row['water_tot_g']
-                    energy_tot_kcal = row['energy_tot_kcal']
-                    protein_tot_g = row['protein_tot_g']
-                    lipid_tot_g  = row['lipid_tot_g']
-                    carbs_tot_g  = row['carbs_tot_g']
-                    fiber_tot_g  = row['fiber_tot_g']
-                    sugar_tot_g  = row['sugar_tot_g']
-                    calcium_tot_mg  = row['calcium_tot_mg']
-                    iron_tot_mg  = row['iron_tot_mg']
-                    cholestrl_tot_mg  = row['cholestrl_tot_mg']
-                    serving = row['serving']
                     date_created = row['date_created']
                     time_created = row['time_created']
                     is_active = row['is_active']
                 
                     sql = """INSERT INTO meals
-                             (meal_id, type, description, water_tot_g, energy_tot_kcal, protein_tot_g, lipid_tot_g, carbs_tot_g, fiber_tot_g, sugar_tot_g, calcium_tot_mg, iron_tot_mg, cholestrl_tot_mg, serving, date_created, time_created, is_active) 
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-                    values = (meal_id, type, description, water_tot_g, energy_tot_kcal, protein_tot_g, lipid_tot_g, carbs_tot_g, fiber_tot_g, sugar_tot_g, calcium_tot_mg, iron_tot_mg, cholestrl_tot_mg, serving, date_created, time_created, is_active)
+                             (meal_id, type, description, date_created, time_created, is_active) 
+                             VALUES (?, ?, ?, ?, ?, ?)"""
+                    values = (meal_id, type, description, date_created, time_created, is_active)
                     self.cursor.execute(sql, values)
 
             self.connection.commit()
@@ -447,15 +433,23 @@ class LocalDB():
 
                     meal_log_id = row['meal_log_id']
                     meal_id = row['meal_id']
+                    energy_tot_kcal = row['energy_tot_kcal']
+                    protein_tot_g = row['protein_tot_g']
+                    lipid_tot_g  = row['lipid_tot_g']
+                    carbs_tot_g  = row['carbs_tot_g']
+                    fiber_tot_g  = row['fiber_tot_g']
+                    sugar_tot_g  = row['sugar_tot_g']
+                    calcium_tot_mg  = row['calcium_tot_mg']
+                    iron_tot_mg  = row['iron_tot_mg']
                     ate = row['ate']
                     date_ate = row['date_ate']
                     time_ate = row['time_ate']
                     is_active = row['is_active']
 
                     sql = """INSERT INTO meal_logs
-                             (meal_log_id, meal_id, ate, date_ate, time_ate, is_active) 
-                             VALUES (?, ?, ?, ?, ?, ?)"""
-                    values = (meal_log_id, meal_id, ate, date_ate, time_ate, is_active)
+                             (meal_log_id, meal_id, energy_tot_kcal, protein_tot_g, lipid_tot_g, carbs_tot_g, fiber_tot_g, sugar_tot_g, calcium_tot_mg, iron_tot_mg, ate, date_ate, time_ate, is_active) 
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+                    values = (meal_log_id, meal_id, energy_tot_kcal, protein_tot_g, lipid_tot_g, carbs_tot_g, fiber_tot_g, sugar_tot_g, calcium_tot_mg, iron_tot_mg, ate, date_ate, time_ate, is_active)
                     self.cursor.execute(sql, values)
 
             self.connection.commit()

@@ -53,6 +53,8 @@ from exercise import Exercise
 from exercise_log import ExerciseLog
 from meal import Meal
 from meal_log import MealLog
+from food_item import FoodItem
+from food_item_log import FoodItemLog
 from arduino_watch import ArduinoWatch
 
 from datetime import datetime, timedelta
@@ -477,6 +479,149 @@ class UpdateExerciseAllocatePopup(Popup):
         self.update_exercise_allocate_callback(exercise_id, exercise_name, description, exercise_type, body_part, equipment, level)
         self.dismiss()
 
+# Popup for updating meal logs
+class UpdateMealLogPopup(Popup):
+    def __init__(self, selected_row, update_meal_log_callback, **kwargs):
+        super(UpdateMealLogPopup, self).__init__(**kwargs)
+        self.update_meal_log_callback = update_meal_log_callback
+        self.selected_row = selected_row
+
+        self.title = "Update Meal Log"
+        self.title_color = get_color_from_hex("#000000")
+        self.size_hint = (0.8, 0.45)
+
+        self.background = 'white'
+
+        layout = BoxLayout(orientation='vertical')
+        
+
+        self.date_assigned_input = MDTextField(multiline=False, text="Date Assigned")
+        self.date_assigned_input.bind(focus=self.show_date_picker)
+        layout.add_widget(self.date_assigned_input)
+        self.date_assigned_input.text = self.selected_row[9]
+
+        self.time_assigned_input = MDTextField(multiline=False, text="Time Assigned")
+        self.time_assigned_input.bind(focus=self.show_time_picker)
+        layout.add_widget(self.time_assigned_input)
+        self.time_assigned_input.text = self.selected_row[10]
+
+        self.is_complete_input = MDTextField(multiline=False, text="Is Complete")
+        self.is_complete_input.bind(focus=self.show_completion_status_menu)
+        layout.add_widget(self.is_complete_input)
+        self.is_complete_input.text = self.selected_row[11]
+
+        button_layout = BoxLayout(orientation='horizontal')
+
+        save_button = Button(text="Save", background_normal='', background_color= (0.0, 0.8, 1, 1))
+        save_button.bind(on_release=self.save_button_pressed)
+        button_layout.add_widget(save_button)
+
+        cancel_button = Button(text="Cancel", background_normal='', background_color= (0.8, 0, 0, 1))
+        cancel_button.bind(on_release=self.dismiss)
+        button_layout.add_widget(cancel_button)
+
+        layout.add_widget(button_layout)
+        self.content = layout
+
+    def show_date_picker(self, instance, value):
+        if value:
+            meal_log_date_dialog = MDDatePicker()
+            meal_log_date_dialog.bind(on_save=self.set_date)
+            meal_log_date_dialog.open()
+
+    def set_date(self, instance, value, date_range):
+        self.date_assigned_input.text = value.strftime("%d/%m/%Y")
+        self.date_assigned_input.foreground_color = get_color_from_hex("#000000")
+
+    def show_time_picker(self, instance, value):
+        if value:
+            time_dialog = MDTimePicker()
+            time_dialog.bind(time=self.set_time)
+            time_dialog.open()
+
+    def set_time(self, instance, time):
+        self.time_assigned_input.text = time.strftime("%H:%M:%S")
+        self.time_assigned_input.foreground_color = get_color_from_hex("#000000")
+
+    def show_completion_status_menu(self, instance, value):
+        if value:
+            menu_items = [
+                {"viewclass": "OneLineListItem", "text": "Yes", "on_release": lambda x="Yes": self.select_completion_status(x)},
+                {"viewclass": "OneLineListItem", "text": "No", "on_release": lambda x="No": self.select_completion_status(x)},
+            ]
+            menu = MDDropdownMenu(items=menu_items, width_mult=4)
+            menu.caller = instance
+            menu.open()
+
+    def select_completion_status(self, selected_completion_status_text):
+        self.is_complete_input.text = selected_completion_status_text
+        self.is_complete_input.foreground_color = get_color_from_hex("#000000")
+
+    def save_button_pressed(self, instance):
+        meal_log_id = self.selected_row[0]
+        date_assigned = self.date_assigned_input.text
+        time_assigned = self.time_assigned_input.text
+        is_complete = self.is_complete_input.text
+
+        self.update_meal_log_callback(meal_log_id, date_assigned, time_assigned, is_complete)
+        self.dismiss()
+
+class UpdateFoodItemLogPopup(Popup):
+    def __init__(self, selected_row, update_food_item_log_callback, **kwargs):
+        super(UpdateFoodItemLogPopup, self).__init__(**kwargs)
+        self.update_food_item_log_callback = update_food_item_log_callback
+        self.selected_row = selected_row
+
+        self.title = "Update Food Item Log"
+        self.title_color = get_color_from_hex("#000000")
+        self.size_hint = (0.8, 0.9)
+        self.background = 'white'
+
+        layout = BoxLayout(orientation='vertical')
+
+        self.serving = MDTextField(hint_text="Serving", input_filter="float")
+        layout.add_widget(self.serving)
+        self.serving.text = self.selected_row[2]
+
+        self.is_complete_input = MDTextField(hint_text="Is Complete")
+        self.is_complete_input.bind(focus=self.show_completion_status_menu)
+        layout.add_widget(self.is_complete_input)
+        self.is_complete_input.text = self.selected_row[10]
+
+        button_layout = BoxLayout(orientation='horizontal')
+
+        save_button = Button(text="Save", background_normal='', background_color=(0.0, 0.8, 1, 1))
+        save_button.bind(on_release=self.save_button_pressed)
+        button_layout.add_widget(save_button)
+
+        cancel_button = Button(text="Cancel", background_normal='', background_color=(0.8, 0, 0, 1))
+        cancel_button.bind(on_release=self.dismiss)
+        button_layout.add_widget(cancel_button)
+
+        layout.add_widget(button_layout)
+        self.content = layout
+
+    def show_completion_status_menu(self, instance, value):
+        if value:
+            menu_items = [
+                {"viewclass": "OneLineListItem", "text": "Yes", "on_release": lambda x="Yes": self.select_completion_status(x)},
+                {"viewclass": "OneLineListItem", "text": "No", "on_release": lambda x="No": self.select_completion_status(x)},
+            ]
+            menu = MDDropdownMenu(items=menu_items, width_mult=4)
+            menu.caller = instance
+            menu.open()
+
+    def select_completion_status(self, selected_completion_status_text):
+        self.is_complete_input.text = selected_completion_status_text
+        self.is_complete_input.foreground_color = get_color_from_hex("#000000")
+
+    def save_button_pressed(self, instance):
+        food_item_log_id = self.selected_row[0]
+        serving = self.serving.text
+        is_complete = self.is_complete_input.text
+        self.update_food_item_log_callback(food_item_log_id, serving, is_complete)
+        self.dismiss()
+
 # Class for managing the app screens
 class WindowManager(ScreenManager):
     pass
@@ -622,7 +767,7 @@ class WorkoutHistoryScreen(Screen):
         workout_log_datatable_box = self.ids.workout_log_datatable_box
         workout_log_data = self.workout_logs.get_date_selected_workout_logs(self.from_selected_date, self.to_selected_date)
 
-        # Worrkout lod datatable displays data like the ID, workout name, date and time assigned, as well as the completion status
+        # Workout log datatable displays data like the ID, workout name, date and time assigned, as well as the completion status
         if workout_log_data:
             self.workout_log_datatable = MDDataTable(
                 pos_hint={'center_x': 0.5, 'center_y': 0.5},
@@ -1704,13 +1849,12 @@ class MealHistoryScreen(Screen):
     #     self.manager.transition.direction = 'left'
     #     self.manager.current = 'meal_manager_screen'
 
-    # def switch_to_food_item_log(self):
-    #     if self.selected_rows:
-    #         self.manager.transition.direction = 'left'
-    #         self.manager.current = 'food_item_log_screen'
-    #         plots_screen = self.manager.get_screen('food_item_log_screen')
-    #         plots_screen.create_food_item_log_datatable()
-    #         # self.selected_rows.clear()
+    def switch_to_food_item_log(self):
+        if self.selected_rows:
+            self.manager.transition.direction = 'left'
+            self.manager.current = 'food_item_log_screen'
+            plots_screen = self.manager.get_screen('food_item_log_screen')
+            plots_screen.create_food_item_log_datatable()
 
     def clear_meal_log_datatable_box(self):
         meal_log_datatable_box = self.ids.meal_log_datatable_box
@@ -1769,9 +1913,8 @@ class MealHistoryScreen(Screen):
                 background_color=[1, 0, 0, .5],
                 column_data=[
                     ["Log ID", dp(25)],
-                    ["Name", dp(25)],
+                    ["Name", dp(30)],
                     ["Energy (Kcal)", dp(20)],
-                    ["Serving", dp(15)],
                     ["Protein (g)", dp(20)],
                     ["Fats (g)", dp(15)],
                     ["Carbs (g)", dp(15)],
@@ -1820,20 +1963,26 @@ class MealHistoryScreen(Screen):
 
     # Function for calling the UpdateMealLogPopup for updating meal log data (Incomplete)
     def update_row(self):
-        # if self.selected_rows:
-        #     for selected_row in self.selected_rows:
-        #         update_popup = UpdateMealLogPopup(selected_row, update_meal_log_callback=self.update_row_callback)
-        #         update_popup.open()
-        pass
+        if self.selected_rows:
+            for selected_row in self.selected_rows:
+                update_popup = UpdateMealLogPopup(selected_row, update_meal_log_callback=self.update_row_callback)
+                update_popup.open()
 
     # Function for updating meal log data
     def update_row_callback(self, meal_log_id, date_assigned, time_assigned, is_complete):
-        # print("updated data", meal_log_id, date_assigned, time_assigned, is_complete)
+        print("updated data", meal_log_id, date_assigned, time_assigned, is_complete)
+        updated_data = {
+            # 'meal_log_id': meal_log_id,
+            'date_ate': date_assigned,
+            'time_ate': time_assigned,
+            'ate': is_complete,
+        }
         if is_complete == 'Yes':
             updated_is_complete = 1
         else:
             updated_is_complete = 0
-        self.meal_logs.update_meal_log( meal_log_id, date_assigned, time_assigned, updated_is_complete)
+
+        self.meal_logs.update_meal_log(meal_log_id, updated_data)
         self.clear_meal_log_datatable_box()
         self.create_meal_log_datatable()
         self.selected_rows.clear()
@@ -1855,7 +2004,119 @@ class FoodItemCreateScreen(Screen):
 
 # Food Item log screen. This screen is responsible for managing food item logs (Display/Add/Edit/Delete etc). (Incomplete)
 class FoodItemLogScreen(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super(FoodItemLogScreen, self).__init__(**kwargs)
+        self.local_db = LocalDB('local_db.db')
+        self.food_item_log = FoodItemLog(self.local_db.connection)
+        self.meal_log = MealLog(self.local_db.connection)
+        self.selected_rows = []
+        self.meal_log_rows = []
+    
+    def switch_to_meal_history(self):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'meal_history_screen'
+        self.clear_food_item_log_datatable_box()
+        plots_screen = self.manager.get_screen('meal_history_screen')
+
+        plots_screen.clear_meal_log_datatable_box()
+        plots_screen.create_meal_log_datatable()
+        self.selected_rows.clear()
+
+    # def switch_to_food_item_log_allocate(self):
+    #     self.manager.transition.direction = 'left'
+    #     self.manager.current = 'food_item_log_allocate_screen'
+    #     self.clear_food_item_log_datatable_box()
+    #     plots_screen = self.manager.get_screen('food_item_log_allocate_screen')
+    #     plots_screen.clear_food_item_log_allocate_datatable_box()
+    #     plots_screen.create_food_item_log_allocate_datatable()
+
+    def clear_food_item_log_datatable_box(self):
+        food_item_log_datatable_box = self.ids.food_item_log_datatable_box
+        food_item_log_datatable_box.clear_widgets()
+
+    def get_meal_log_data_from_selected_rows(self):
+        self.meal_log_rows = self.manager.get_screen('meal_history_screen').get_selected_rows()
+        return self.meal_log_rows[-1][0]
+
+    # Create food_item log datatable. Contains food_item log ID, food_item name, description, sets, repitations, weight (kg), rest (sec), distance (m), rpe (difficulty) and completion status. 
+    def create_food_item_log_datatable(self):
+        food_item_log_datatable_box = self.ids.food_item_log_datatable_box
+        food_item_log_data = self.food_item_log.get_food_item_logs_details(self.get_meal_log_data_from_selected_rows())
+
+        if food_item_log_data:
+            self.food_item_log_datatable = MDDataTable(
+                pos_hint={'center_x': 0.5, 'center_y': 0.5},
+                size_hint=(0.95, 0.3),
+                check=True,
+                use_pagination=True,
+                rows_num=8,
+                pagination_menu_height='240dp',
+                pagination_menu_pos="auto",
+                background_color=[1, 0, 0, .5],
+                column_data=[
+                    ["Log ID", dp(25)],
+                    ["Name", dp(45)],
+                    ["Serving", dp(15)],
+                    ["Energy (kcal)", dp(20)],
+                    ["protein (g)", dp(20)],
+                    ["Fats (g)", dp(15)],
+                    ["Carbs (g)", dp(15)],
+                    ["Sugar (g)", dp(15)],
+                    ["Fibre (g)", dp(15)],
+                    ["Iron (mg)", dp(15)],
+                    ["Complete", dp(25)]
+                ],
+                row_data=food_item_log_data
+            )
+            self.food_item_log_datatable.bind(on_check_press=self.rows_selected)
+        else:
+            self.food_item_log_datatable = Label(text='No Food Items Allocated', color = 'red', font_size = "20sp", bold = True) # Display error message if no food_item log found
+            
+        food_item_log_datatable_box.add_widget(self.food_item_log_datatable)
+
+    def rows_selected(self, instance_table, current_row):
+        row_data = tuple(current_row)
+        modified_row_data = (int(row_data[0]),) + row_data[1:]
+        if modified_row_data in self.selected_rows:
+            self.selected_rows.remove(modified_row_data)
+        else:
+            self.selected_rows.append(modified_row_data)
+
+    # Remove food_item log
+    def remove_row(self):
+        if self.selected_rows:
+            for row in self.selected_rows:
+                food_item_log_id = row[0]
+                self.food_item_log.remove_food_item_log(row[0])
+        self.clear_food_item_log_datatable_box()
+        self.create_food_item_log_datatable()
+        self.selected_rows.clear()
+
+    def update_row(self):
+        if self.selected_rows:
+            for selected_row in self.selected_rows:
+                update_popup = UpdateFoodItemLogPopup(selected_row, update_food_item_log_callback=self.update_row_callback)
+                update_popup.open()
+
+    # Update food_item log
+    def update_row_callback(self, food_item_log_id, serving, is_complete):
+        updated_is_complete = 1 if is_complete == 'Yes' else 0
+        updated_values = {
+            'serving': serving,
+            'ate': updated_is_complete
+        }
+        self.food_item_log.update_food_item_log(food_item_log_id, updated_values)
+
+        updated_meal_log = self.meal_log.calculate_nutrients(self.get_meal_log_data_from_selected_rows())
+        self.meal_log.update_meal_log(self.get_meal_log_data_from_selected_rows(), updated_meal_log)
+
+
+        self.clear_food_item_log_datatable_box()
+        self.create_food_item_log_datatable()
+        self.selected_rows.clear()
+    
+    def get_selected_rows(self):
+        return self.selected_rows
 
 # Food Item Allocate screen. This screen is responsible for allocating food item logs to a meal log (Incomplete)
 class FoodItemLogAllocateScreen(Screen):

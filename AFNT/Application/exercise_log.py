@@ -113,7 +113,7 @@ class ExerciseLog():
                         exercises AS e ON el.exercise_id = e.exercise_id
                     WHERE 
                         el.workout_log_id = ? AND
-                        el.is_active = 1;  -- Add condition for is_active field
+                        el.is_active = 1;
                 """, (workout_log_id,))
                 return self.cursor.fetchall()
 
