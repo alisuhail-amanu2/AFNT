@@ -1816,7 +1816,7 @@ class GymFinderScreen(Screen):
 
     #     return nearby_gyms
 
-# Meal History Screen. This screen is responsible for managing meal logs (Display/Add/Edit/Delete etc). (Incomplete)
+# Meal History Screen. This screen is responsible for managing meal logs (Display/Add/Edit/Delete etc).
 class MealHistoryScreen(Screen):
     def __init__(self, **kwargs):
         super(MealHistoryScreen, self).__init__(**kwargs)
@@ -2022,13 +2022,13 @@ class FoodItemLogScreen(Screen):
         plots_screen.create_meal_log_datatable()
         self.selected_rows.clear()
 
-    # def switch_to_food_item_log_allocate(self):
-    #     self.manager.transition.direction = 'left'
-    #     self.manager.current = 'food_item_log_allocate_screen'
-    #     self.clear_food_item_log_datatable_box()
-    #     plots_screen = self.manager.get_screen('food_item_log_allocate_screen')
-    #     plots_screen.clear_food_item_log_allocate_datatable_box()
-    #     plots_screen.create_food_item_log_allocate_datatable()
+    def switch_to_food_item_log_allocate(self):
+        self.manager.transition.direction = 'left'
+        self.manager.current = 'food_item_log_allocate_screen'
+        self.clear_food_item_log_datatable_box()
+        plots_screen = self.manager.get_screen('food_item_log_allocate_screen')
+        plots_screen.clear_food_item_log_allocate_datatable_box()
+        plots_screen.create_food_item_log_allocate_datatable()
 
     def clear_food_item_log_datatable_box(self):
         food_item_log_datatable_box = self.ids.food_item_log_datatable_box
@@ -2120,7 +2120,131 @@ class FoodItemLogScreen(Screen):
 
 # Food Item Allocate screen. This screen is responsible for allocating food item logs to a meal log (Incomplete)
 class FoodItemLogAllocateScreen(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super(FoodItemLogAllocateScreen, self).__init__(**kwargs)
+        self.local_db = LocalDB('local_db.db')
+        self.food_item = FoodItem(self.local_db.connection)
+        self.food_item_log = FoodItemLog(self.local_db.connection)
+        self.meal = Meal(self.local_db.connection)
+        self.meal_log = MealLog(self.local_db.connection)
+        self.select_meal_type = ""
+        self.food_item_log_allocate_data = ""
+        self.selected_rows = []
+        self.food_item_log_rows = []
+        self.fail_popup = FailPopup()
+        self.success_popup = SuccessPopup()
+
+    def switch_to_food_item_log(self):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'food_item_log_screen'
+        plots_screen = self.manager.get_screen('food_item_log_screen')
+        plots_screen.clear_food_item_log_datatable_box()
+        plots_screen.create_food_item_log_datatable()
+
+    def clear_food_item_log_allocate_datatable_box(self):
+        food_item_log_allocate_datatable_box = self.ids.food_item_log_allocate_datatable_box
+        food_item_log_allocate_datatable_box.clear_widgets()
+        self.selected_rows.clear()
+
+    def get_meal_log_id(self):
+        meal_log_id = self.manager.get_screen('food_item_log_screen').get_meal_log_data_from_selected_rows()
+        return meal_log_id
+
+    # food_item log datatable. Contains food_item log ID, food_item name, sets, repetitions, weight (kg), rest(sec), duration, and distance (m) 
+    def create_food_item_log_allocate_datatable(self):
+        food_item_log_allocate_datatable_box = self.ids.food_item_log_allocate_datatable_box
+        self.food_item_log_allocate_data = self.food_item_log.get_all_food_item_logs_details()
+
+        if self.food_item_log_allocate_data:
+            search_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=50, pos_hint={'center_x': 0.5})
+            self.search_field = MDTextField(
+                hint_text="Search",
+                size_hint_x=None,
+                width=300,
+                pos_hint={'center_x': 0.5, 'center_y': 0.9}
+            )
+            # Search button for food_item logs
+            self.search_button = Button(
+                text="Search",
+                size_hint=(None, None),
+                size=(100, 50),
+                pos_hint={'center_x': 0.85, 'center_y': 0.9}
+            )
+            self.search_button.bind(on_release=self.on_search_button_release)
+
+            search_layout.add_widget(self.search_field)
+            search_layout.add_widget(self.search_button)
+
+            self.food_item_log_allocate_datatable = MDDataTable(
+                pos_hint={'center_x': 0.5, 'center_y': 0.5},
+                size_hint=(0.95, 0.3),
+                check=True,
+                use_pagination=True,
+                rows_num=8,
+                pagination_menu_height='240dp',
+                pagination_menu_pos="auto",
+                background_color=[1, 0, 0, .5],
+                column_data=[
+                    ["Log ID", dp(25)],
+                    ["Name", dp(45)],
+                    ["Serving", dp(15)],
+                    ["Energy (kcal)", dp(20)],
+                    ["protein (g)", dp(20)],
+                    ["Fats (g)", dp(15)],
+                    ["Carbs (g)", dp(15)],
+                    ["Sugar (g)", dp(15)],
+                    ["Fibre (g)", dp(15)],
+                    ["Iron (mg)", dp(15)]
+                ],
+                row_data=self.food_item_log_allocate_data
+            )
+            self.food_item_log_allocate_datatable.bind(on_check_press=self.rows_selected)
+
+            food_item_log_allocate_datatable_box.add_widget(search_layout)
+            food_item_log_allocate_datatable_box.add_widget(self.food_item_log_allocate_datatable)
+            self.selected_rows.clear()
+        else:
+            self.food_item_log_allocate_datatable = Label(text='No Food Items Log(s) Recorded', color='red', font_size="20sp", bold=True) # Display error message if no food_item logs detected
+            food_item_log_allocate_datatable_box.add_widget(self.food_item_log_allocate_datatable)
+
+    def on_search_button_release(self, instance):
+        search_query = self.search_field.text
+        if search_query:
+            filtered_data = [data for data in self.food_item_log_allocate_data if search_query.lower() in str(data).lower()]
+            self.food_item_log_allocate_datatable.row_data = filtered_data
+        else:
+            self.food_item_log_allocate_datatable.row_data = self.food_item_log_allocate_data
+
+    def rows_selected(self, instance_table, current_row):
+        row_data = tuple(current_row)
+        modified_row_data = ((row_data[0]),) + row_data[1:]
+        if modified_row_data in self.selected_rows:
+            self.selected_rows.remove(modified_row_data)
+        else:
+            self.selected_rows.append(modified_row_data)
+
+    # Function for allocating food_item log to the selected meal log
+    def allocate_log_save_button(self):
+        meal_log_id = self.get_meal_log_id()
+        if self.selected_rows:
+            for food_item_logs in self.selected_rows:
+                food_item_id = self.food_item_log.get_food_item_id(food_item_logs[0])
+                food_item_log_data = {
+                    'meal_log_id': meal_log_id,
+                    'food_item_id': food_item_id,
+                    'serving': food_item_logs[2],
+                    'weight_g': '',
+                    'ate': 0,
+                    'date_ate': '',
+                    'time_ate': '',
+                    'description': '',
+                    'is_active': 1, 
+                }
+                self.food_item_log.insert_food_item_log(food_item_log_data)
+            
+            return self.success_popup.show_popup('Success', 'Food Item Log(s) Allocated Successfully')
+        else:
+            print("No Food Item log(s) selected")
 
 # Food Item Allocate screen. This screen is responsible for allocating food items to a meal (Incomplete)
 class FoodItemAllocateScreen(Screen):

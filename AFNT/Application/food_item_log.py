@@ -41,6 +41,40 @@ class FoodItemLog():
             self.cursor.execute("SELECT * FROM food_item_logs WHERE food_item_log_id=?", (food_item_log_id,))
             return self.cursor.fetchall()
 
+    def get_food_item_id(self, food_item_log_id):
+        with self.connection:
+            self.cursor.execute("SELECT food_item_id FROM food_item_logs WHERE food_item_log_id=?", (food_item_log_id,))
+            food_item_id = self.cursor.fetchall()
+            return food_item_id[0][0]
+
+    def get_all_food_item_logs_details(self):
+        try:
+            with self.connection:
+                self.cursor.execute("""
+                    SELECT 
+                        fil.food_item_log_id,
+                        fi.food_item_name,
+                        fil.serving,
+                        ROUND(fi.energy_kcal * fil.serving) AS total_energy_kcal,
+                        ROUND(fi.protein_g * fil.serving, 1) AS total_protein_g,
+                        ROUND(fi.lipid_g * fil.serving, 1) AS total_lipid_g,
+                        ROUND(fi.carbs_g * fil.serving, 1) AS total_carbs_g,
+                        ROUND(fi.sugar_g * fil.serving, 1) AS total_sugar_g,
+                        ROUND(fi.fiber_td_g * fil.serving, 1) AS total_fiber_td_g,
+                        ROUND(fi.iron_mg * fil.serving, 1) AS total_iron_mg
+                    FROM 
+                        food_item_logs AS fil
+                    JOIN 
+                        food_items AS fi ON fil.food_item_id = fi.food_item_id
+                    WHERE
+                        fil.is_active = 1;
+                """)
+                return self.cursor.fetchall()
+
+        except Exception as e:
+            print(f"Error retrieving exercise logs details: {e}")
+            return []
+
     def get_food_item_logs_details(self, meal_log_id):
         try:
             with self.connection:
@@ -108,6 +142,8 @@ class FoodItemLog():
 # connection = sqlite3.connect('local_db.db')
 # food_item_log = FoodItemLog(connection)
 
+# print(food_item_log.get_food_item_id(1))
 # food_item_log.re_add_food_item_log(5)
+# print(food_item_log.get_all_food_item_logs_details())
 
 # print(food_item_log.get_food_item_logs_details('3'))
