@@ -622,6 +622,69 @@ class UpdateFoodItemLogPopup(Popup):
         self.update_food_item_log_callback(food_item_log_id, serving, is_complete)
         self.dismiss()
 
+# Popup for updating allocated meals
+class UpdateMealAllocatePopup(Popup):
+    def __init__(self, selected_row, update_meal_allocate_callback, **kwargs):
+        super(UpdateMealAllocatePopup, self).__init__(**kwargs)
+        self.update_meal_allocate_callback = update_meal_allocate_callback
+        self.selected_row = selected_row
+
+        self.title = "Update Meal"
+        self.title_color = get_color_from_hex("#000000")
+        self.size_hint = (0.8, 0.6)
+        self.background = 'white'
+
+        layout = BoxLayout(orientation='vertical')
+
+        self.meal_type_input = MDTextField(hint_text="Select Meal Type")
+        self.meal_type_input.bind(focus=self.show_meal_type_menu)
+        layout.add_widget(self.meal_type_input)
+        self.meal_type_input.text = self.selected_row[1]
+
+        self.description_input = MDTextField(hint_text="Enter Meal Description")
+        layout.add_widget(self.description_input)
+        self.description_input.text = self.selected_row[2]
+
+
+        button_layout = BoxLayout(orientation='horizontal')
+
+        save_button = Button(text="Save", background_normal='', background_color=(0.0, 0.8, 1, 1))
+        save_button.bind(on_release=self.save_button_pressed)
+        button_layout.add_widget(save_button)
+
+        cancel_button = Button(text="Cancel", background_normal='', background_color=(0.8, 0, 0, 1))
+        cancel_button.bind(on_release=self.dismiss)
+        button_layout.add_widget(cancel_button)
+
+        layout.add_widget(button_layout)
+        self.content = layout
+
+    def show_meal_type_menu(self, instance, value):
+        if value:
+            menu_items = [
+                {"viewclass": "OneLineListItem", "text": "Breakfast", "on_release": lambda x="Breakfast": self.select_meal_type(x)},
+                {"viewclass": "OneLineListItem", "text": "Morning Snack", "on_release": lambda x="Morning Snack": self.select_meal_type(x)},
+                {"viewclass": "OneLineListItem", "text": "Lunch", "on_release": lambda x="Lunch": self.select_meal_type(x)},
+                {"viewclass": "OneLineListItem", "text": "Afternoon Snack", "on_release": lambda x="Afternoon Snack": self.select_meal_type(x)},
+                {"viewclass": "OneLineListItem", "text": "Brunch", "on_release": lambda x="Brunch": self.select_meal_type(x)},
+                {"viewclass": "OneLineListItem", "text": "Dinner", "on_release": lambda x="Dinner": self.select_meal_type(x)},
+                {"viewclass": "OneLineListItem", "text": "Evening Snack", "on_release": lambda x="Evening Snack": self.select_meal_type(x)},
+            ]
+            menu = MDDropdownMenu(items=menu_items, width_mult=4)
+            menu.caller = instance
+            menu.open()
+
+    def select_meal_type(self, selected_meal_type_text):
+        self.meal_type_input.text = selected_meal_type_text
+        self.meal_type_input.foreground_color = get_color_from_hex("#000000")
+
+    def save_button_pressed(self, instance):
+        meal_id = self.selected_row[0]
+        description = self.description_input.text
+        meal_type = self.meal_type_input.text
+        self.update_meal_allocate_callback(meal_id, description, meal_type)
+        self.dismiss()
+
 # Class for managing the app screens
 class WindowManager(ScreenManager):
     pass
@@ -1834,20 +1897,15 @@ class MealHistoryScreen(Screen):
         self.selected_rows.clear()
         self.clear_meal_log_datatable_box()
 
-    # def switch_to_meal_allocate(self):
-    #     self.selected_rows.clear()
-    #     self.manager.transition.direction = 'left'
-    #     self.manager.current = 'meal_allocate_screen'
-    #     self.clear_meal_log_datatable_box
+    def switch_to_meal_allocate(self):
+        self.selected_rows.clear()
+        self.manager.transition.direction = 'left'
+        self.manager.current = 'meal_allocate_screen'
+        self.clear_meal_log_datatable_box
         
-    #     plots_screen = self.manager.get_screen('meal_allocate_screen')
-    #     plots_screen.clear_meal_allocate_datatable_box()
-    #     plots_screen.create_meal_allocate_datatable()
-
-    # def switch_to_meal_manager(self):
-    #     self.selected_rows.clear()
-    #     self.manager.transition.direction = 'left'
-    #     self.manager.current = 'meal_manager_screen'
+        plots_screen = self.manager.get_screen('meal_allocate_screen')
+        plots_screen.clear_meal_allocate_datatable_box()
+        plots_screen.create_meal_allocate_datatable()
 
     def switch_to_food_item_log(self):
         if self.selected_rows:
@@ -1991,18 +2049,244 @@ class MealHistoryScreen(Screen):
         return self.selected_rows
 
 # Meal Allocate screen. Used for allocating meals to a selected datetime
-class MealAllocateSceen(Screen):
-    pass
+class MealAllocateScreen(Screen):
+    def __init__(self, **kwargs):
+        super(MealAllocateScreen, self).__init__(**kwargs)
+        self.local_db = LocalDB('local_db.db')
+        self.meal = Meal(self.local_db.connection)
+        self.meal_logs = MealLog(self.local_db.connection)
+        self.food_item_log = FoodItemLog(self.local_db.connection)
 
-# Meal Create screen. This screen is responsible for creating a new meal (Incomplete)
+        self.selected_rows = []
+        self.selected_date = datetime.today().strftime('%d/%m/%Y')
+        self.selected_time = datetime.today().strftime('%H:%M:%S')
+
+    def switch_to_meal_history(self):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'meal_history_screen'
+        self.clear_meal_allocate_datatable_box()
+        plots_screen = self.manager.get_screen('meal_history_screen')
+        plots_screen.clear_meal_log_datatable_box()
+        plots_screen.create_meal_log_datatable()
+        self.selected_rows.clear()
+
+    def switch_to_meal_create(self):
+        self.manager.transition.direction = 'left'
+        self.manager.current = 'meal_create_screen'
+        self.selected_rows.clear()
+        self.clear_meal_allocate_datatable_box()
+
+    # def switch_to_food_item_create(self):
+    #     self.manager.transition.direction = 'left'
+    #     self.manager.current = 'food_item_create_screen'
+    #     self.selected_rows.clear()
+    #     self.clear_meal_allocate_datatable_box()
+
+    # def switch_to_food_item_allocate(self):
+    #     if self.selected_rows:
+    #         self.manager.transition.direction = 'left'
+    #         self.manager.current = 'food_item_allocate_screen'
+    #         plots_screen = self.manager.get_screen('food_item_allocate_screen')
+    #         plots_screen.clear_food_item_allocate_datatable_box()
+    #         plots_screen.create_food_item_allocate_datatable()
+
+    def clear_meal_allocate_datatable_box(self):
+        meal_allocate_datatable_box = self.ids.meal_allocate_datatable_box
+        meal_allocate_datatable_box.clear_widgets()
+        self.selected_rows.clear()
+
+    # Allocate date input
+    def handle_meal_allocate_date_input(self):
+        if not hasattr(self, 'meal_allocate_date'):
+            self.meal_allocate_date = MDDatePicker()
+            self.meal_allocate_date.bind(on_save=self.meal_allocate_date_on_save, on_cancel=self.on_cancel)
+        self.meal_allocate_date.open()
+
+    def meal_allocate_date_on_save(self, instance, value, date_range):
+        screen = self.manager.get_screen('meal_allocate_screen')
+        self.selected_date = value.strftime("%d/%m/%Y")
+        screen.ids.meal_allocate_date.text = self.selected_date
+        self.clear_meal_allocate_datatable_box()
+        self.create_meal_allocate_datatable()
+
+    def handle_meal_allocate_time_input(self):
+        if not hasattr(self, 'meal_allocate_time'):
+            self.meal_allocate_time = MDTimePicker()
+            self.meal_allocate_time.bind(on_save=self.meal_allocate_time_on_save, on_cancel=self.on_cancel)
+        self.meal_allocate_time.open()
+
+    def meal_allocate_time_on_save(self, instance, value):
+        screen = self.manager.get_screen('meal_allocate_screen')
+        self.selected_time = value.strftime("%H:%M:%S")
+        screen.ids.meal_allocate_time.text = self.selected_time
+        self.clear_meal_allocate_datatable_box()
+        self.create_meal_allocate_datatable()
+
+    def on_cancel(self, instance, value):
+        instance.dismiss()
+
+    # Creates meal datatable and displays the meal ID, meal name, description, type and rating (for preset meals)
+    def create_meal_allocate_datatable(self):
+        screen = self.manager.get_screen('meal_allocate_screen')
+        screen.ids.meal_allocate_date.text = self.selected_date
+        screen.ids.meal_allocate_time.text = self.selected_time
+        meal_allocate_datatable_box = self.ids.meal_allocate_datatable_box
+        meal_allocate_data = self.meal.get_meal_details()
+
+        if meal_allocate_data:
+            self.meal_allocate_datatable = MDDataTable(
+                pos_hint={'center_x': 0.5, 'center_y': 0.5},
+                size_hint=(0.95, 0.3),
+                check=True,
+                use_pagination=True,
+                rows_num=6,
+                pagination_menu_height='240dp',
+                pagination_menu_pos="auto",
+                background_color=[1, 0, 0, .5],
+                column_data=[
+                    ["ID", dp(25)],
+                    ["Type", dp(35)],
+                    ["Description", dp(45)],
+                ],
+                row_data=meal_allocate_data
+            )
+            self.meal_allocate_datatable.bind(on_check_press=self.rows_selected)
+        else:
+            self.meal_allocate_datatable = Label(text='No Meals Recorded', color = 'red', font_size = "20sp", bold = True) # Display error message if no meals detected
+            
+        meal_allocate_datatable_box.add_widget(self.meal_allocate_datatable)
+        self.selected_rows.clear()
+
+    def rows_selected(self, instance_table, current_row):
+        row_data = tuple(current_row)
+        modified_row_data = ((row_data[0]),) + row_data[1:]
+        if modified_row_data in self.selected_rows:
+            self.selected_rows.remove(modified_row_data)
+        else:
+            self.selected_rows.append(modified_row_data)
+
+    def remove_row(self):
+        if self.selected_rows:
+            for row in self.selected_rows:
+                meal_id = row[0]
+                self.meal.remove_meal(row[0])
+        self.clear_meal_allocate_datatable_box()
+        self.create_meal_allocate_datatable()
+        self.selected_rows.clear()
+
+    def update_row(self):
+        if self.selected_rows:
+            for selected_row in self.selected_rows:
+                update_popup = UpdateMealAllocatePopup(selected_row, update_meal_allocate_callback=self.update_row_callback)
+                self.selected_rows.clear()
+                update_popup.open()
+
+    # For updating meal stats
+    def update_row_callback(self, meal_id, description, meal_type):
+        meal_update = {
+            'description': description,
+            'type': meal_type,
+        }
+            
+        self.meal.update_meal(meal_id, meal_update)
+        self.clear_meal_allocate_datatable_box()
+        self.create_meal_allocate_datatable()
+        self.selected_rows.clear()
+
+    def get_selected_rows(self):
+        return self.selected_rows
+
+    def allocate_save_button(self):
+        if self.selected_rows:
+            insert_meal_log = {
+                'meal_id': self.selected_rows[0][0],
+                'date_assigned': self.selected_date,
+                'time_assigned': self.selected_time,
+                'is_complete': 0,
+                'is_active': 1,
+            }
+
+            new_meal_log_id = self.meal_logs.insert_meal_log(insert_meal_log)
+            if new_meal_log_id:
+                latest_meal_log = self.meal_logs.get_latest_meal_log_id(self.selected_rows[0][0])
+                self.exercise_log.allocate_exercise_logs(latest_meal_log, new_meal_log_id)
+                
+                self.selected_rows.clear()
+                allocate_meal_success = SuccessPopup()
+                allocate_meal_success.show_popup('Success', 'Meal Allocated!')
+            else:
+                self.selected_rows.clear()
+                allocate_meal_success = FailPopup()
+                allocate_meal_success.show_popup('Failed', '4 Meals Allowed Per Day!')
+
+    def get_selected_rows(self):
+        return self.selected_rows
+
+# Meal Create screen. This screen is responsible for creating a new meal.
 class MealCreateScreen(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super(MealCreateScreen, self).__init__(**kwargs)
+        self.local_db = LocalDB('local_db.db')
+        self.meal = Meal(self.local_db.connection)
+        self.select_meal_type = ""
+        self.fail_popup = FailPopup()
+        self.success_popup = SuccessPopup()
+
+    def switch_to_meal_allocate(self):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'meal_allocate_screen'
+        plots_screen = self.manager.get_screen('meal_allocate_screen')
+        plots_screen.clear_meal_allocate_datatable_box()
+        plots_screen.create_meal_allocate_datatable()
+
+    def handle_meal_description_input(self, text):
+        self.ids.meal_description_input.error = not text
+
+    def show_meal_type_menu(self, instance):
+        menu_items = [
+            {"viewclass": "OneLineListItem", "text": "Breakfast", "on_release": lambda x="Breakfast": self.set_selected_meal_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Morning Snack", "on_release": lambda x="Morning Snack": self.set_selected_meal_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Lunch", "on_release": lambda x="Lunch": self.set_selected_meal_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Back", "on_release": lambda x="Back": self.set_selected_meal_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Abdomen", "on_release": lambda x="Abdomen": self.set_selected_meal_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Legs", "on_release": lambda x="Legs": self.set_selected_meal_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Push", "on_release": lambda x="Push": self.set_selected_meal_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Pull", "on_release": lambda x="Pull": self.set_selected_meal_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Core", "on_release": lambda x="Core": self.set_selected_meal_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Cardio", "on_release": lambda x="Cardio": self.set_selected_meal_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Custom", "on_release": lambda x="Custom": self.set_selected_meal_type(x, instance)},
+        ]
+        menu = MDDropdownMenu(items=menu_items, width_mult=4)
+        menu.caller = instance
+        menu.open()
+
+    def set_selected_meal_type(self, selected_meal_type_text, textfield_instance):
+        self.ids.meal_type_input.text = selected_meal_type_text
+
+    def verify_meal_create_input(self):
+        meal_type = self.ids.meal_type_input.text
+        meal_description = self.ids.meal_description_input.text
+
+        if not meal_description:
+            return self.fail_popup.show_popup('Failed', 'Enter Meal Name')
+        if not meal_type:
+            return self.fail_popup.show_popup('Failed', 'Select Meal Type')
+
+        meal_data = {
+            "type": meal_type,
+            "description": meal_description,
+            "date_created": datetime.now().strftime("%d/%m/%Y"),
+            "time_created":datetime.now().strftime('%H:%M:%S'), 
+            "is_active": 1
+        }
+        self.meal.insert_meal(meal_data)
+        return self.success_popup.show_popup('Success', 'Meal Created Successfully')
 
 # Food Item Create screen. This screen is responsible for creating a new food item (Incomplete)
 class FoodItemCreateScreen(Screen):
     pass
 
-# Food Item log screen. This screen is responsible for managing food item logs (Display/Add/Edit/Delete etc). (Incomplete)
+# Food Item log screen. This screen is responsible for managing food item logs (Display/Add/Edit/Delete etc).
 class FoodItemLogScreen(Screen):
     def __init__(self, **kwargs):
         super(FoodItemLogScreen, self).__init__(**kwargs)
@@ -2118,7 +2402,7 @@ class FoodItemLogScreen(Screen):
     def get_selected_rows(self):
         return self.selected_rows
 
-# Food Item Allocate screen. This screen is responsible for allocating food item logs to a meal log (Incomplete)
+# Food Item Allocate screen. This screen is responsible for allocating food item logs to a meal log.
 class FoodItemLogAllocateScreen(Screen):
     def __init__(self, **kwargs):
         super(FoodItemLogAllocateScreen, self).__init__(**kwargs)

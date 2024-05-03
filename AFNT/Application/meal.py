@@ -50,6 +50,31 @@ class Meal():
             self.cursor.execute("SELECT * FROM meals WHERE LOWER(type) = LOWER(?)", (type,))
             return self.cursor.fetchall()
 
+    def get_meal_details(self):
+        try:
+
+            with self.connection:
+                # Use parameterized query to prevent SQL injection
+                query = """
+                    SELECT 
+                        meal_id,
+                        type,
+                        description
+                    FROM 
+                        meals
+                    WHERE 
+                        is_active = 1
+                """
+
+                self.cursor.execute(query)
+                meals = self.cursor.fetchall()
+                
+                return meals
+
+        except Exception as e:
+            print(f"Error retrieving meal logs: {e}")
+            return []
+
     # Update meal record using meal_id and updating the values using `updated_values` dictionary 
     def update_meal(self, meal_id, updated_values):
         table_name = 'meals'
@@ -94,15 +119,29 @@ class Meal():
 
         return latest_id_numeric + 1 if latest_id_numeric else 1
 
-    # Removes meal from the database
+    # Function for removing the meal by setting `is_active` field to `0`. The database will only display those records with is_active = 1
     def remove_meal(self, meal_id):
-        with self.connection:
-            if meal_id.startswith('C'):
-                self.cursor.execute("DELETE FROM meals WHERE meal_id=?", (meal_id,))
-            else:
-                print("Cannot delete preset meals.")
+        try:
+            with self.connection:
+                self.cursor.execute("UPDATE meals SET is_active = 0 WHERE meal_id=?", (meal_id,))
+        except Exception as e:
+            print(f"Error removing meal: {e}")
+
+    # Function to readd the removed meal by setting its is_active to 1.
+    def re_add_meal(self, meal_id):
+        try:
+            with self.connection:
+                self.cursor.execute("UPDATE meals SET is_active = 1 WHERE meal_id=?", (meal_id,))
+        except Exception as e:
+            print(f"Error removing meal: {e}")
 
     # Drops meals table from LocalDB
     def drop_meal(self):
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS meals")
+
+# connection = sqlite3.connect('local_db.db')
+# meal = Meal(connection)
+
+
+# print(meal.get_meal_details())
