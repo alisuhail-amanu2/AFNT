@@ -47,6 +47,11 @@ class FoodItemLog():
             food_item_id = self.cursor.fetchall()
             return food_item_id[0][0]
 
+    def get_food_item_by_meal_log_id(self, meal_log_id):
+        with self.connection:
+            self.cursor.execute("SELECT * FROM food_item_logs WHERE meal_log_id=?", (meal_log_id,))
+            return self.cursor.fetchall()
+
     def get_all_food_item_logs_details(self):
         try:
             with self.connection:
@@ -147,3 +152,5 @@ class FoodItemLog():
 # print(food_item_log.get_all_food_item_logs_details())
 
 # print(food_item_log.get_food_item_logs_details('3'))
+
+# print(food_item_log.get_food_item_by_meal_log_id('2'))

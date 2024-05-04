@@ -27,14 +27,12 @@ class MealLog():
                 """
                 self.cursor.execute(sql, values)
 
-        except sqlite3.IntegrityError as e:
-            if "FOREIGN KEY constraint failed" in str(e):
-                print("Error: Invalid meal_id or workout_log_id.")
-            else:
-                print(f"IntegrityError: {e}")
+                # Return the last inserted row ID
+                return self.cursor.lastrowid
 
         except Exception as e:
             print(f"Error inserting meal log: {e}")
+            return None
 
     # Get meal log by meal_log_id
     def get_meal_log_by_id(self, meal_log_id):
@@ -132,6 +130,28 @@ class MealLog():
             print(f"Error retrieving meal logs: {e}")
             return []
 
+    def get_latest_meal_log_by_meal_id(self, meal_id):
+        try:
+            with self.connection:
+                query = """
+                    SELECT *
+                    FROM meal_logs
+                    WHERE 
+                        meal_id = ? AND
+                        is_active = 1
+                    ORDER BY
+                        DATE(SUBSTR(date_ate, 7, 4) || '-' || SUBSTR(date_ate, 4, 2) || '-' || SUBSTR(date_ate, 1, 2))
+                        DESC,
+                        TIME(time_ate) DESC
+                    LIMIT 1;
+                    """
+                
+                self.cursor.execute(query, (meal_id,))
+                return self.cursor.fetchall()
+        except Exception as e:
+            print(f"Error retrieving meal logs: {e}")
+            return []
+
     def calculate_nutrients(self, meal_log_id):
         try:
             with self.connection:
@@ -175,10 +195,33 @@ class MealLog():
             print(f"Error calculating nutrients: {e}")
             return None
 
+    def print_meal_log(self):
+        query = "SELECT * FROM meal_logs"
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
 
 
-# connection = sqlite3.connect('local_db.db')
-# meal_log = MealLog(connection)
+connection = sqlite3.connect('local_db.db')
+meal_log = MealLog(connection)
+
+# meal_log_data = {
+#     "meal_id": 'C1',
+#     "energy_tot_kcal": 1,
+#     "protein_tot_g": 1,
+#     "lipid_tot_g":1,
+#     "carbs_tot_g":1,
+#     "fiber_tot_g":1,
+#     "sugar_tot_g":1,
+#     "calcium_tot_mg":1,
+#     "iron_tot_mg":1,
+#     "ate": 0,
+#     "date_ate": '10/05/2024',
+#     "time_ate": '00:00:00',
+#     "is_active": 1,
+# }
+# meal_log_id = meal_log.insert_meal_log(meal_log_data)
+
+# print('meal_log_id', meal_log_id)
 
 # print(meal_log.calculate_nutrients(2))
 
@@ -188,3 +231,7 @@ class MealLog():
 
 # # meal_log.re_add_meal_log('C1')
 # # print(meal_log.get_meal_log_by_id('C'))
+
+print(meal_log.get_latest_meal_log_by_meal_id('C1'))
+
+# print(meal_log.print_meal_log())

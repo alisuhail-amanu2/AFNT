@@ -106,3 +106,9 @@ class FoodItem():
     def drop_food_item(self):
         with self.connection:
             self.cursor.execute("DROP TABLE IF EXISTS food_items")
+
+# connection = sqlite3.connect('local_db.db')
+# food_item = FoodItem(connection)
+# id = food_item.get_food_item_by_name('BUTTER,WITH SALT')
+
+# print(id[0][0])

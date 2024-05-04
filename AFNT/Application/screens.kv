@@ -121,6 +121,7 @@ WindowManager:
     ArduinoWatchPlotsScreen:
     MealAllocateScreen:
     MealCreateScreen:
+    FoodItemCreateScreen:
     FoodItemLogScreen:
     FoodItemLogAllocateScreen:
     FoodItemAllocateScreen:
@@ -2082,6 +2083,113 @@ WindowManager:
                         width: self.parent.width
                         background_color: 0.0, 0.8, 1, 1
                         on_release: root.verify_meal_create_input()
+
+<FoodItemCreateScreen>:
+    name: "food_item_create_screen"
+    MDTopAppBar:
+        title: "Create Food Item"
+        bold: True
+        halign: 'center'
+        font_size: '24sp'
+        pos_hint: {"top": 1}
+        elevation: 4
+        left_action_items:
+            [["arrow-left", lambda x: root.switch_to_meal_allocate()]]
+        md_bg_color: 0, 0, 0.5, 
+    
+    ScrollView:
+        do_scroll_y: True
+        do_scroll_x: False
+        bar_width: 0
+        size_hint: (0.9, 0.85)
+        pos_hint: {'center_x': 0.5, 'top': 0.85}
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (None, None)
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            height: dp(850)
+            width: self.parent.width
+            spacing: 20
+            padding: 10
+            canvas.before:
+                Color:
+                    rgba: 0.95, 0.95, 0.95, 1
+                RoundedRectangle:
+                    size: self.size
+                    pos: self.pos
+                    radius: [10,]
+            BoxLayout:
+                id: food_item_create_box
+                orientation:'vertical'
+
+                MDTextField:
+                    id: food_item_name_input
+                    hint_text: 'Enter Food Item name *'
+                    icon_right: "rename"
+                    helper_text_mode: "on_error"
+                    helper_text: "Enter Food Item Name *"
+                    multiline: False
+                    on_text: root.handle_food_item_name_input(self.text)
+            
+                MDTextField:
+                    id: food_item_energy_kcal
+                    hint_text: 'Enter Total Calories (kcal) *'
+                    helper_text_mode: "on_error"
+                    helper_text: "Enter Calorie Count (kcal)"
+                    multiline: False
+
+                MDTextField:
+                    id: protein_g_input
+                    hint_text: 'Enter Protein (g)'
+                    multiline: False
+
+                MDTextField:
+                    id: lipid_g_input
+                    hint_text: 'Enter Fats (g)'
+                    multiline: False
+
+                MDTextField:
+                    id: carbs_g_input
+                    hint_text: 'Enter Carbohydrates (g)'
+                    multiline: False
+
+                MDTextField:
+                    id: fibre_td_input
+                    hint_text: 'Enter Fibre (g)'
+                    multiline: False
+
+                MDTextField:
+                    id: sugar_g_input
+                    hint_text: 'Enter Sugar (g)'
+                    multiline: False
+                
+                MDTextField:
+                    id: calcium_mg_input
+                    hint_text: 'Enter Calcium (mg)'
+                    multiline: False
+
+                MDTextField:
+                    id: iron_mg_input
+                    hint_text: 'Enter Iron (mg)'
+                    multiline: False
+
+                MDTextField:
+                    id: cholestrol_mg_input
+                    hint_text: 'Enter Cholestrol (mg)'
+                    multiline: False
+
+                BoxLayout:
+                    orientation: 'horizontal'
+                    pos_hint: {"center_x": 0.5}
+
+                    Button:
+                        text: "Create"
+                        size_hint_x: None
+                        background_normal: ''
+                        width: self.parent.width
+                        background_color: 0.0, 0.8, 1, 1
+                        on_release: root.verify_food_item_create_input()
 
 <FoodItemLogScreen>:
     name: "food_item_log_screen"

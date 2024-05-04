@@ -2076,11 +2076,11 @@ class MealAllocateScreen(Screen):
         self.selected_rows.clear()
         self.clear_meal_allocate_datatable_box()
 
-    # def switch_to_food_item_create(self):
-    #     self.manager.transition.direction = 'left'
-    #     self.manager.current = 'food_item_create_screen'
-    #     self.selected_rows.clear()
-    #     self.clear_meal_allocate_datatable_box()
+    def switch_to_food_item_create(self):
+        self.manager.transition.direction = 'left'
+        self.manager.current = 'food_item_create_screen'
+        self.selected_rows.clear()
+        self.clear_meal_allocate_datatable_box()
 
     # def switch_to_food_item_allocate(self):
     #     if self.selected_rows:
@@ -2197,27 +2197,75 @@ class MealAllocateScreen(Screen):
         return self.selected_rows
 
     def allocate_save_button(self):
+        print(self.selected_rows)
         if self.selected_rows:
-            insert_meal_log = {
-                'meal_id': self.selected_rows[0][0],
-                'date_assigned': self.selected_date,
-                'time_assigned': self.selected_time,
-                'is_complete': 0,
-                'is_active': 1,
-            }
+            for meals in self.selected_rows:
+                if not self.meal.is_meal_type_allocated(meals[1], self.selected_date):
+                    # print('Meal type not allocated')
+                    latest_meal_log = self.meal_logs.get_latest_meal_log_by_meal_id(meals[0][0])
+                    # print(latest_meal_log)
+                    meal_log_data = {}
+                    if latest_meal_log:
+                        meal_log_data = {
+                            "meal_id": meals[0],
+                            "energy_tot_kcal": latest_meal_log[0][2],
+                            "protein_tot_g": latest_meal_log[0][3],
+                            "lipid_tot_g":latest_meal_log[0][4],
+                            "carbs_tot_g":latest_meal_log[0][5],
+                            "fiber_tot_g":latest_meal_log[0][6],
+                            "sugar_tot_g":latest_meal_log[0][7],
+                            "calcium_tot_mg":latest_meal_log[0][8],
+                            "iron_tot_mg":latest_meal_log[0][9],
+                            "ate": 0,
+                            "date_ate": self.selected_date,
+                            "time_ate": self.selected_time,
+                            "is_active": 1,
+                        }
+                        meal_log_id = self.meal_logs.insert_meal_log(meal_log_data)
+                        latest_food_item_logs = self.food_item_log.get_food_item_by_meal_log_id(latest_meal_log[0][0])
 
-            new_meal_log_id = self.meal_logs.insert_meal_log(insert_meal_log)
-            if new_meal_log_id:
-                latest_meal_log = self.meal_logs.get_latest_meal_log_id(self.selected_rows[0][0])
-                self.exercise_log.allocate_exercise_logs(latest_meal_log, new_meal_log_id)
-                
-                self.selected_rows.clear()
-                allocate_meal_success = SuccessPopup()
-                allocate_meal_success.show_popup('Success', 'Meal Allocated!')
-            else:
-                self.selected_rows.clear()
-                allocate_meal_success = FailPopup()
-                allocate_meal_success.show_popup('Failed', '4 Meals Allowed Per Day!')
+                        for food_item_logs in latest_food_item_logs:
+                            new_food_item_logs = {
+                                "meal_log_id": meal_log_id,
+                                "food_item_id": food_item_logs[2],
+                                "serving": food_item_logs[3],
+                                "weight_g": 0,
+                                "ate": 0,
+                                "date_ate": '',
+                                "time_ate": '',
+                                "description": '',
+                                "is_active": 1
+                            }
+
+                            self.food_item_log.insert_food_item_log(new_food_item_logs)
+                        # print('Past meal log exists, use latest one')
+                    else:
+                        meal_log_data = {
+                            "meal_id": meals[0],
+                            "energy_tot_kcal": 0,
+                            "protein_tot_g": 0,
+                            "lipid_tot_g":0,
+                            "carbs_tot_g":0,
+                            "fiber_tot_g":0,
+                            "sugar_tot_g":0,
+                            "calcium_tot_mg":0,
+                            "iron_tot_mg":0,
+                            "ate": 0,
+                            "date_ate": self.selected_date,
+                            "time_ate": self.selected_time,
+                            "is_active": 1,
+                        }
+                        # print('Past meal log does not exist, create new default one')
+                        self.meal_logs.insert_meal_log(meal_log_data)
+
+                    allocate_meal_success = SuccessPopup()
+                    allocate_meal_success.show_popup('Success', 'Meal Allocated!')
+                    # print('inserted meal log')
+
+                else:
+                    allocate_meal_fail = FailPopup()
+                    allocate_meal_fail.show_popup('Failed', f"{meals[1]} has already been\nallocated on this date!")
+                    # print('meal type already exists for selected date')
 
     def get_selected_rows(self):
         return self.selected_rows
@@ -2247,14 +2295,10 @@ class MealCreateScreen(Screen):
             {"viewclass": "OneLineListItem", "text": "Breakfast", "on_release": lambda x="Breakfast": self.set_selected_meal_type(x, instance)},
             {"viewclass": "OneLineListItem", "text": "Morning Snack", "on_release": lambda x="Morning Snack": self.set_selected_meal_type(x, instance)},
             {"viewclass": "OneLineListItem", "text": "Lunch", "on_release": lambda x="Lunch": self.set_selected_meal_type(x, instance)},
-            {"viewclass": "OneLineListItem", "text": "Back", "on_release": lambda x="Back": self.set_selected_meal_type(x, instance)},
-            {"viewclass": "OneLineListItem", "text": "Abdomen", "on_release": lambda x="Abdomen": self.set_selected_meal_type(x, instance)},
-            {"viewclass": "OneLineListItem", "text": "Legs", "on_release": lambda x="Legs": self.set_selected_meal_type(x, instance)},
-            {"viewclass": "OneLineListItem", "text": "Push", "on_release": lambda x="Push": self.set_selected_meal_type(x, instance)},
-            {"viewclass": "OneLineListItem", "text": "Pull", "on_release": lambda x="Pull": self.set_selected_meal_type(x, instance)},
-            {"viewclass": "OneLineListItem", "text": "Core", "on_release": lambda x="Core": self.set_selected_meal_type(x, instance)},
-            {"viewclass": "OneLineListItem", "text": "Cardio", "on_release": lambda x="Cardio": self.set_selected_meal_type(x, instance)},
-            {"viewclass": "OneLineListItem", "text": "Custom", "on_release": lambda x="Custom": self.set_selected_meal_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Brunch", "on_release": lambda x="Brunch": self.set_selected_meal_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Afternoon Snack", "on_release": lambda x="Afternoon Snack": self.set_selected_meal_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Dinner", "on_release": lambda x="Dinner": self.set_selected_meal_type(x, instance)},
+            {"viewclass": "OneLineListItem", "text": "Evening Snack", "on_release": lambda x="Evening Snack": self.set_selected_meal_type(x, instance)},
         ]
         menu = MDDropdownMenu(items=menu_items, width_mult=4)
         menu.caller = instance
@@ -2282,9 +2326,127 @@ class MealCreateScreen(Screen):
         self.meal.insert_meal(meal_data)
         return self.success_popup.show_popup('Success', 'Meal Created Successfully')
 
-# Food Item Create screen. This screen is responsible for creating a new food item (Incomplete)
+# Food Item Create screen. This screen is responsible for creating a new food item
 class FoodItemCreateScreen(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super(FoodItemCreateScreen, self).__init__(**kwargs)
+        self.local_db = LocalDB('local_db.db')
+        self.food_item = FoodItem(self.local_db.connection)
+        self.food_item_log = FoodItemLog(self.local_db.connection)
+        self.select_meal_type = ""
+        self.fail_popup = FailPopup()
+        self.success_popup = SuccessPopup()
+
+    def switch_to_meal_allocate(self):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'meal_allocate_screen'
+        plots_screen = self.manager.get_screen('meal_allocate_screen')
+        plots_screen.clear_meal_allocate_datatable_box()
+        plots_screen.create_meal_allocate_datatable()
+
+    def handle_food_item_name_input(self, text):
+        self.ids.food_item_name_input.error = not text
+
+    # Verify food_item input data
+    def verify_food_item_create_input(self):
+        food_item_name = self.ids.food_item_name_input.text
+        energy_kcal = self.ids.food_item_energy_kcal.text
+        protein_g = self.ids.protein_g_input.text
+        lipid_g = self.ids.lipid_g_input.text
+        carbs_g = self.ids.carbs_g_input.text
+        fibre_td_g = self.ids.fibre_td_input.text
+        sugar_g = self.ids.sugar_g_input.text
+        calcium_mg = self.ids.calcium_mg_input.text
+        iron_mg = self.ids.iron_mg_input.text
+        cholestrol_mg = self.ids.cholestrol_mg_input.text
+
+
+        if not food_item_name:
+            return self.fail_popup.show_popup('Failed', 'Enter Food Item name')
+        if not energy_kcal:
+            return self.fail_popup.show_popup('Failed', 'Enter Total Calories')
+        if energy_kcal:
+            try:
+                energy_kcal = int(energy_kcal)
+            except ValueError:
+                return self.fail_popup.show_popup('Failed', 'Energy (kcal) must be an integer')
+        if protein_g:
+            try:
+                protein_g = float(protein_g)
+            except ValueError:
+                return self.fail_popup.show_popup('Failed', 'Protein (g) must be a number')
+        if lipid_g:
+            try:
+                lipid_g = float(lipid_g)
+            except ValueError:
+                return self.fail_popup.show_popup('Failed', 'Fats (g) must be a number')
+        if carbs_g:
+            try:
+                carbs_g = float(carbs_g)
+            except ValueError:
+                return self.fail_popup.show_popup('Failed', 'Carbohydrates (g) must be a number')
+        if fibre_td_g:
+            try:
+                fibre_td_g = float(fibre_td_g)
+            except ValueError:
+                return self.fail_popup.show_popup('Failed', 'Fibre (g) must be a number')
+        if sugar_g:
+            try:
+                sugar_g = float(sugar_g)
+            except ValueError:
+                return self.fail_popup.show_popup('Failed', 'Sugar (g) must be a number')
+        if calcium_mg:
+            try:
+                calcium_mg = float(calcium_mg)
+            except ValueError:
+                return self.fail_popup.show_popup('Failed', 'Calcium (mg) must be a number')
+        if iron_mg:
+            try:
+                iron_mg = float(iron_mg)
+            except ValueError:
+                return self.fail_popup.show_popup('Failed', 'Iron (mg) must be a number')
+        if cholestrol_mg:
+            try:
+                cholestrol_mg = float(cholestrol_mg)
+            except ValueError:
+                return self.fail_popup.show_popup('Failed', 'Cholestrol (mg) must be a number')
+
+        food_item_data = {
+            "food_item_name": food_item_name,
+            "water_g": 0,
+            "energy_kcal": energy_kcal,
+            "protein_g": protein_g,
+            "lipid_g": lipid_g,
+            "carbs_g": carbs_g,
+            "fiber_td_g": fibre_td_g,
+            "sugar_g": sugar_g,
+            "calcium_mg": calcium_mg,
+            "iron_mg": iron_mg,
+            "cholestrl_mg": cholestrol_mg,
+            "gmwt_1": 0,
+            "gmwt_desc1": '',
+            "gmwt_2": 0,
+            "gmwt_desc2": '',
+            "is_active": 1,
+        }
+        self.food_item.insert_food_item(food_item_data) # Inserting new food item
+        food_item_details = self.food_item.get_food_item_by_name(food_item_name)
+        print(food_item_details)
+        print(food_item_details[0][0])
+
+        food_item_log_data = {
+            "food_item_id": food_item_details[0][0],
+            "meal_log_id": 0,
+            "serving": 1,
+            "weight_g": '',
+            "ate": 0,
+            "date_ate": '',
+            "time_ate": '',
+            "description": '',
+            "is_active": 1,
+        }
+        self.food_item_log.insert_food_item_log(food_item_log_data) # Creating food_item log for the new food_item
+        return self.success_popup.show_popup('Success', 'Food Item Created Successfully')
 
 # Food Item log screen. This screen is responsible for managing food item logs (Display/Add/Edit/Delete etc).
 class FoodItemLogScreen(Screen):

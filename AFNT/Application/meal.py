@@ -50,6 +50,29 @@ class Meal():
             self.cursor.execute("SELECT * FROM meals WHERE LOWER(type) = LOWER(?)", (type,))
             return self.cursor.fetchall()
 
+    def is_meal_type_allocated(self, meal_type, date):
+        try:
+            with self.connection:
+                query = """
+                    SELECT *
+                    FROM meal_logs AS ml
+                    JOIN meals AS m ON ml.meal_id = m.meal_id
+                    WHERE 
+                        m.type = ? AND
+                        ml.date_ate = ? AND
+                        ml.is_active = 1;
+                    """
+                self.cursor.execute(query, (meal_type, date))
+                if self.cursor.fetchall():
+                    return True
+                else:
+                    return False
+                
+        except Exception as e:
+            print(f"Error retrieving meals: {e}")
+            return []
+
+
     def get_meal_details(self):
         try:
 
@@ -143,5 +166,7 @@ class Meal():
 # connection = sqlite3.connect('local_db.db')
 # meal = Meal(connection)
 
+# print(meal.get_meal_by_id(1)[0][0])
+# print(meal.is_meal_type_allocated('Dinner', '05/04/2024'))
 
 # print(meal.get_meal_details())
