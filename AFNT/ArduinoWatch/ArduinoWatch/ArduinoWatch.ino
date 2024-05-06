@@ -54,7 +54,7 @@ int accelSensorPort = 3;
 unsigned long stepTimestamps[STEP_TRIGGER] = {};
 unsigned long loopStart = 0;
 uint32_t doVibrate = 0;
-bool firstSD = false;
+bool firstSD = true;
 RTCZero rtc;
 
 
@@ -377,6 +377,7 @@ void logData(String dataString, String displayString) {
   }
 
   if (firstSD) {
+    file.truncate(0);
     // If it's the first time writing to the file, write column headings.
     file.println(displayString);
     // Set firstSD to false after writing column headings.
