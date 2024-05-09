@@ -38,13 +38,13 @@ int32_t heartRate; // Heart rate value.
 int32_t temperature; // Temperature value.
 
 // Change these values to set the current time when you upload the sketch.
-const byte seconds = 45;
-const byte minutes = 59;
-const byte hours = 23;
+const byte seconds = 0;
+const byte minutes = 40;
+const byte hours = 13;
 
 // Change these values to set the current initial date.
-const byte day = 6;
-const byte month = 4;
+const byte day = 13;
+const byte month = 5;
 const byte year = 24;
 
 // Which port is each sensor connected to. initial 0 value represents that they are not connected.

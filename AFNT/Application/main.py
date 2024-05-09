@@ -2048,7 +2048,7 @@ class MealHistoryScreen(Screen):
     def get_selected_rows(self):
         return self.selected_rows
 
-# Meal Allocate screen. Used for allocating meals to a selected datetime
+# Meal Allocate screen. Used for allocating meals to a selected datetime.
 class MealAllocateScreen(Screen):
     def __init__(self, **kwargs):
         super(MealAllocateScreen, self).__init__(**kwargs)
@@ -3210,7 +3210,7 @@ class ArduinoWatchPlotsScreen(Screen):
             ax.set_ylabel('Total Steps')
             ax.set_title('Step Count')
             ax.grid(axis='y')
-            ax.yaxis.set_major_locator(MultipleLocator(2))
+            ax.yaxis.set_major_locator(MultipleLocator(10))
             ax.set_ylim(bottom=0)
             canvas = FigureCanvasKivyAgg(fig)
             box2.add_widget(canvas)
