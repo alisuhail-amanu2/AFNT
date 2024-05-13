@@ -201,8 +201,8 @@ class MealLog():
         return self.cursor.fetchall()
 
 
-connection = sqlite3.connect('local_db.db')
-meal_log = MealLog(connection)
+# connection = sqlite3.connect('local_db.db')
+# meal_log = MealLog(connection)
 
 # meal_log_data = {
 #     "meal_id": 'C1',
@@ -232,6 +232,6 @@ meal_log = MealLog(connection)
 # # meal_log.re_add_meal_log('C1')
 # # print(meal_log.get_meal_log_by_id('C'))
 
-print(meal_log.get_latest_meal_log_by_meal_id('C1'))
+# print(meal_log.get_latest_meal_log_by_meal_id('C1'))
 
 # print(meal_log.print_meal_log())

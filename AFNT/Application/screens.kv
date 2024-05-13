@@ -1863,7 +1863,7 @@ WindowManager:
     name: "meal_allocate_screen"
     
     MDTopAppBar:
-        title: "Allocate meal"
+        title: "Allocate Meal"
         bold: True
         halign: 'center'
         font_size: '24sp'
@@ -1978,14 +1978,14 @@ WindowManager:
                     anchor_y: "center"
 
                     Button:
-                        id: allocate_exercise
-                        text: "Allocate Exercise"
-                        value: "allocate_exercise"
+                        id: allocate_meal
+                        text: "Allocate Meal"
+                        value: "allocate_meal"
                         size_hint_x: None
                         width: self.parent.width
                         background_normal: ''
                         background_color: 0.0, 0.8, 1, 1
-                        on_release: root.switch_to_exercise_allocate()
+                        # on_release: root.switch_to_meal_allocate()
 
                 AnchorLayout:
                     anchor_x: "center"
